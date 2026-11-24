@@ -6,7 +6,7 @@ Human file; format: `docs/contract_spec.md`.
 
 | Last run | Where it stands | Waiting on |
 |---|---|---|
-| never | The reading tools are not built: no step can be walked yet. | Your read of the contract. |
+| never | The reading tools are being built: no step can be walked yet. | The reading pass, out 2026-11-25. |
 
 This part is validated two ways:
 

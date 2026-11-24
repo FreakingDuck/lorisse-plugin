@@ -1,6 +1,6 @@
 # plugin — contract
 
-> written by Lorisse 2026-11-24 · reviewed by the owner: not yet
+> written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
 Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change, and this page is the reading step's alone; it is rewritten when writing comes.
 
@@ -29,8 +29,6 @@ Does not:
 ## 4. The memory folder
 
 We want Lorisse to work on the one folder the person chose, and to say plainly when it has none.
-// Multiple folders as in the dev setup ?
-// Lorisse: yes, several repositories: the memory folder's config names them, as yours does today, and they read as one memory. Said now in C-4.4.
 
 - **C-4.1** The program works on one folder, the memory folder: the one the person gave in the plugin's setting; without it, the folder the session is opened on, when that is a memory folder. It looks nowhere else.
 - **C-4.2** With no memory folder, `where` says so and how to give one, every other tool answers that same sentence, and nothing is created.
@@ -38,8 +36,6 @@ We want Lorisse to work on the one folder the person chose, and to say plainly w
 - **C-4.4** A memory folder can name several repositories in its config: their pieces are read as one memory, each said with the repository it comes from.
 
 ## 5. Nothing is written
-// For now ? I believe the contract will be done later for everything
-// Lorisse: yes, for now: it holds for the reading step only. The full contract is written with the whole; this page stays short until then.
 
 We want a question never to change the folder, so that reading is safe to try on a real one.
 
