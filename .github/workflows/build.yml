@@ -1,0 +1,94 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-main
+  cancel-in-progress: false
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Add the two Mac targets
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - name: Tests
+        run: cargo test --locked
+      - name: Build for Apple silicon
+        run: cargo build --release --locked --target aarch64-apple-darwin
+      - name: Build for Intel
+        run: cargo build --release --locked --target x86_64-apple-darwin
+      - name: Join both into one program
+        run: |
+          mkdir -p out
+          lipo -create -output out/lorisse \
+            target/aarch64-apple-darwin/release/lorisse \
+            target/x86_64-apple-darwin/release/lorisse
+          lipo -info out/lorisse
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lorisse-mac
+          path: out/lorisse
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Tests
+        run: cargo test --locked
+      - name: Build
+        run: cargo build --release --locked
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lorisse-windows
+          path: target/release/lorisse.exe
+          if-no-files-found: error
+
+  commit:
+    needs: [mac, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/download-artifact@v4
+        with:
+          name: lorisse-mac
+          path: server
+      - uses: actions/download-artifact@v4
+        with:
+          name: lorisse-windows
+          path: server
+      - name: Commit the two programs when they changed
+        run: |
+          chmod +x server/lorisse
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add server/lorisse server/lorisse.exe
+          git update-index --chmod=+x server/lorisse
+          if git diff --cached --quiet; then
+            echo "The programs did not change."
+            exit 0
+          fi
+          git commit -m "the programs built from ${GITHUB_SHA::7} [skip ci]"
+          git push origin HEAD:main

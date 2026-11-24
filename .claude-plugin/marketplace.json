@@ -8,7 +8,9 @@
     {
       "name": "lorisse",
       "source": "./",
-      "description": "Lorisse, a first try: one local program with one tool, where."
+      "description": "A memory that is yours, in plain files. First version: one tool, to see that Lorisse answers.",
+      "homepage": "https://lorisse.ai",
+      "repository": "https://github.com/FreakingDuck/lorisse-plugin"
     }
   ]
 }

@@ -1,8 +1,10 @@
 {
   "name": "lorisse",
   "version": "0.0.1",
-  "description": "Lorisse, a first try: one local program with one tool, where.",
+  "description": "A memory that is yours, in plain files. First version: one tool, to see that Lorisse answers.",
   "author": {
     "name": "FreakingDuck"
-  }
+  },
+  "homepage": "https://lorisse.ai",
+  "repository": "https://github.com/FreakingDuck/lorisse-plugin"
 }
