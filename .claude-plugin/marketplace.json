@@ -1,0 +1,14 @@
+{
+  "name": "lorisse",
+  "description": "Lorisse's own marketplace: this folder is its one plugin.",
+  "owner": {
+    "name": "FreakingDuck"
+  },
+  "plugins": [
+    {
+      "name": "lorisse",
+      "source": "./",
+      "description": "Lorisse, a first try: one local program with one tool, where."
+    }
+  ]
+}

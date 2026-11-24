@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "lorisse": {
+      "type": "stdio",
+      "command": "${CLAUDE_PLUGIN_ROOT}/server/lorisse.exe",
+      "args": []
+    }
+  }
+}
