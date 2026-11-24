@@ -23,7 +23,7 @@ Lorisse as a plugin of the Claude app. The repository is the workshop; the folde
 
 - **The method**: this repository follows the method's revision r5. A part is a folder with README, CONTRACT, VALIDATION on top, written by `docs/contract_spec.md`; `status.yaml` is the table; the copies of the method's pieces are compared by the gate, and a copy that differs is ported from the method, never mended here.
 - **The review line**: under every page's title, `> written by <who> <date> · reviewed by the owner: <not yet, or his date and his word>`. Only the owner writes his mark. His `// ` lines in a page are notes: answer under each with a `// Lorisse: ` line, never remove his.
-- **The gate**: `powershell -NoProfile -ExecutionPolicy Bypass -File C:/software/lorisse-plugin/scripts/verify.ps1`, green before any commit that touches code.
+- **The gate**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1`, called by its absolute path with forward slashes, green before any commit that touches code.
 - **The sample only.** No check, no test and no walk ever opens a person's own memory folder. The program never writes in a memory folder before the writing step's contract says how.
 - **A release is a version raised.** While `plugin/.claude-plugin/plugin.json` names a version, an installed copy stays as it is until that string changes. Raise it at each release, and never set a version in the marketplace entry.
 - **The built programs are GitHub's.** `plugin/server/` is written by the workflow from the source alone. A local build copied there is for a try, never committed.
