@@ -1,0 +1,15 @@
+[package]
+name = "lorisse-store"
+version = "0.1.0"
+edition = "2024"
+description = "The data folder's store: pieces as Markdown files, the inbox, reviewed diffs, the index, the confidential gate"
+
+[dependencies]
+# `serde`: the dates of the frontmatter and the index.
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+# `index.json`.
+serde_json = { version = "1", features = ["preserve_order"] }
+# Parsing the frontmatter and `config.yaml`; rendering is by hand.
+serde_yaml_ng = "0.10"
+thiserror = "2"

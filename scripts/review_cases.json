@@ -1,0 +1,290 @@
+{
+  "about": [
+    "The cases of the review report (method/checks/check_reviews.ps1), as data, for every reader that judges what waits for the owner's read.",
+    "Each case is a made-up repository: `table` (status.yaml's lines, else default_table), then `steps` in order: each writes its `files` (a path and its lines, joined by a line feed, one more at the end);",
+    "a step with `at` then commits everything at that moment (author and committer alike); a step without `at` leaves its files on disk only.",
+    "`reading` is the reader's record written last (target/reading.json: {\"version\": 1, \"docs\": {<file>: {\"marked\": <hour>}}}), never committed.",
+    "`expect` gives, for a file, the fields its entry of the data must hold (the others are not looked at); `absent` the files the report must not list; `listed` the whole list, in its order;",
+    "`summary` the summary line; `rows` the printed rows, each [file, verdict, mark] printed as '{file,-50} {verdict}   {mark}', and `lines` the other lines the printed report must hold (a contract's clause line)."
+  ],
+  "default_table": ["parts:", "  a: { stage: design, edits: open, path: a }"],
+  "cases": [
+    {
+      "name": "a page never read",
+      "proves": "C-5.2",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: not yet", "", "the page"] } }
+      ],
+      "expect": { "a/README.md": { "state": "never reviewed", "text": "never reviewed", "answered": false, "date": null, "mark": "-", "since": null, "hour": null, "change": null } }
+    },
+    {
+      "name": "a page read and unchanged",
+      "proves": "C-5.2, C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } }
+      ],
+      "expect": { "a/README.md": { "state": "reviewed", "text": "reviewed", "date": "2026-11-10", "mark": "ok", "since": "day", "hour": "2026-11-10 23:59:59", "change": null, "clauses": null } }
+    },
+    {
+      "name": "his mark of the evening committed the next morning",
+      "proves": "C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: not yet", "", "the page"] } },
+        { "at": "2026-11-11T08:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } }
+      ],
+      "expect": { "a/README.md": { "state": "reviewed", "date": "2026-11-10", "mark": "ok", "since": "day" } }
+    },
+    {
+      "name": "his mark of the evening committed the next morning, the hour in the record",
+      "proves": "C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: not yet", "", "the page"] } },
+        { "at": "2026-11-11T08:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } }
+      ],
+      "reading": { "a/README.md": "2026-11-10T21:00:00+01:00" },
+      "expect": { "a/README.md": { "state": "reviewed", "since": "hour", "hour": "2026-11-10T21:00:00+01:00" } }
+    },
+    {
+      "name": "a new page written and marked one evening, committed the next morning",
+      "proves": "C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } },
+        { "at": "2026-11-11T08:00:00+01:00", "files": { "a/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-10 · reviewed by the owner: 2026-11-10, ok", "", "- **C-1.1** a promise"] } }
+      ],
+      "expect": { "a/CONTRACT.md": { "state": "reviewed", "date": "2026-11-10", "mark": "ok" } }
+    },
+    {
+      "name": "the writer's half of the review line reworded only",
+      "proves": "C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } },
+        { "at": "2026-11-12T09:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by another writer 2026-11-12 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } }
+      ],
+      "expect": { "a/README.md": { "state": "reviewed", "mark": "ok" } }
+    },
+    {
+      "name": "a change the afternoon after his mark of 14:00, the hour in the record",
+      "proves": "C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } },
+        { "at": "2026-11-10T16:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page, changed in the afternoon"] } }
+      ],
+      "reading": { "a/README.md": "2026-11-10T14:00:00+01:00" },
+      "expect": { "a/README.md": { "state": "changed since", "text": "changed since", "date": "2026-11-10", "since": "hour", "hour": "2026-11-10T14:00:00+01:00", "change": "2026-11-10" } }
+    },
+    {
+      "name": "the same change without a record: the end of his day, no change",
+      "proves": "C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } },
+        { "at": "2026-11-10T16:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page, changed in the afternoon"] } }
+      ],
+      "expect": { "a/README.md": { "state": "reviewed", "since": "day", "hour": "2026-11-10 23:59:59" } }
+    },
+    {
+      "name": "a record of another day than his mark: the end of his day",
+      "proves": "C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } },
+        { "at": "2026-11-10T16:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page, changed in the afternoon"] } }
+      ],
+      "reading": { "a/README.md": "2026-11-09T09:00:00+01:00" },
+      "expect": { "a/README.md": { "state": "reviewed", "since": "day", "hour": "2026-11-10 23:59:59" } }
+    },
+    {
+      "name": "a change two days after his mark",
+      "proves": "C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } },
+        { "at": "2026-11-12T09:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page, reworded"] } }
+      ],
+      "expect": { "a/README.md": { "state": "changed since", "date": "2026-11-10", "change": "2026-11-12", "mark": "ok" } }
+    },
+    {
+      "name": "the text changed on disk, not committed yet",
+      "proves": "C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } },
+        { "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page, reworked on disk"] } }
+      ],
+      "expect": { "a/README.md": { "state": "changed since", "text": "changed since" } }
+    },
+    {
+      "name": "blank lines and trailing spaces only",
+      "proves": "C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page", "a second line"] } },
+        { "files": { "a/README.md": ["# a page   ", "", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "", "the page  ", "", "a second line\t", "", ""] } }
+      ],
+      "expect": { "a/README.md": { "state": "reviewed", "text": "reviewed" } }
+    },
+    {
+      "name": "a note of his added: no change, nothing answered",
+      "proves": "C-5.4, C-5.5",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } },
+        { "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page", "// why this line?"] } }
+      ],
+      "expect": { "a/README.md": { "state": "reviewed", "text": "reviewed", "answered": false } }
+    },
+    {
+      "name": "a note of his answered by Lorisse",
+      "proves": "C-5.5",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } },
+        { "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page", "// why this line?", "// Lorisse: because of the promise; I can cut it"] } }
+      ],
+      "expect": { "a/README.md": { "state": "answered", "text": "reviewed", "answered": true, "date": "2026-11-10", "mark": "ok" } }
+    },
+    {
+      "name": "his ok under the answer: read again, nothing answered",
+      "proves": "C-5.5",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"] } },
+        { "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page", "// why this line?", "// Lorisse: because of the promise; I can cut it", "// ok"] } }
+      ],
+      "expect": { "a/README.md": { "state": "reviewed", "answered": false } }
+    },
+    {
+      "name": "an answer on a page never read, and one on a page changed: answered whatever else",
+      "proves": "C-5.5",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": {
+          "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: not yet", "", "the page", "// a question", "// Lorisse: an answer"],
+          "a/VALIDATION.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10", "", "the steps"] } },
+        { "at": "2026-11-12T09:00:00+01:00", "files": {
+          "a/VALIDATION.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10", "", "the steps, changed", "// a question", "// Lorisse: an answer"] } }
+      ],
+      "expect": {
+        "a/README.md": { "state": "answered", "text": "never reviewed", "answered": true, "mark": "-" },
+        "a/VALIDATION.md": { "state": "answered", "text": "changed since", "answered": true, "mark": "read", "change": "2026-11-12" }
+      }
+    },
+    {
+      "name": "a note and an answer inside a fenced block are no thread",
+      "proves": "C-5.5",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page", "```", "// a comment of code", "// Lorisse: written in code", "```"] } }
+      ],
+      "expect": { "a/README.md": { "state": "reviewed", "answered": false } }
+    },
+    {
+      "name": "a rework on disk after his to rework",
+      "proves": "C-5.2, C-5.4",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, to rework", "", "the page", "// shorter, please"] } },
+        { "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, to rework", "", "the page, shorter", "// shorter, please", "// Lorisse: done, one line"] } }
+      ],
+      "expect": { "a/README.md": { "state": "answered", "text": "changed since", "mark": "to rework", "answered": true } }
+    },
+    {
+      "name": "a word after his date that is no mark",
+      "proves": "C-5.2",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, understood", "", "the page"] } }
+      ],
+      "expect": { "a/README.md": { "state": "reviewed", "mark": "-", "unknown_mark": true, "date": "2026-11-10" } }
+    },
+    {
+      "name": "a contract with a clause added",
+      "proves": "C-5.6",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "## 4. A theme", "", "- **C-4.1** the first promise", "- **C-4.2** the second promise", "", "a line of wording"] } },
+        { "at": "2026-11-12T09:00:00+01:00", "files": { "a/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "## 4. A theme", "", "- **C-4.1** the first promise", "- **C-4.2** the second promise", "- **C-4.3** a third promise", "", "a line of wording"] } }
+      ],
+      "expect": { "a/CONTRACT.md": { "state": "changed since", "clauses": { "added": ["C-4.3"], "removed": [], "reworded": [] }, "wording_only": false } },
+      "lines": ["    clauses: C-4.3 added"]
+    },
+    {
+      "name": "a contract with a clause removed",
+      "proves": "C-5.6",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "## 4. A theme", "", "- **C-4.1** the first promise", "- **C-4.2** the second promise", "", "a line of wording"] } },
+        { "at": "2026-11-12T09:00:00+01:00", "files": { "a/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "## 4. A theme", "", "- **C-4.1** the first promise", "", "a line of wording"] } }
+      ],
+      "expect": { "a/CONTRACT.md": { "state": "changed since", "clauses": { "added": [], "removed": ["C-4.2"], "reworded": [] }, "wording_only": false } },
+      "lines": ["    clauses: C-4.2 removed"]
+    },
+    {
+      "name": "a contract with a clause reworded",
+      "proves": "C-5.6",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "## 4. A theme", "", "- **C-4.1** the first promise", "- **C-4.2** the second promise", "", "a line of wording"] } },
+        { "at": "2026-11-12T09:00:00+01:00", "files": { "a/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "## 4. A theme", "", "- **C-4.1** the first promise, now wider", "- **C-4.2** the second promise", "", "a line of wording"] } }
+      ],
+      "expect": { "a/CONTRACT.md": { "state": "changed since", "clauses": { "added": [], "removed": [], "reworded": ["C-4.1"] }, "wording_only": false } },
+      "lines": ["    clauses: C-4.1 reworded"]
+    },
+    {
+      "name": "a contract with its wording changed only",
+      "proves": "C-5.6",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "## 4. A theme", "", "- **C-4.1** the first promise", "- **C-4.2** the second promise", "", "a line of wording"] } },
+        { "at": "2026-11-12T09:00:00+01:00", "files": { "a/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "## 4. A theme", "", "- **C-4.1** the first promise", "- **C-4.2** the second promise", "", "a line of wording, reworded"] } }
+      ],
+      "expect": { "a/CONTRACT.md": { "state": "changed since", "clauses": { "added": [], "removed": [], "reworded": [] }, "wording_only": true } },
+      "lines": ["    clauses: none changed, the wording only"]
+    },
+    {
+      "name": "a page that is no contract says no clause",
+      "proves": "C-5.6",
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "- **C-4.1** a line that looks like a clause"] } },
+        { "at": "2026-11-12T09:00:00+01:00", "files": { "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "- **C-4.1** a line that looks like a clause, reworded"] } }
+      ],
+      "expect": { "a/README.md": { "state": "changed since", "clauses": null, "wording_only": false } }
+    },
+    {
+      "name": "the pages listed: the parts' three, docs, a tracked page with the line; none without it, none generated, none untracked",
+      "proves": "C-5.1",
+      "table": ["parts:", "  a: { stage: design, edits: open, path: a }", "  b: { stage: design, edits: open, path: b }", "  c: { stage: design, edits: open, path: \"-\" }"],
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": {
+          "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: not yet", "", "the page"],
+          "a/CONTRACT.md": ["# a contract", "", "no review line here"],
+          "a/VALIDATION.md": ["# a validation", "", "> generated by a fixture 2026-11-10 from the steps · regenerated on request"],
+          "b/README.md": ["# b", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10", "", "the page"],
+          "docs/guide.md": ["# a guide", "", "no review line here"],
+          "docs/state.md": ["# a state", "", "> generated by a fixture 2026-11-10 from the table · regenerated on request"],
+          "notes/followed.md": ["---", "name: a front matter", "---", "# followed", "", "> written by a fixture 2026-11-01 · reviewed by the owner: not yet", "", "a page"],
+          "notes/plain.md": ["# plain", "", "no review line here"],
+          "notes/late.md": ["# late", "", "", "", "", "", "", "", "", "", "> written by a fixture 2026-11-01 · reviewed by the owner: not yet"] } },
+        { "files": { "notes/untracked.md": ["# untracked", "", "> written by a fixture 2026-11-01 · reviewed by the owner: not yet"] } }
+      ],
+      "listed": ["a/CONTRACT.md", "a/README.md", "b/README.md", "docs/guide.md", "notes/followed.md"],
+      "absent": ["a/VALIDATION.md", "docs/state.md", "notes/plain.md", "notes/late.md", "notes/untracked.md"],
+      "expect": {
+        "a/CONTRACT.md": { "state": "no line", "text": "no line", "mark": "-", "date": null },
+        "docs/guide.md": { "state": "no line" },
+        "notes/followed.md": { "state": "never reviewed" },
+        "b/README.md": { "state": "reviewed", "mark": "read" }
+      }
+    },
+    {
+      "name": "the rows and the summary: each state counted, an answered page by its text, an unknown mark apart",
+      "proves": "C-5.2, C-5.3",
+      "table": ["parts:", "  a: { stage: design, edits: open, path: a }", "  b: { stage: design, edits: open, path: b }"],
+      "steps": [
+        { "at": "2026-11-10T10:00:00+01:00", "files": {
+          "a/README.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "the page"],
+          "a/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "- **C-1.1** a promise"],
+          "a/VALIDATION.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: not yet", "", "the steps"],
+          "b/README.md": ["# b", "", "no review line here"],
+          "b/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, understood", "", "- **C-1.1** a promise"],
+          "b/VALIDATION.md": ["# a page", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, to rework", "", "the steps", "// a question", "// Lorisse: an answer"] } },
+        { "at": "2026-11-12T09:00:00+01:00", "files": {
+          "a/CONTRACT.md": ["# a contract", "", "> written by a fixture 2026-11-01 · reviewed by the owner: 2026-11-10, ok", "", "- **C-1.1** a promise, wider"] } }
+      ],
+      "summary": "reviews: 6 file(s): 3 reviewed, 1 changed since, 1 never reviewed, 1 no line, 1 unknown mark",
+      "rows": [
+        ["a/CONTRACT.md", "changed since 2026-11-10 (last change 2026-11-12)", "ok"],
+        ["a/README.md", "reviewed 2026-11-10", "ok"],
+        ["a/VALIDATION.md", "never reviewed", "-"],
+        ["b/CONTRACT.md", "reviewed 2026-11-10", "-"],
+        ["b/README.md", "no line", "-"],
+        ["b/VALIDATION.md", "answered", "to rework"]
+      ],
+      "lines": ["    clauses: C-1.1 reworded"]
+    }
+  ]
+}

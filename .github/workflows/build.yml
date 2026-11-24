@@ -1,15 +1,15 @@
-# Builds and tests the program for a Mac (both Apple chips and Intel, one file)
-# and for Windows, then commits the two programs to server/ when they changed.
-# A plugin installed from GitHub carries only the files of the repository, so the
-# built programs live in it; this recipe is what makes them, from src/ alone.
+# Tests the workspace, then builds the program of crates/tools for a Mac (both Apple chips
+# and Intel, one file) and for Windows, and commits the two programs to plugin/server/ when
+# they changed. A plugin installed from GitHub carries only the files of the repository, so
+# the built programs live in it; this recipe is what makes them, from the source alone.
 name: build
 
 on:
   push:
     branches: [main]
     paths:
-      - "src/**"
-      - "tests/**"
+      - "crates/**"
+      - "sample/**"
       - "Cargo.toml"
       - "Cargo.lock"
       - ".github/workflows/build.yml"
@@ -29,14 +29,16 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v5
+      - name: The compiler (the store needs Rust 1.85 or newer)
+        run: rustc --version
       - name: Add the two Mac targets
         run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
       - name: Tests
-        run: cargo test --locked
+        run: cargo test --workspace --locked
       - name: Build for Apple silicon
-        run: cargo build --release --locked --target aarch64-apple-darwin
+        run: cargo build --release --locked -p lorisse --target aarch64-apple-darwin
       - name: Build for Intel
-        run: cargo build --release --locked --target x86_64-apple-darwin
+        run: cargo build --release --locked -p lorisse --target x86_64-apple-darwin
       - name: Join both into one program
         run: |
           mkdir -p out
@@ -56,10 +58,12 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v5
+      - name: The compiler (the store needs Rust 1.85 or newer)
+        run: rustc --version
       - name: Tests
-        run: cargo test --locked
+        run: cargo test --workspace --locked
       - name: Build
-        run: cargo build --release --locked
+        run: cargo build --release --locked -p lorisse
       - uses: actions/upload-artifact@v4
         with:
           name: lorisse-windows
@@ -78,18 +82,18 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: lorisse-mac
-          path: server
+          path: plugin/server
       - uses: actions/download-artifact@v4
         with:
           name: lorisse-windows
-          path: server
+          path: plugin/server
       - name: Commit the two programs when they changed
         run: |
-          chmod +x server/lorisse
+          chmod +x plugin/server/lorisse
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add server/lorisse server/lorisse.exe
-          git update-index --chmod=+x server/lorisse
+          git add plugin/server/lorisse plugin/server/lorisse.exe
+          git update-index --chmod=+x plugin/server/lorisse
           if git diff --cached --quiet; then
             echo "The programs did not change."
             exit 0

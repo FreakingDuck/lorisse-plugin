@@ -1,13 +1,13 @@
 {
   "name": "lorisse",
-  "description": "Lorisse's own marketplace: this folder is its one plugin.",
+  "description": "Lorisse's own marketplace: its one plugin is the folder plugin/.",
   "owner": {
     "name": "FreakingDuck"
   },
   "plugins": [
     {
       "name": "lorisse",
-      "source": "./",
+      "source": "./plugin",
       "description": "A memory that is yours, in plain files. First version: one tool, to see that Lorisse answers.",
       "homepage": "https://lorisse.ai",
       "repository": "https://github.com/FreakingDuck/lorisse-plugin"

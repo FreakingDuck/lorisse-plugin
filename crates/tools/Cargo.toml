@@ -1,0 +1,12 @@
+[package]
+name = "lorisse"
+version = "0.0.1"
+edition = "2021"
+description = "Lorisse's first plugin program: an MCP server over stdio with one tool, where"
+publish = false
+
+[[bin]]
+name = "lorisse"
+path = "src/main.rs"
+
+[dependencies]

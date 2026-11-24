@@ -1,0 +1,69 @@
+# status.yaml — the owner's table: one row per part (a folder with README · CONTRACT · VALIDATION
+# on top), its stage, what the assistant may do there, what comes next. The rows come first; what
+# the columns mean is explained at the bottom of this file.
+
+parts:
+  # design: being built, nothing is frozen
+  keeper:              { stage: design,    edits: open,   next: "step 4 of five: the rules of filing written as the keeper's skill (what is filed at once, what stays a proposal, what is never done); its three pages written first", last: "one skill of three lines since the first try: it tells Claude to call the tool where", what: "the skills: the pages that tell Claude when to use the tools and the rules of filing", changed: 2026-11-24, path: plugin/skills }
+  store:               { stage: design,    edits: open,   next: "an open that writes nothing in the folder (the plugin's C-5.1): today opening it writes its index and its counters; its code and its tests cleaned of every name and note of the setup it came from, before the repository's next push; its contract grows with what the plugin relies on", last: "copied from the desktop app's store, its tests green here as there, plus one on the sample folder; its three pages written short for the plugin", what: "the one door to the memory folder: every read of a piece, and later every write, its number, its commit, its undo", changed: 2026-11-24, path: crates/store }
+  tools:               { stage: design,    edits: open,   next: "the reading tools, the memory first: the folder found, where, search, read, links, on the sample folder, in one pass on his go; tasks, the inbox, the questions to check and what to do next are left out for now, his word; its three pages", last: "0.0.1: one tool, where; built for Windows and for a Mac by GitHub at each push", what: "the program the Claude app starts on the machine: it gives Claude the tools and nothing else", changed: 2026-11-24, path: crates/tools }
+  plugin:              { stage: design,    edits: open,   next: "his read of the contract after his notes of 2026-11-24 (the tools moved to the README, what now and the task lists out, the page kept short until the whole exists); two threads still open in it, on several repositories and on 'for now'; a scan of the store's copied fixtures for any real name before the next push; his walk in Cowork on Windows; the install on a Mac", last: "the barebone: plugin/ is what the Claude app installs, a workspace of two crates, the sample folder, the method's copies and the gate, green; 0.0.1 public on GitHub and on lorisse.ai, installed on his Windows from GitHub, it answered", what: "Lorisse as a plugin of the Claude app: a memory that is yours, in plain files, kept by rules", changed: 2026-11-24, path: ., method: r5 }
+
+# ── What the columns mean ─────────────────────────────────────────────────────────────────────
+# The assistant reads this table first; a hook enforces `edits` on every file change
+# (guard_edits.ps1, user-level). Written for the owner coming back: a row reads
+# stage first, then what the assistant may do there, then what comes next; the rest is the
+# record. The groups follow the stages, in the order a part lives through them, and the rows are
+# alphabetical within a group.
+#
+#   stage:       design    → being built: nothing is frozen, clause ids, step numbers, file
+#                            formats and keys change freely, no legacy is kept, no "retired" marks
+#                desk      → built, its README / CONTRACT / VALIDATION marked ok by the owner, the
+#                            desk steps run (the run log); only the bench is missing
+#                validated → the owner ran it on the bench and locked it: clause ids and step
+#                            numbers never change again; a format may still break, with its
+#                            note in the session file; a project without a bench: a fresh
+#                            machine, walked by another user
+#                released  → in production: a wire, a file or a key changes only with a
+#                            migration or a documented break
+#                parked    → exists, not wanted now; `next` says why and when to come back
+#   edits:       open   → the assistant edits freely
+#                auto   → open, and a scheduled run may build it on an `agent/<name>` branch
+#                         in a worktree; the owner merges or deletes the branch
+#                ask    → the first edit under the path in a session is a permission prompt;
+#                         the owner's yes covers the row for that session (the hook keeps a
+#                         marker under %LOCALAPPDATA%\lorisse-grants)
+#                locked → refused, whatever the request; only this row unlocks it. A feature on
+#                         a locked part is a design pass first (the contract clause, the
+#                         VALIDATION step, then the code and its tests), never a patch.
+#   Under a lock two additions pass, asked as an `ask` edit is, and nothing else:
+#     a new row at the end of the run log of the part's VALIDATION.md (a run changes no code)
+#     a new line under "Wanted, not promised yet" of its CONTRACT.md (a wish changes no promise)
+#   Nothing is changed or removed under a lock.
+#   next:        what comes next, short, the clauses split by "; " (the page shows at most four
+#                as bullets), or why the row is as it is; "" when nothing
+#   last:        what came last, the clauses split by "; " the same way; absent = nothing said
+#   what:        one line in plain words on what the part is, written by the assistant for the
+#                owner; absent = no line under the part's name on the page
+#   changed:    the date this row last changed
+#   path:        what the hook guards; a file under no row is open
+#   method:      r<n>, the method's revision the part was last aligned to (the `revision:` line
+#                of lorisse/method/README.md); absent = never aligned, the page shows it behind
+#   review:      the owner's mark on each of the part's three documents, one word each
+#                (read, ok, to rework, not yet); written by his reader on his click;
+#                the pages' review lines stay the source
+# The review state is the pages' own: the owner's marks on the three documents' review
+# lines (check_reviews.ps1 reports them) and VALIDATION.md's run log for the by-hand runs.
+# The review: field is a copy his reader writes, so the state can be read without it.
+# Where what is still to do on a part is written:
+#   a wish, something the part could do one day
+#       → its CONTRACT.md, under "Wanted, not promised yet"
+#   an issue found on a locked part, what would be changed today if it were not locked
+#       → the project's backlog; it is fixed when the part is reopened, then leaves the backlog
+#   a step nobody has run yet
+#       → nothing more to write: its empty box in VALIDATION.md is enough
+# The backlog is a page of the project, one row an issue, tied to its part. It is not the
+# assistant's to-do list, and not a second table of what is owed.
+# A "-" (quoted: a bare dash is a list to YAML) means the column does not apply. One row per
+# line, whatever the group: the hook reads `path` and `edits` off the line. When a row's
+# stage changes, move it to its group.

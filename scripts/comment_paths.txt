@@ -1,0 +1,2 @@
+# The paths the short-comment rule sweeps beside the table's parts (scripts/check_comments.ps1).
+crates/

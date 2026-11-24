@@ -1,0 +1,11 @@
+# Line endings travel with the repository, not with a machine's git settings.
+* text=auto
+
+# The built programs are never touched as text. The Mac one has no extension.
+*.exe -text
+plugin/server/lorisse -text
+
+# The fixtures and the sample are data the tests compare byte for byte: LF on every
+# platform. A Windows checkout's CRLF turns the store's tests red.
+crates/*/fixtures/** text eol=lf
+sample/** text eol=lf

@@ -1,0 +1,8 @@
+# The sample memory folder's settings: every word of the folder is invented, made for the checks.
+kinds: [fact, decision, preference, idea, need]
+memory_statuses: [raw, sorted, retired]
+task_statuses: [todo, in-progress, waiting, done, retired]
+priorities: [high, medium, low]
+categories: [home, garden, admin]
+sources: [phone, chat, agent, console, app]
+person_sections: [What I know, How I handle]
