@@ -1,3 +1,7 @@
+# Builds and tests the program for a Mac (both Apple chips and Intel, one file)
+# and for Windows, then commits the two programs to server/ when they changed.
+# A plugin installed from GitHub carries only the files of the repository, so the
+# built programs live in it; this recipe is what makes them, from src/ alone.
 name: build
 
 on:
