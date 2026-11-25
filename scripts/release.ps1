@@ -47,14 +47,17 @@ $ErrorActionPreference = 'Stop'
 if (-not $pushed) { Stop-Release 'no pushed commit found' }
 $until = (Get-Date).AddMinutes($Minutes)
 $ended = $null
+$missed = 0
 while ((Get-Date) -lt $until) {
     try {
         $runs = Invoke-RestMethod -Uri ('https://api.github.com/repos/{0}/actions/runs?per_page=5' -f $repo) -Headers @{ 'User-Agent' = 'release-script' }
         $run = @($runs.workflow_runs | Where-Object { $_.head_sha -eq $pushed }) | Select-Object -First 1
         if ($run -and $run.status -eq 'completed') { $ended = $run; break }
         if (-not $run) {
-            # No build for this commit: nothing of the program changed, or the programs are in already.
-            $ended = 'none'; break
+            # GitHub takes a moment to start a build. After two minutes without one, there is
+            # none for this commit: nothing of the program changed, or the programs are in.
+            $missed++
+            if ($missed -ge 4) { $ended = 'none'; break }
         }
     } catch { }
     Start-Sleep -Seconds 30
@@ -63,6 +66,19 @@ if ($null -eq $ended) { Stop-Release ('GitHub''s build did not end within {0} mi
 if ($ended -eq 'none') {
     Write-Host 'build: none for the pushed commit'
 } elseif ($ended.conclusion -ne 'success') {
+    # Say which machine and which step failed, so nobody has to go and look.
+    try {
+        $jobs = Invoke-RestMethod -Uri $ended.jobs_url -Headers @{ 'User-Agent' = 'release-script' }
+        foreach ($job in @($jobs.jobs | Where-Object { $_.conclusion -ne 'success' })) {
+            $steps = @($job.steps | Where-Object { $_.conclusion -eq 'failure' } | ForEach-Object { $_.name }) -join ', '
+            Write-Host ('  {0}: {1}; failed step(s): {2}' -f $job.name, $job.conclusion, $steps)
+            if ($job.conclusion -eq 'failure') {
+                $notes = Invoke-RestMethod -Uri ('https://api.github.com/repos/{0}/check-runs/{1}/annotations' -f $repo, $job.id) -Headers @{ 'User-Agent' = 'release-script' }
+                foreach ($note in @($notes)) { Write-Host ('    ' + $note.message) }
+            }
+        }
+        Write-Host ('  the run: ' + $ended.html_url)
+    } catch { }
     Stop-Release ('GitHub''s build ended as ' + $ended.conclusion)
 } else {
     Write-Host 'build: ended well'

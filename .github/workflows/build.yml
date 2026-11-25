@@ -34,7 +34,15 @@ jobs:
       - name: Add the two Mac targets
         run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
       - name: Tests
-        run: cargo test --workspace --locked
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --workspace --locked 2>&1 | tee test.log
+      - name: Say which tests failed
+        if: failure()
+        shell: bash
+        run: |
+          grep -E "^test .* FAILED$|panicked at|^ +left:|^ +right:|^error: test failed" test.log | head -n 20 | while IFS= read -r line; do echo "::error::$line"; done
       - name: Build for Apple silicon
         run: cargo build --release --locked -p lorisse --target aarch64-apple-darwin
       - name: Build for Intel
@@ -61,7 +69,15 @@ jobs:
       - name: The compiler (the store needs Rust 1.85 or newer)
         run: rustc --version
       - name: Tests
-        run: cargo test --workspace --locked
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --workspace --locked 2>&1 | tee test.log
+      - name: Say which tests failed
+        if: failure()
+        shell: bash
+        run: |
+          grep -E "^test .* FAILED$|panicked at|^ +left:|^ +right:|^error: test failed" test.log | head -n 20 | while IFS= read -r line; do echo "::error::$line"; done
       - name: Build
         run: cargo build --release --locked -p lorisse
       - uses: actions/upload-artifact@v4
