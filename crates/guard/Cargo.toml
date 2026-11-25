@@ -1,0 +1,12 @@
+[package]
+name = "lorisse-guard"
+version = "0.1.0"
+edition = "2021"
+description = "Lorisse's guard: before a tool call, pass, ask or never, by the rules of the memory folder"
+publish = false
+
+[dependencies]
+# The call the hook receives and the answer it prints.
+serde_json = "1"
+# `rules.yaml`.
+serde_yaml_ng = "0.10"

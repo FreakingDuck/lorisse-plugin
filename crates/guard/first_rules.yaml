@@ -1,0 +1,8 @@
+# The plugin's first set of rules: what holds while the memory folder has no rules.yaml.
+# Copy it to the root of your memory folder as rules.yaml and change it there.
+# Three lists: pass (runs without a prompt), ask (the Claude app asks you), never (refused).
+# Under each list, a service and its tools. A tool in two lists takes the strictest.
+pass:
+  lorisse: [where, open, search, read, links, remember, note, link, undo]
+ask: {}
+never: {}
