@@ -1,7 +1,7 @@
 {
   "name": "lorisse",
   "displayName": "Lorisse",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Your own memory, in plain files on your machine. Lorisse finds what you noted, files what you ask it to remember, and every change can be taken back.",
   "author": {
     "name": "Lorisse",
