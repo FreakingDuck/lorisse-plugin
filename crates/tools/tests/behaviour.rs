@@ -165,7 +165,11 @@ fn start_when_this_machine_already_has_a_memory_folder_names_it_and_makes_nothin
     let by_setting = ask(&[(SETTING, &setting), (HOME, &home_text)], None, &[("start", r#"{"name":"Sam"}"#)]);
     assert_eq!(by_setting[0], format!("This machine already has a memory folder: {shown}, found by the plugin's setting; nothing was made."));
     let by_session = ask(&[(HOME, &home_text)], Some(copy.path()), &[("start", "{}")]);
-    assert!(by_session[0].starts_with(&format!("This machine already has a memory folder: {shown}, found by the folder this session")), "{}", by_session[0]);
+    // The session's folder is said as the system resolves it (a Mac's temporary folder sits
+    // behind a link), so the folder is known here by its own name, not by its whole path.
+    let name = copy.path().file_name().unwrap().to_string_lossy().into_owned();
+    assert!(by_session[0].starts_with("This machine already has a memory folder: "), "{}", by_session[0]);
+    assert!(by_session[0].contains(&format!("{name}, found by the folder this session")), "{}", by_session[0]);
     home.write(".lorisse-folder", &format!("{setting}\n"));
     let before = snapshot(home.path());
     let elsewhere = Temp::empty("already_cwd");
