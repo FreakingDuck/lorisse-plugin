@@ -12,6 +12,7 @@ The one door to a memory folder: the only code that reads a piece's file, for th
 
 - Reads a memory folder: one piece, a list, a search, the links.
 - Keeps what is confidential from an opening that has no right to it.
+- Opens a folder for reading only, without writing in it.
 
 Does not:
 
@@ -36,17 +37,24 @@ We want a part the person marked confidential to stay out of every answer, not o
 
 - **C-5.1** An opening without the confidential right does not see a confidential piece: it is not read, not listed, not found by a search and not counted.
 
-## 6. Behaviour
+## 6. An opening for reading
+
+We want a folder to be read without a trace, so that a question is safe on a person's real folder.
+
+- **C-6.1** An opening for reading writes no file in the folder, creates none, and starts no other program.
+- **C-6.2** On an opening for reading, every call that would write is refused, and the refusal says the opening only reads.
+
+## 7. Behaviour
 
 | Situation | Reaction |
 |---|---|
 | a piece whose header cannot be read | the folder still opens; the check names the file |
+| an opening for reading on a folder that is not there | refused; nothing is created |
 
-## 7. Wanted, not promised yet
+## 8. Wanted, not promised yet
 
-- An opening that writes nothing in the folder.
 - The promises of writing: a number never reused, one change one commit, the undo, the proposals.
 
-## 8. Non-goals
+## 9. Non-goals
 
 A screen, a model, a network connection.

@@ -6,14 +6,14 @@ Human file; format: `docs/contract_spec.md`.
 
 | Last run | Where it stands | Waiting on |
 |---|---|---|
-| never | The reading tools are being built: no step can be walked yet. | The reading pass, out 2026-11-25. |
+| never by you | The reading tools are built and green in the gate. Claude, run once without a person on the sample, found the boiler's pieces, read one with its link, and was told the confidential one does not exist. | Your walk of H-1 to H-4, once the new version is on GitHub and updated in your Claude panel. |
 
 This part is validated two ways:
 
 - **By the gate**: every tool is asked directly, without Claude, on the sample folder, and the sample is compared before and after. Promise by promise, it is in the table at the end.
 - **By hand**: the steps below, in the Claude panel of VS Code, on a copy of the sample: what only a person can see, Claude asking Lorisse by itself and saying what it answers.
 
-The sample is a small memory folder kept in the repository, every word of it invented: four memories, one person, two tags, one memory in a part marked confidential, and a few tasks and a raw piece kept for the later steps. Its dates are far behind or far ahead, so the walk reads the same any day.
+The sample is a small memory folder kept in the repository, every word of it invented: four memories, one person, two tags, one memory in a part marked confidential, a second repository named `club` with one memory, and a few tasks and a raw piece kept for the later steps. With two repositories, each piece is said with its own: `M-0001 [home]`. Its dates are far behind or far ahead, so the walk reads the same any day.
 
 ## Before you start
 
@@ -34,7 +34,7 @@ The sample is a small memory folder kept in the repository, every word of it inv
 - [ ] **H-2** A memory is found, read, and followed to what it links to.
   It proves C-6.2 as far as a person sees it, and that the three questions work through Claude: a memory is of use only if it comes back when asked.
   1. Type "Find boiler".
-     - See: "The boiler's contract" and "Boiler serviced in March".
+     - See: "The boiler's contract", "Boiler serviced in March", and the person Sam Example.
   2. Type "Read M-0002 and say what it links to".
      - See: the text of "Boiler serviced in March", and its link to "The boiler's contract".
 
@@ -52,7 +52,7 @@ The sample is a small memory folder kept in the repository, every word of it inv
 
 - [ ] **H-5** Lorisse answers from the folder you gave in the plugin's setting.
   It proves C-4.1: your folder is found whatever folder the session is opened on.
-  - Waits on: how the setting is given from the Claude panel, not tried yet.
+  - Waits on: how the setting is given. In Claude Code the folder is asked when the plugin is enabled, and is a row of `/config`: read on Anthropic's page, not tried in the panel. For the desktop app the page says nothing.
 
 ## For the gate: one row a promise
 
