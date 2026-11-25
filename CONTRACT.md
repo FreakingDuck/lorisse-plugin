@@ -115,6 +115,8 @@ We want a document kept with what it is about: the quote with the works, the let
 - Changing or retiring a memory's text, filing a person; proposals for anything heavy (merge two pieces, move one, rename a tag).
 - Files: with the Claude app's own connector to a file service, Lorisse files the documents that arrive and keeps a memory of each. No connector of ours.
 - A large file kept by reference: the memories live in git, the large documents in the person's file service; `attach` of a file past the limit, or of one already in that service's folder, keeps its path instead of a copy.
+- A first day that does not start empty: what another assistant already remembers of the person, exported by them as dated lines, is filed line by line as memories with their dates; the lines that are instructions are proposed for the intro, never obeyed as such.
+- The way out: the whole memory given back as one page of dated lines by category, so a person can leave with it or hand it to another assistant.
 - One memory for life and for the work on code: the assistant's own notes of a project as one more repository of the memory folder.
 - The same memory from the phone and the plain chat: the program on a server of the person's, the memories exchanged by git.
 - A release that arrives whole: the card, the version and the programs together, never one before the other; and a check after each release that an installed copy says the new version.
