@@ -2,6 +2,7 @@
 //! reading tools (`where`, `open`, `search`, `read`, `links`), which write nothing, and four
 //! writing tools (`remember`, `note`, `link`, `undo`), each at most one commit by Lorisse in the
 //! person's memory folder, through the store. Each tool is declared read-only or writing.
+//! Started with the word `guard`, it is the plugin's guard instead: one tool call judged.
 
 mod folder;
 mod json;
@@ -9,13 +10,36 @@ mod tools;
 mod writing;
 
 use json::Json;
-use std::io::{self, BufRead, Write};
+use std::io::{self, BufRead, Read, Write};
 use std::panic::{self, AssertUnwindSafe};
 
 const NAME: &str = "lorisse";
 const DEFAULT_PROTOCOL: &str = "2025-06-18";
 
+/// The guard mode: what the Claude app sends before a tool call comes in on stdin, and at most
+/// one answer goes out. It always ends well: a guard that fails leaves the call to the app.
+fn guard() {
+    let mut received = String::new();
+    if io::stdin().read_to_string(&mut received).is_err() {
+        return;
+    }
+    let answer = panic::catch_unwind(|| {
+        let folder = match folder::find() {
+            folder::Folder::At(path, _) => Some(path),
+            _ => None,
+        };
+        lorisse_guard::answer(&received, folder.as_deref())
+    });
+    if let Ok(Some(answer)) = answer {
+        println!("{answer}");
+    }
+}
+
 fn main() {
+    if std::env::args().nth(1).as_deref() == Some("guard") {
+        guard();
+        return;
+    }
     let stdin = io::stdin();
     let stdout = io::stdout();
     let mut out = stdout.lock();

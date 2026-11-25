@@ -19,7 +19,7 @@
       5. the plugin's validation        claude plugin validate, on the root (the marketplace)
                                         and on plugin/, with the newest claude.exe of the VS Code
                                         extension; none found: skipped, never red
-      6. the package                    plugin/ holds only the card, .mcp.json, skills/, server/
+      6. the package                    plugin/ holds only the card, .mcp.json, skills/, server/, hooks/
       7. the versions                   the marketplace entry names no version, the card one
       8. the scripts                    every .ps1 of the repository is plain ASCII and opens on
                                         a help block (<# with .SYNOPSIS)
@@ -138,7 +138,7 @@ if (-not $claude) {
 }
 
 # 6. The package: plugin/ holds only what the Claude app installs.
-$allowed = @('.claude-plugin', '.mcp.json', 'skills', 'server')
+$allowed = @('.claude-plugin', '.mcp.json', 'skills', 'server', 'hooks')
 $plugin = Join-Path $repo 'plugin'
 $extra = @()
 if (Test-Path -LiteralPath $plugin) {
@@ -150,7 +150,7 @@ if (Test-Path -LiteralPath $plugin) {
     $missing = $allowed
 }
 if ($extra.Count -eq 0 -and $missing.Count -eq 0) {
-    Write-Check 'ok' 'package' 'plugin/ holds the card, .mcp.json, skills/, server/ and nothing else'
+    Write-Check 'ok' 'package' 'plugin/ holds the card, .mcp.json, skills/, server/, hooks/ and nothing else'
 } else {
     Write-Check 'red' 'package' ('more: [{0}], missing: [{1}]' -f ($extra -join ', '), ($missing -join ', '))
 }

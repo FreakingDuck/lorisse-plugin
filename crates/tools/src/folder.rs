@@ -8,6 +8,9 @@ use lorisse_store::CONFIG_FILE;
 /// The variable the plugin's setting reaches the program as.
 pub const SETTING: &str = "LORISSE_MEMORY_FOLDER";
 
+/// The same setting as the Claude app may give it to a plugin's hook.
+const OPTION: &str = "CLAUDE_PLUGIN_OPTION_MEMORY_FOLDER";
+
 /// The variable the Claude app gives with the session's folder.
 const PROJECT: &str = "CLAUDE_PROJECT_DIR";
 
@@ -86,7 +89,7 @@ pub fn find() -> Folder {
             return Folder::At(path, Found::Session);
         }
     }
-    match given(SETTING).map(PathBuf::from) {
+    match given(SETTING).or_else(|| given(OPTION)).map(PathBuf::from) {
         Some(path) if is_memory_folder(&path) => Folder::At(path, Found::Setting),
         Some(path) => Folder::NotMemory(path),
         None => Folder::None,

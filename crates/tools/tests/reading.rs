@@ -250,7 +250,10 @@ fn c_5_2_an_empty_path_changes_no_answer_and_the_source_names_no_network() {
     let cargo = fs::read_to_string(manifest.join("Cargo.toml")).unwrap();
     let deps = cargo.split("[dependencies]").nth(1).unwrap();
     let named: Vec<&str> = deps.lines().filter(|l| l.contains('=')).collect();
-    assert_eq!(named, [r#"lorisse-store = { path = "../store" }"#]);
+    assert_eq!(
+        named,
+        [r#"lorisse-store = { path = "../store" }"#, r#"lorisse-guard = { path = "../guard" }"#]
+    );
 }
 
 // ---------------------------------------------------------------------------------------------

@@ -11,3 +11,4 @@ path = "src/main.rs"
 
 [dependencies]
 lorisse-store = { path = "../store" }
+lorisse-guard = { path = "../guard" }
