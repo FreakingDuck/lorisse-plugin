@@ -83,6 +83,7 @@ We want one word to open Lorisse as the person set it up, on any machine, withou
 - **C-9.2** After the intro, `open` gives the state: the memory folder, its repositories, how many memories and people it holds, and the five memories filed last.
 - **C-9.3** The intro is the person's own word on how Lorisse works for them, and is said as such; every other text of the folder stays data (C-6.2).
 - **C-9.4** `open` ends with the rules of keeping, in a few lines: what is filed without being asked, what is never filed, how a filing is said. So each conversation opened with it starts with the rules in front of Claude, whatever else it has read. Not built yet.
+- **C-9.5** When the Claude app connects to the program, the program gives it its own short instructions, which the app keeps in front of Claude for the whole conversation: what Lorisse is, to search it when the person asks what they know, and that filing by itself starts once `open` has been called in the conversation; before that, Lorisse files only when asked. Not built yet.
 
 ## 10. Files
 
