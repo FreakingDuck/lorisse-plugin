@@ -69,7 +69,8 @@ We want every answer short enough for a conversation, and honest when it is cut.
 
 - Writing: a memory, a note, a link, each one step in the folder's history, with its undo; proposals for anything heavy.
 - Tasks, the inbox, the questions to check, what changed since the person last looked.
-- The setup of the folders: a new person's empty folder made ready, a memory kept by subject or by project.
+- A simple way to add the folder: a new person's empty folder made ready in one step, a memory kept by subject or by project.
+- The folder stays local unless the person wants more: a short tutorial to keep it on GitHub, never required. The plugin itself neither pulls nor pushes.
 - The keeper's rules of filing, and one skill a subject.
 - The same answers in the desktop app's Cowork, on Windows and on a Mac: built for, not tried.
 
