@@ -36,9 +36,9 @@ Lorisse reads a memory folder, files in it, and opens a conversation with your o
 |---|---|---|
 | 1. the way in | one tool, `where`: the Claude app accepts the plugin and Claude calls the program by itself | done, version 0.0.1 |
 | 2. reading | open your memory folder: search your memories, read one, follow its links | done, version 0.1.0 |
-| 3. writing | file a memory, a note, a link; each change is one commit in the folder's history, and can be taken back. `open` starts a conversation with your intro. | built, version 0.2.0 |
+| 3. writing | file a memory, a note, a link; each change is one commit in the folder's history, and can be taken back. `plop` starts a conversation with your intro. | built, version 0.2.0 |
 | 4. the guard | your rules, in a file of your folder: what passes alone, what asks, what never happens, for Lorisse's tools and for the Claude app's connectors | built, version 0.2.0 |
-| 5. the files | a document kept with the memory it is about; reading a memory names its files, a search finds a memory by a file's name. The program gives Claude its rules when it connects, and `open` repeats them. | built, version 0.3.0 |
+| 5. the files | a document kept with the memory it is about; reading a memory names its files, a search finds a memory by a file's name. The program gives Claude its rules when it connects, and `plop` repeats them. | built, version 0.3.0 |
 | 6. the first day | a simple way to add the folder: an empty one made ready for a new person | after |
 | 7. the keeper | the skill that holds the rules of filing: what is filed at once, what stays a proposal, what is never done | after |
 
@@ -60,7 +60,7 @@ What Claude can ask the program. Memories, people and tags are read; a task or a
 | `search` | a text | the memories, people and tags whose title, tags or text hold it, capitals ignored, a match in a title first: number, title, the line that matched. Ten at most. |
 | `read` | a number, a person's name or a tag's name | every field of the piece's header, then its text, cut past 6000 characters |
 | `links` | a number | the pieces it links to and the pieces that link to it, each with number and title; a link that leads to no piece is said as such |
-| `open` | nothing | your intro (the page `intro.md` at the root of your folder), then the state: the folder, its repositories, how many memories and people, the five filed last |
+| `plop` | nothing | your intro (the page `intro.md` at the root of your folder), then the state: the folder, its repositories, how many memories and people, the five filed last |
 | `remember` | a title and a text; a kind, tags, links and a repository if wanted | a new memory, filed as one commit; its number |
 | `note` | a number or a person's name, and a text | one dated line added at the end of the piece, as one commit |
 | `link` | two pieces | the first linked to the second, as one commit; a link already there changes nothing |

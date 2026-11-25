@@ -66,7 +66,7 @@ The sample is a small memory folder kept in the repository, every word of it inv
 
 - [ ] **H-8** One word opens Lorisse with your own intro.
   It proves C-9.1 and C-9.2: you set Lorisse up once, in a page of yours, and every conversation starts from it.
-  1. Type "Open Lorisse".
+  1. Type "plop".
      - See: the sample's intro, then the folder, its two repositories, the memories filed last, and the rules of keeping.
 
 - [ ] **H-9** A file is kept with the memory it belongs to.
@@ -114,7 +114,7 @@ For the gate, which checks that each promise of the contract has one row here, a
 | C-9.1 | the intro page given whole, changed between two calls, absent | 3 checks · output | H-8 |
 | C-9.2 | the state after the intro: the folder, the repositories, the counts, the five last | 1 check · output | H-8 |
 | C-9.3 | the intro said as the person's word, a memory's text as data | 1 check · output | — |
-| C-9.4 | the rules of keeping at the end of `open` | 1 check · output | H-8 |
+| C-9.4 | the rules of keeping at the end of `plop` | 1 check · output | H-8 |
 | C-9.5 | the instructions given when the app connects | 1 check · output | — |
 | C-10.1 | a file attached: its copy, its commit, the original untouched | 2 checks · writes | H-9 |
 | C-10.2 | the files of a piece named by `read`, with their paths | 1 check · output | H-9 |

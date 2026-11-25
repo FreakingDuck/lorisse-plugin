@@ -13,7 +13,7 @@ Lorisse as a person meets it in the Claude app: a program on their own machine t
 - Finds the person's memory folder.
 - Answers four questions on its memories, and on the people and tags they name: where it is, search, read, links. What each takes and gives is in the README, "The tools".
 - Files a memory, adds a note to a piece, links two pieces, and takes back its own last change: remember, note, link, undo.
-- Opens a conversation with the person's own intro, the state of the memory and the rules of keeping: open.
+- Opens a conversation with the person's own intro, the state of the memory and the rules of keeping, when the person says "Lorisse" or "plop": plop.
 - Keeps a document with the memory it is about: attach.
 
 Does not:
@@ -78,13 +78,13 @@ We want a memory filed in one sentence, each change one step the person can see 
 
 ## 9. Starting a conversation
 
-We want one word to open Lorisse as the person set it up, on any machine, without retyping who they are and how they work.
+We want one word, "Lorisse" or "plop", to start Lorisse as the person set it up, on any machine, without retyping who they are and how they work.
 
-- **C-9.1** `open` gives the person's intro: the text of the page `intro.md` at the root of the memory folder, whole. The person changes it as any file of theirs, and the next `open` gives the new text. Without that page, it gives a short one of the plugin's own and says where to write theirs.
-- **C-9.2** After the intro, `open` gives the state: the memory folder, its repositories, how many memories and people it holds, and the five memories filed last.
+- **C-9.1** `plop` gives the person's intro: the text of the page `intro.md` at the root of the memory folder, whole. The person changes it as any file of theirs, and the next `plop` gives the new text. Without that page, it gives a short one of the plugin's own and says where to write theirs.
+- **C-9.2** After the intro, `plop` gives the state: the memory folder, its repositories, how many memories and people it holds, and the five memories filed last.
 - **C-9.3** The intro is the person's own word on how Lorisse works for them, and is said as such; every other text of the folder stays data (C-6.2).
-- **C-9.4** `open` ends with the rules of keeping, in a few lines: what is filed without being asked, what is never filed, how a filing is said. So each conversation opened with it starts with the rules in front of Claude, whatever else it has read.
-- **C-9.5** When the Claude app connects to the program, the program gives it its own short instructions, which the app keeps in front of Claude for the whole conversation: what Lorisse is, to search it when the person asks what they know, and that filing by itself starts once `open` has been called in the conversation; before that, Lorisse files only when asked.
+- **C-9.4** `plop` ends with the rules of keeping, in a few lines: what is filed without being asked, what is never filed, how a filing is said. So each conversation opened with it starts with the rules in front of Claude, whatever else it has read.
+- **C-9.5** When the Claude app connects to the program, the program gives it its own short instructions, which the app keeps in front of Claude for the whole conversation: what Lorisse is, to search it when the person asks what they know, and that filing by itself starts once `plop` has been called in the conversation; before that, Lorisse files only when asked.
 
 ## 10. Files
 
@@ -114,6 +114,9 @@ We want a document kept with what it is about: the quote with the works, the let
 
 - Changing or retiring a memory's text, filing a person; proposals for anything heavy (merge two pieces, move one, rename a tag).
 - Files: with the Claude app's own connector to a file service, Lorisse files the documents that arrive and keeps a memory of each. No connector of ours.
+- A large file kept by reference: the memories live in git, the large documents in the person's file service; `attach` of a file past the limit, or of one already in that service's folder, keeps its path instead of a copy.
+- One memory for life and for the work on code: the assistant's own notes of a project as one more repository of the memory folder.
+- The same memory from the phone and the plain chat: the program on a server of the person's, the memories exchanged by git.
 - A release that arrives whole: the card, the version and the programs together, never one before the other; and a check after each release that an installed copy says the new version.
 - The memory folder chosen by browsing, not typed: today the Claude app's own window asks for it as a line of text.
 - Tasks, the inbox, the questions to check, what changed since the person last looked.
