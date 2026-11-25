@@ -1,6 +1,6 @@
 {
   "name": "lorisse",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A memory that is yours, in plain files. Reads your memory folder (where, open, search, read, links) and, when you ask, files a memory, a note or a link as one commit you can undo (remember, note, link, undo).",
   "author": {
     "name": "FreakingDuck"
