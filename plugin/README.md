@@ -4,7 +4,7 @@
 
 A memory that is yours, in files you can read.
 
-You talk with Claude as usual. When something matters (a decision, a date, what a person told you), you say "remember that", and Lorisse files it as a plain text file in a folder on your own machine. Later you ask "what do I know about the boiler?" and it finds it, reads it, and follows it to what it is linked to.
+You talk with Claude as usual. When something matters (a decision, a date, what a person told you), Lorisse files it by itself, as a plain text file in a folder on your own machine, and tells you in one line. Later you ask "what do I know about the boiler?" and it finds it, reads it, and follows it to what it is linked to.
 
 - **Yours**: plain files in your folder, readable without Lorisse. Nothing leaves your machine.
 - **Safe to try**: every change is one step in the folder's history, and "undo that" takes it back.

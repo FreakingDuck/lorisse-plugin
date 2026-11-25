@@ -63,7 +63,7 @@ We want every answer short enough for a conversation, and honest when it is cut.
 
 ## 8. Writing
 
-We want a memory filed in one sentence, each change one step the person can see in the folder's history and take back, and nothing else touched. When a tool is called is the keeper's: on the person's ask, or on their yes to an offer.
+We want a memory filed in one sentence, each change one step the person can see in the folder's history and take back, and nothing else touched. When a tool is called is the keeper's: by itself when the person says something worth keeping, each filing said in one line; the person's own intro can say otherwise.
 
 - **C-8.1** `remember` files a new memory: its title, its text, its kind, its tags, the pieces it links to. The answer gives its number, and `read` gives it back as it was filed.
 - **C-8.2** `note` adds one dated line at the end of the text of a memory or of a person; what was there is unchanged.
