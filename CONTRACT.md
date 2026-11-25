@@ -30,7 +30,7 @@ Does not:
 
 We want Lorisse to work on the one folder the person chose, and to say plainly when it has none.
 
-- **C-4.1** The program works on one folder, the memory folder: the one the person gave in the plugin's setting; without it, the folder the session is opened on, when that is a memory folder. It looks nowhere else.
+- **C-4.1** The program works on one folder, the memory folder: the folder the session is opened on, when that is a memory folder; otherwise the one the person gave in the plugin's setting. It looks nowhere else.
 - **C-4.2** With no memory folder, `where` says so and how to give one, every other tool answers that same sentence, and nothing is created.
 - **C-4.3** The folder is read at each call: a piece another program changed is seen at the next call.
 - **C-4.4** A memory folder can name several repositories in its config: their pieces are read as one memory, each said with the repository it comes from.

@@ -51,7 +51,7 @@ The sample is a small memory folder kept in the repository, every word of it inv
 ## On your own folder
 
 - [ ] **H-5** Lorisse answers from the folder you gave in the plugin's setting.
-  It proves C-4.1: your folder is found whatever folder the session is opened on.
+  It proves C-4.1: from a session opened on a code project, your folder is still found.
   - Waits on: how the setting is given. In Claude Code the folder is asked when the plugin is enabled, and is a row of `/config`: read on Anthropic's page, not tried in the panel. For the desktop app the page says nothing.
 
 ## For the gate: one row a promise
@@ -60,7 +60,7 @@ For the gate, which checks that each promise of the contract has one row here, a
 
 | Clause | What is checked | Automated | By hand |
 |---|---|---|---|
-| C-4.1 | the folder from the setting, else from the session | 3 checks · input (the setting, the session's folder, both) | H-1, H-5 |
+| C-4.1 | the session's folder when it is a memory folder, else the setting | 3 checks · input (the setting, the session's folder, both) | H-1, H-5 |
 | C-4.2 | no folder: one sentence, nothing created | 2 checks · output | — |
 | C-4.3 | a piece changed between two calls | 1 check · input | — |
 | C-4.4 | a second repository named in the sample's config | 2 checks · output (its piece found, its repository said) | — |

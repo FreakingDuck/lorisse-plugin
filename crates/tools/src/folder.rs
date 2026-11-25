@@ -1,5 +1,5 @@
-//! The memory folder: the plugin's setting first, else the folder the session is opened on when
-//! it is a memory folder; nowhere else. Read from the process's environment at each call.
+//! The memory folder: the folder the session is opened on when it is a memory folder, else the
+//! plugin's setting; nowhere else. Read from the process's environment at each call.
 
 use std::path::PathBuf;
 
@@ -25,7 +25,7 @@ pub enum Folder {
     At(PathBuf, Found),
     /// A folder given by the setting that is no memory folder.
     NotMemory(PathBuf),
-    /// No setting, and the session's folder is no memory folder.
+    /// The session's folder is no memory folder, and no setting.
     None,
 }
 
@@ -78,18 +78,17 @@ fn given(name: &str) -> Option<String> {
 
 /// The memory folder of this call.
 pub fn find() -> Folder {
-    if let Some(setting) = given(SETTING) {
-        let path = PathBuf::from(setting);
-        return match is_memory_folder(&path) {
-            true => Folder::At(path, Found::Setting),
-            false => Folder::NotMemory(path),
-        };
-    }
     let session = given(PROJECT)
         .map(PathBuf::from)
         .or_else(|| std::env::current_dir().ok());
-    match session {
-        Some(path) if is_memory_folder(&path) => Folder::At(path, Found::Session),
-        _ => Folder::None,
+    if let Some(path) = session {
+        if is_memory_folder(&path) {
+            return Folder::At(path, Found::Session);
+        }
+    }
+    match given(SETTING).map(PathBuf::from) {
+        Some(path) if is_memory_folder(&path) => Folder::At(path, Found::Setting),
+        Some(path) => Folder::NotMemory(path),
+        None => Folder::None,
     }
 }

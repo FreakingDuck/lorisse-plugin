@@ -11,7 +11,7 @@
     "memory_folder": {
       "type": "directory",
       "title": "Memory folder",
-      "description": "The folder that holds your memory. Leave it empty to use the folder the session is opened on, when it is a memory folder.",
+      "description": "The folder that holds your memory, used when the session is opened somewhere else. A session opened on a memory folder uses that folder.",
       "required": false
     }
   }

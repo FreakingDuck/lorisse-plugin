@@ -19,7 +19,7 @@ fn shown(path: &Path) -> String {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-4.1 the folder from the setting, else from the session (3 checks)
+// C-4.1 the session's folder when it is a memory folder, else the setting (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
@@ -54,7 +54,7 @@ fn c_4_1_without_the_setting_the_session_folder_is_taken() {
 }
 
 #[test]
-fn c_4_1_the_setting_wins_over_the_session_folder() {
+fn c_4_1_the_session_folder_wins_over_the_setting_when_it_is_a_memory_folder() {
     let given = Temp::sample("both_given");
     let session = Temp::sample("both_session");
     session.write("memories/M-0020.md", &memory("M-0020", "Only in the session's folder", "A lighthouse.", ""));
@@ -65,9 +65,9 @@ fn c_4_1_the_setting_wins_over_the_session_folder() {
         Some(session.path()),
         &[("where", "{}"), ("search", r#"{"text":"lighthouse"}"#)],
     );
-    assert!(got[0].contains(&shown(given.path())), "{}", got[0]);
-    assert!(got[0].contains("the plugin's setting"), "{}", got[0]);
-    assert!(!got[1].contains("M-0020"), "{}", got[1]);
+    assert!(got[0].contains(&shown(session.path())), "{}", got[0]);
+    assert!(got[0].contains("the folder this session is opened on"), "{}", got[0]);
+    assert!(got[1].contains("M-0020"), "{}", got[1]);
 }
 
 // ---------------------------------------------------------------------------------------------

@@ -45,7 +45,7 @@ Your folder stays on your machine. Keeping it on GitHub as well is your choice, 
 
 ## Your memory folder
 
-Lorisse reads one folder: the one you give in the plugin's setting, "Memory folder"; without it, the folder the session is opened on, when it is a memory folder (it holds a `config.yaml` at its root). It looks nowhere else. A memory folder can name several repositories in its config; they read as one memory.
+Lorisse reads one folder. Where you are wins: the folder the session is opened on, when it is a memory folder (it holds a `config.yaml` at its root). Anywhere else, the one you gave in the plugin's setting, "Memory folder". It looks nowhere else. The setting is kept by each machine, so each machine names its own. A memory folder can name several repositories in its config; they read as one memory.
 
 ## The tools
 
