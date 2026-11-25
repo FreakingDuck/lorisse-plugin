@@ -46,7 +46,7 @@ fn c_5_3_the_reading_tools_are_declared_read_only_and_the_writing_tools_as_writi
     let hint = |tool: &Json, key: &str| tool.get("annotations").and_then(|a| a.get(key)).cloned();
     for tool in tools {
         let name = tool.get("name").and_then(Json::as_str).unwrap();
-        let reads = ["where", "open", "search", "read", "links"].contains(&name);
+        let reads = ["where", "plop", "search", "read", "links"].contains(&name);
         assert_eq!(hint(tool, "readOnlyHint"), Some(Json::Bool(reads)), "{name}");
         assert_eq!(hint(tool, "openWorldHint"), Some(Json::Bool(false)), "{name}");
         if !reads {
@@ -376,10 +376,10 @@ fn c_8_9_a_link_to_a_piece_that_does_not_exist_is_refused_and_nothing_is_written
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_9_1_open_gives_the_intro_page_whole() {
+fn c_9_1_plop_gives_the_intro_page_whole() {
     let copy = Temp::sample("intro_whole");
     let intro = read_file(copy.path(), "intro.md");
-    let got = ask_one(copy.path(), "open", "{}");
+    let got = ask_one(copy.path(), "plop", "{}");
     let want = format!(
         "The page below is the person's own word on how Lorisse works for them (intro.md, at the root of their memory folder): follow it.\n{}\n",
         intro.trim_end()
@@ -392,23 +392,23 @@ fn c_9_1_the_intro_changed_between_two_calls_is_the_new_text() {
     let copy = Temp::sample("intro_changed");
     let setting = copy.path().to_string_lossy().into_owned();
     let mut live = Live::start(&[(SETTING, &setting)]);
-    assert!(live.ask("open", "{}").contains("Answer short, in plain words"));
+    assert!(live.ask("plop", "{}").contains("Answer short, in plain words"));
     copy.write("intro.md", "Answer in one line, always.\n");
-    let second = live.ask("open", "{}");
+    let second = live.ask("plop", "{}");
     assert!(second.contains("\nAnswer in one line, always.\n"), "{second}");
     assert!(!second.contains("Answer short, in plain words"), "{second}");
 }
 
 #[test]
-fn c_9_1_without_the_page_open_gives_the_plugin_s_own_and_where_to_write_theirs() {
+fn c_9_1_without_the_page_plop_gives_the_plugin_s_own_and_where_to_write_theirs() {
     let copy = Temp::sample("intro_absent");
     fs::remove_file(copy.path().join("intro.md")).unwrap();
-    let got = ask_one(copy.path(), "open", "{}");
+    let got = ask_one(copy.path(), "plop", "{}");
     let first = got.lines().next().unwrap();
     assert_eq!(first, "The person has written no intro.md at the root of their memory folder yet: below is the plugin's own.");
     let shown = copy.path().to_string_lossy().replace('\\', "/");
     assert!(got.contains(&format!("makes the page intro.md at the root of {shown}")), "{got}");
-    assert!(!copy.path().join("intro.md").exists(), "open writes nothing");
+    assert!(!copy.path().join("intro.md").exists(), "plop writes nothing");
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -416,10 +416,10 @@ fn c_9_1_without_the_page_open_gives_the_plugin_s_own_and_where_to_write_theirs(
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_9_2_open_gives_the_folder_its_repositories_the_counts_and_the_five_filed_last() {
+fn c_9_2_plop_gives_the_folder_its_repositories_the_counts_and_the_five_filed_last() {
     let copy = Temp::git_sample("state");
     ask_one(copy.path(), "remember", GUTTER);
-    let got = ask_one(copy.path(), "open", "{}");
+    let got = ask_one(copy.path(), "plop", "{}");
     let shown = copy.path().to_string_lossy().replace('\\', "/");
     let state = got.split("\n\n").find(|p| p.starts_with("The memory folder: ")).unwrap();
     let want = [
@@ -445,7 +445,7 @@ fn c_9_2_open_gives_the_folder_its_repositories_the_counts_and_the_five_filed_la
 #[test]
 fn c_9_3_the_intro_is_said_as_the_person_s_word_and_the_rest_as_data() {
     let copy = Temp::sample("intro_word");
-    let got = ask_one(copy.path(), "open", "{}");
+    let got = ask_one(copy.path(), "plop", "{}");
     let lines: Vec<&str> = got.lines().collect();
     assert!(lines[0].starts_with("The page below is the person's own word"), "{got}");
     let intro_at = lines.iter().position(|l| *l == "# How Lorisse works for me").unwrap();

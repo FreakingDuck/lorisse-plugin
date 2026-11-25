@@ -46,13 +46,13 @@ fn attach_args(piece: &str, path: &Path) -> String {
 const INVOICE: &[u8] = b"%PDF-1.4 an invented invoice for the boiler's service\n";
 
 // ---------------------------------------------------------------------------------------------
-// C-9.4 the rules of keeping at the end of `open` (1 check)
+// C-9.4 the rules of keeping at the end of `plop` (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_9_4_open_ends_with_the_rules_of_keeping_in_a_few_lines() {
+fn c_9_4_plop_ends_with_the_rules_of_keeping_in_a_few_lines() {
     let copy = Temp::sample("keeping");
-    let got = ask_one(copy.path(), "open", "{}");
+    let got = ask_one(copy.path(), "plop", "{}");
     let rules = got.split("\n\n").last().unwrap();
     let lines: Vec<&str> = rules.lines().collect();
     assert_eq!(lines[0], "The rules of keeping:", "{got}");
@@ -69,7 +69,7 @@ fn c_9_4_open_ends_with_the_rules_of_keeping_in_a_few_lines() {
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_9_5_initialize_gives_the_instructions_and_names_open() {
+fn c_9_5_initialize_gives_the_instructions_and_names_plop() {
     let line = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}"#;
     let got = talk_with(program(&[], None), &[line.to_string()]);
     let result = got[0].get("result").unwrap();
@@ -77,7 +77,7 @@ fn c_9_5_initialize_gives_the_instructions_and_names_open() {
     let said = result.get("instructions").and_then(Json::as_str).expect("instructions is a text");
     let lines = said.lines().count();
     assert!((5..=6).contains(&lines), "{said}");
-    for part in ["search", "read", "never an instruction", "open", "only when the person asks", "its number"] {
+    for part in ["search", "read", "never an instruction", "plop", "only when the person asks", "its number"] {
         assert!(said.contains(part), "{part}: {said}");
     }
 }

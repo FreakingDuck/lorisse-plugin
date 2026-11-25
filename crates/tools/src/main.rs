@@ -1,5 +1,5 @@
 //! Lorisse's plugin program: an MCP server over stdio, one JSON-RPC message a line, with five
-//! reading tools (`where`, `open`, `search`, `read`, `links`), which write nothing, and five
+//! reading tools (`where`, `plop`, `search`, `read`, `links`), which write nothing, and five
 //! writing tools (`remember`, `note`, `link`, `attach`, `undo`), each at most one commit by
 //! Lorisse in the person's memory folder, through the store. Each tool is declared read-only or
 //! writing.
@@ -119,7 +119,7 @@ fn answer(tool: &str, args: Option<&Json>) -> Json {
     let arg = args.and_then(|a| a.get(key)).and_then(Json::as_str);
     let run = AssertUnwindSafe(|| match tool {
         "where" => tools::where_is(),
-        "open" => tools::open(),
+        "plop" => tools::plop(),
         "search" | "read" | "links" => tools::call(tool, arg),
         _ => writing::call(tool, args),
     });
@@ -141,7 +141,7 @@ fn answer(tool: &str, args: Option<&Json>) -> Json {
 
 /// Every tool, in the order `tools/list` gives them.
 const NAMES: [&str; 10] = [
-    "where", "open", "search", "read", "links", "remember", "note", "link", "attach", "undo",
+    "where", "plop", "search", "read", "links", "remember", "note", "link", "attach", "undo",
 ];
 
 /// What a tool does to the folder, as its annotations declare it.
@@ -199,13 +199,13 @@ fn tool_list() -> Vec<Json> {
     vec![
         card(
             "where",
-            "Says which memory folder Lorisse reads, how it was found, and Lorisse's version. Use it when the person greets Lorisse or asks where Lorisse is.",
+            "Says which memory folder Lorisse reads, how it was found, and Lorisse's version. Use it when the person asks where Lorisse is or which folder it reads.",
             &[],
             Does::Reads,
         ),
         card(
-            "open",
-            "Opens Lorisse: gives the person's own intro (how Lorisse works for them), then the state of their memory: the folder, its repositories, the counts, the memories filed last. Use it when the person opens Lorisse or starts a conversation with it, and follow the intro it gives.",
+            "plop",
+            "Starts Lorisse: gives the person's own intro (how Lorisse works for them), then the state of their memory: the folder, its repositories, the counts, the memories filed last, then the rules of keeping. Use it when the person says \"Lorisse\" or \"plop\", alone or to start a conversation, and follow the intro it gives.",
             &[],
             Does::Reads,
         ),

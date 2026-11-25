@@ -90,7 +90,7 @@ pub fn reason(answer: &Option<Value>) -> String {
 /// The README's example.
 pub const README_RULES: &str = "\
 pass:
-  lorisse: [where, open, search, read, links, remember, note, link, undo]
+  lorisse: [where, plop, search, read, links, remember, note, link, undo]
   dropbox: [search, list_folder, fetch, file_preview, get_file_metadata]
 ask:
   dropbox: [move, copy, create_folder, create_file]
@@ -101,7 +101,7 @@ never:
 
 /// Lorisse's ten tools.
 pub const LORISSE_TOOLS: [&str; 10] = [
-    "where", "open", "search", "read", "links", "remember", "note", "link", "attach", "undo",
+    "where", "plop", "search", "read", "links", "remember", "note", "link", "attach", "undo",
 ];
 
 /// A tool of this plugin, by its full name.

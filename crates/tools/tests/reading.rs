@@ -34,7 +34,7 @@ fn c_4_1_the_setting_gives_the_folder_whatever_folder_the_program_runs_in() {
     );
     assert!(got[0].contains(&shown(copy.path())), "{}", got[0]);
     assert!(got[0].contains("the plugin's setting"), "{}", got[0]);
-    assert!(got[0].contains("0.3.0"), "{}", got[0]);
+    assert!(got[0].contains("0.3.1"), "{}", got[0]);
     assert!(got[1].contains("M-0001 [home] · The boiler's contract"), "{}", got[1]);
 }
 
@@ -172,7 +172,7 @@ fn git(dir: &Path, args: &[&str]) -> String {
 /// Every tool, with good and bad arguments.
 const EVERY_CALL: &[(&str, &str)] = &[
     ("where", "{}"),
-    ("open", "{}"),
+    ("plop", "{}"),
     ("search", r#"{"text":"boiler"}"#),
     ("search", r#"{"text":"surprise"}"#),
     ("search", r#"{"text":""}"#),

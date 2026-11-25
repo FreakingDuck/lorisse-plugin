@@ -27,7 +27,7 @@ fn initialize_with_a_number_id() {
     assert!(res.get("capabilities").unwrap().get("tools").is_some());
     let info = res.get("serverInfo").unwrap();
     assert_eq!(info.get("name").and_then(Json::as_str), Some("lorisse"));
-    assert_eq!(info.get("version").and_then(Json::as_str), Some("0.3.0"));
+    assert_eq!(info.get("version").and_then(Json::as_str), Some("0.3.1"));
 }
 
 #[test]
@@ -59,7 +59,7 @@ fn tools_list_names_the_ten_tools_each_with_its_description() {
     let names: Vec<&str> = tools.iter().filter_map(|t| t.get("name").and_then(Json::as_str)).collect();
     assert_eq!(
         names,
-        ["where", "open", "search", "read", "links", "remember", "note", "link", "attach", "undo"]
+        ["where", "plop", "search", "read", "links", "remember", "note", "link", "attach", "undo"]
     );
     for tool in &tools {
         let said = tool.get("description").and_then(Json::as_str).unwrap();
@@ -67,6 +67,16 @@ fn tools_list_names_the_ten_tools_each_with_its_description() {
         let schema = tool.get("inputSchema").unwrap();
         assert_eq!(schema.get("type").and_then(Json::as_str), Some("object"));
     }
+}
+
+#[test]
+fn a_call_of_a_tool_named_open_is_answered_as_an_unknown_tool() {
+    let got = talk(&[r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"open","arguments":{}}}"#]);
+    assert_eq!(got.len(), 1);
+    assert!(got[0].get("result").is_none());
+    let err = got[0].get("error").unwrap();
+    assert_eq!(err.get("code"), Some(&Json::Number("-32602".into())));
+    assert_eq!(err.get("message").and_then(Json::as_str), Some("Unknown tool: open"));
 }
 
 #[test]
