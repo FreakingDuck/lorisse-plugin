@@ -2,7 +2,7 @@
 
 > written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
-Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files. All are built. Part 11, the first day, and C-8.10 are designed and not built.
+Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files, part 11 the first day. All are built.
 
 ## 1. Role
 
@@ -15,7 +15,7 @@ Lorisse as a person meets it in the Claude app: a program on their own machine t
 - Files a memory, adds a note to a piece, links two pieces, and takes back its own last change: remember, note, link, undo.
 - Opens a conversation with the person's own intro, the state of the memory and the rules of keeping, when the person says "Lorisse" or "plop": plop.
 - Keeps a document with the memory it is about: attach.
-- Makes a new person's memory folder ready, and fills it with what another assistant already remembers of them: start, import. Not built yet.
+- Makes a new person's memory folder ready, and fills it with what another assistant already remembers of them: start, import.
 
 Does not:
 
@@ -76,7 +76,7 @@ We want a memory filed in one sentence, each change one step the person can see 
 - **C-8.7** Nothing is written in a part marked confidential, nor in a repository marked so: asked to, the tool refuses in one sentence.
 - **C-8.8** In a folder of several repositories, a new memory goes to the one the call names; without a name, to the folder's own.
 - **C-8.9** A change that would break the folder's rules (a kind the folder does not know, a link to a piece that does not exist) is refused with its reason, and nothing is written.
-- **C-8.10** Git is recommended, not required. In a folder that is not under git, the writing tools write all the same: the piece is filed, there is no history, and `undo` says it has none to go back through. `plop` says once, in one sentence, what git would add. Not built yet.
+- **C-8.10** Git is recommended, not required. In a folder that is not under git, the writing tools write all the same: the piece is filed, there is no history, and `undo` says it has none to go back through. `plop` says once, in one sentence, what git would add.
 
 ## 9. Starting a conversation
 
@@ -101,7 +101,7 @@ We want a document kept with what it is about: the quote with the works, the let
 
 ## 11. The first day
 
-Designed, not built yet. We want a new person to have a memory in five minutes, without knowing what a folder under git is, and a first conversation that does not start empty.
+We want a new person to have a memory in five minutes, without knowing what a folder under git is, and a first conversation that does not start empty.
 
 - **C-11.1** `start` makes a memory folder ready: a folder named `Lorisse` in the person's home folder, unless they name another place, holding the settings, the first set of rules and their page of intro, and nothing of anyone else's. A place that already holds files is never taken over: it is refused, unless it is empty or already a memory folder.
 - **C-11.2** When git is on the machine, the new folder is put under git, on the machine only, with a name for its commits, and its first state is one commit. Without git the folder is made all the same, and the answer says in one sentence what git would add and that it can come later.

@@ -20,6 +20,10 @@
 .PARAMETER Allow
     Allow Lorisse's tools on the command line, the guard aside.
 
+.PARAMETER FirstDay
+    Run in an empty folder with no memory at all, to try the first day: the folder Lorisse
+    makes goes under target/try-home, never under this machine's own home.
+
 .PARAMETER Model
     The model to run; haiku by default.
 
@@ -33,6 +37,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$Prompt,
     [switch]$Allow,
+    [switch]$FirstDay,
     [string]$Model = 'haiku'
 )
 
@@ -65,17 +70,44 @@ if (-not $claude) { Write-Host 'no claude program found'; exit 1 }
 $more = @()
 if ($Allow) { $more = @('--allowedTools', 'mcp__plugin_lorisse_lorisse') }
 
+# The try never touches this machine's own memory nor its home: the program is given a home
+# made for the try, and no setting. With -FirstDay it runs in an empty folder, with no memory.
+$tryHome = Join-Path $root 'target/try-home'
+if (Test-Path -LiteralPath $tryHome) { Remove-Item -LiteralPath $tryHome -Recurse -Force }
+New-Item -ItemType Directory -Path $tryHome -Force | Out-Null
+$homeText = $tryHome.Replace('\', '/')
+$mcp = '{"mcpServers":{"lorisse":{"type":"stdio","command":"${CLAUDE_PLUGIN_ROOT}/server/lorisse","args":[],"env":{"LORISSE_MEMORY_FOLDER":"","CLAUDE_PLUGIN_OPTION_MEMORY_FOLDER":"","LORISSE_HOME":"' + $homeText + '"}}}}'
+[IO.File]::WriteAllText((Join-Path $try '.mcp.json'), $mcp, (New-Object Text.UTF8Encoding $false))
+$where = $sample
+if ($FirstDay) {
+    $where = Join-Path $root 'target/try-empty'
+    if (Test-Path -LiteralPath $where) { Remove-Item -LiteralPath $where -Recurse -Force }
+    New-Item -ItemType Directory -Path $where -Force | Out-Null
+}
+
 Write-Host ('--- Claude ({0}) answers:' -f $Model)
 $ErrorActionPreference = 'Continue'
-Push-Location -LiteralPath $sample
+Push-Location -LiteralPath $where
 try {
     & $claude -p $Prompt --plugin-dir $try --model $Model @more
 } finally {
     Pop-Location
 }
-Write-Host '--- the sample''s history:'
-& git -C $sample log --oneline
-Write-Host '--- the sample''s state:'
-& git -C $sample status --short
+if ($FirstDay) {
+    $made = Join-Path $tryHome 'Lorisse'
+    Write-Host '--- the folder made on the first day:'
+    if (Test-Path -LiteralPath $made) {
+        Get-ChildItem -LiteralPath $made -Recurse -File | Where-Object { $_.FullName -notmatch '[\\/]\.git[\\/]' } | ForEach-Object { Write-Host ('  ' + $_.FullName.Substring($made.Length + 1)) }
+        Write-Host '--- its history:'
+        & git -C $made log --oneline
+    } else {
+        Write-Host '  none'
+    }
+} else {
+    Write-Host '--- the sample''s history:'
+    & git -C $sample log --oneline
+    Write-Host '--- the sample''s state:'
+    & git -C $sample status --short
+}
 Write-Host 'try ended'
 exit 0
