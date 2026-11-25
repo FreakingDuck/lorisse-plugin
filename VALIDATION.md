@@ -76,6 +76,24 @@ The sample is a small memory folder kept in the repository, every word of it inv
   2. Type "Read M-0001".
      - See: the memory, and the file `README.md` named with its path in the sample.
 
+## The first day, on a machine that has no memory yet
+
+- [ ] **H-10** A new person has a memory in one conversation.
+  It proves C-11.1, C-11.3 and C-11.4: nothing to know about folders or git to begin.
+  - Waits on: the first day's pass, not built yet.
+  1. Type "plop".
+     - See: Lorisse says there is no memory yet and offers to make one.
+  2. Answer yes, then its three questions.
+     - See: Lorisse says the folder is ready, and where it is.
+  3. Open a new conversation and type "plop".
+     - See: your intro, with the three answers you gave.
+
+- [ ] **H-11** The first day does not start empty.
+  It proves C-11.6: what another assistant already knows of you comes with you.
+  - Waits on: the first day's pass, not built yet.
+  1. Paste three dated lines of your own after "Import this:".
+     - See: Lorisse says three memories are filed, with their dates.
+
 ## On your own folder
 
 - [ ] **H-5** Lorisse answers from the folder you gave in the plugin's setting.
@@ -111,6 +129,7 @@ For the gate, which checks that each promise of the contract has one row here, a
 | C-8.7 | a write asked in the confidential part, and in a confidential repository | 2 checks · output | — |
 | C-8.8 | a memory filed in the named repository, and without a name | 2 checks · writes | — |
 | C-8.9 | an unknown kind, a link to no piece | 2 checks · output | — |
+| C-8.10 | a memory filed, a note and an undo asked in a folder that is not under git; the one sentence of `plop` | 3 checks · writes (not built yet) | — |
 | C-9.1 | the intro page given whole, changed between two calls, absent | 3 checks · output | H-8 |
 | C-9.2 | the state after the intro: the folder, the repositories, the counts, the five last | 1 check · output | H-8 |
 | C-9.3 | the intro said as the person's word, a memory's text as data | 1 check · output | — |
@@ -122,6 +141,13 @@ For the gate, which checks that each promise of the contract has one row here, a
 | C-10.4 | a file over the limit | 1 check · output | — |
 | C-10.5 | a second file of the same name | 1 check · writes | — |
 | C-10.6 | a key file, a secret's name | 2 checks · output | — |
+| C-11.1 | a folder made in a home folder of the test's own, in a named place; a place that holds files refused | 3 checks · writes (not built yet) | H-10 |
+| C-11.2 | under git with one commit when git is there; made all the same with an empty PATH, with the sentence | 2 checks · writes (not built yet) | — |
+| C-11.3 | the folder found afterwards with no setting, from another folder | 1 check · input (not built yet) | H-10 |
+| C-11.4 | the intro written from the three answers, given back by `plop` | 1 check · output (not built yet) | H-10 |
+| C-11.5 | the text to copy, whole, in its block | 1 check · output (not built yet) | — |
+| C-11.6 | dated lines filed with their dates and categories; the instructions given back, not filed; one undo for the whole | 3 checks · writes (not built yet) | H-11 |
+| C-11.7 | a line that cannot be read, counted and left out | 1 check · output (not built yet) | — |
 
 ## Run log
 

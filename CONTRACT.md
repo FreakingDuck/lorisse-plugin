@@ -2,7 +2,7 @@
 
 > written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
-Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files. All are built.
+Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files. All are built. Part 11, the first day, and C-8.10 are designed and not built.
 
 ## 1. Role
 
@@ -15,6 +15,7 @@ Lorisse as a person meets it in the Claude app: a program on their own machine t
 - Files a memory, adds a note to a piece, links two pieces, and takes back its own last change: remember, note, link, undo.
 - Opens a conversation with the person's own intro, the state of the memory and the rules of keeping, when the person says "Lorisse" or "plop": plop.
 - Keeps a document with the memory it is about: attach.
+- Makes a new person's memory folder ready, and fills it with what another assistant already remembers of them: start, import. Not built yet.
 
 Does not:
 
@@ -35,8 +36,8 @@ Does not:
 
 We want Lorisse to work on the one folder the person chose, and to say plainly when it has none.
 
-- **C-4.1** The program works on one folder, the memory folder: the folder the session is opened on, when that is a memory folder; otherwise the one the person gave in the plugin's setting. It looks nowhere else.
-- **C-4.2** With no memory folder, `where` says so and how to give one, every other tool answers that same sentence, and nothing is created.
+- **C-4.1** The program works on one folder, the memory folder: the folder the session is opened on, when that is a memory folder; otherwise the one the person gave in the plugin's setting; otherwise the one this machine remembers from the first day (C-11.3). It looks nowhere else.
+- **C-4.2** With no memory folder, `where` and `plop` say so and offer to make one with `start`; every other tool answers that same sentence, and nothing is created.
 - **C-4.3** The folder is read at each call: a piece another program changed is seen at the next call.
 - **C-4.4** A memory folder can name several repositories in its config: their pieces are read as one memory, each said with the repository it comes from.
 
@@ -75,6 +76,7 @@ We want a memory filed in one sentence, each change one step the person can see 
 - **C-8.7** Nothing is written in a part marked confidential, nor in a repository marked so: asked to, the tool refuses in one sentence.
 - **C-8.8** In a folder of several repositories, a new memory goes to the one the call names; without a name, to the folder's own.
 - **C-8.9** A change that would break the folder's rules (a kind the folder does not know, a link to a piece that does not exist) is refused with its reason, and nothing is written.
+- **C-8.10** Git is recommended, not required. In a folder that is not under git, the writing tools write all the same: the piece is filed, there is no history, and `undo` says it has none to go back through. `plop` says once, in one sentence, what git would add. Not built yet.
 
 ## 9. Starting a conversation
 
@@ -97,36 +99,48 @@ We want a document kept with what it is about: the quote with the works, the let
 - **C-10.5** A file is never replaced: one of the same name already with the piece makes the new one take a numbered name.
 - **C-10.6** A key or a secret is never attached: a file under a `.ssh` folder, a `.pem`, a `.env`, or a name that ends in `_key` or `_token`, is refused with the reason.
 
-## 11. Behaviour
+## 11. The first day
+
+Designed, not built yet. We want a new person to have a memory in five minutes, without knowing what a folder under git is, and a first conversation that does not start empty.
+
+- **C-11.1** `start` makes a memory folder ready: a folder named `Lorisse` in the person's home folder, unless they name another place, holding the settings, the first set of rules and their page of intro, and nothing of anyone else's. A place that already holds files is never taken over: it is refused, unless it is empty or already a memory folder.
+- **C-11.2** When git is on the machine, the new folder is put under git, on the machine only, with a name for its commits, and its first state is one commit. Without git the folder is made all the same, and the answer says in one sentence what git would add and that it can come later.
+- **C-11.3** The machine remembers the folder `start` made: from then on Lorisse finds it with no setting to fill, in every conversation on that machine.
+- **C-11.4** `start` writes the person's intro from what they said: their name, what they want to remember, how they like to be answered.
+- **C-11.5** `start` gives, in a block the person can copy whole, the text to hand to another assistant to get back what it already remembers of them, as dated lines by category.
+- **C-11.6** `import` takes that answer: each dated line becomes a memory with its date and its category, in the person's own words; the lines that are instructions are not filed, they are given back as proposals for the intro, never obeyed. The whole import is one step, taken back by one `undo` when the folder is under git, and the answer gives the count.
+- **C-11.7** A line `import` cannot read is left out and counted, never guessed.
+
+## 12. Behaviour
 
 | Situation | Reaction |
 |---|---|
 | A number that does not exist | one sentence that names it |
 | An argument missing or of the wrong kind | one sentence that says what is expected |
 | A piece whose header cannot be read | the answer names the file and gives the rest |
-| A writing tool, the folder not under git | refused: one sentence that says so and how to put it under git; nothing written |
-| A writing tool, no git on the machine, or no name set for its commits | refused: one sentence that names what is missing; nothing written |
+| A writing tool, the folder under git, but no git on the machine or no name set for its commits | refused: one sentence that names what is missing; nothing written |
+| `start` when this machine already has a memory folder | one sentence that names it; nothing is made |
 | `undo` with no change of Lorisse's to take back | one sentence that says so |
 | A change that fails halfway | the folder is as it was before the call |
 | Any call, whatever the folder or the piece | the program answers and stays up |
 
-## 12. Wanted, not promised yet
+## 13. Wanted, not promised yet
 
 - Changing or retiring a memory's text, filing a person; proposals for anything heavy (merge two pieces, move one, rename a tag).
+- A short tutorial to keep the folder on a git service as well, for those who want a copy elsewhere.
 - Files: with the Claude app's own connector to a file service, Lorisse files the documents that arrive and keeps a memory of each. No connector of ours.
 - A large file kept by reference: the memories live in git, the large documents in the person's file service; `attach` of a file past the limit, or of one already in that service's folder, keeps its path instead of a copy.
-- A first day that does not start empty: what another assistant already remembers of the person, exported by them as dated lines, is filed line by line as memories with their dates; the lines that are instructions are proposed for the intro, never obeyed as such.
 - The way out: the whole memory given back as one page of dated lines by category, so a person can leave with it or hand it to another assistant.
 - One memory for life and for the work on code: the assistant's own notes of a project as one more repository of the memory folder.
 - The same memory from the phone and the plain chat: the program on a server of the person's, the memories exchanged by git.
 - A release that arrives whole: the card, the version and the programs together, never one before the other; and a check after each release that an installed copy says the new version.
 - The memory folder chosen by browsing, not typed: today the Claude app's own window asks for it as a line of text.
 - Tasks, the inbox, the questions to check, what changed since the person last looked.
-- A simple way to add the folder: a new person's empty folder made ready in one step, a memory kept by subject or by project.
-- The folder stays local unless the person wants more: a short tutorial to keep it on GitHub, never required. The plugin itself neither pulls nor pushes.
+- A memory kept by subject or by project, in repositories the person names.
+- The plugin itself neither pulls nor pushes: the folder stays on the machine unless the person wants more.
 - The keeper's rules of filing, and one skill a subject.
 - The same answers in the desktop app's Cowork, on Windows and on a Mac: built for, not tried.
 
-## 13. Non-goals
+## 14. Non-goals
 
 A screen of its own, a choice of model, a reader of mail: the Claude app has them.
