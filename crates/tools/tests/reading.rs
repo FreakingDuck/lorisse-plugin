@@ -203,6 +203,9 @@ fn c_5_1_nothing_is_written_after_every_tool_called_many_times() {
         copy.path(),
         &[
             "-c", "user.name=sample", "-c", "user.email=sample@example.invalid",
+            // No background upkeep by git after the commit: its lock file would come and go
+            // under the snapshot, and look like a change that is not the program's.
+            "-c", "maintenance.auto=false", "-c", "gc.auto=0",
             "-c", "commit.gpgsign=false", "commit", "-q", "-m", "the sample",
         ],
     );
