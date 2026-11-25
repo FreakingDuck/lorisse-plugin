@@ -2,7 +2,7 @@
 
 > written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
-Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step, built. Part 8 is the writing step: designed here, not built yet.
+Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step, built. Parts 8 and 9, and C-5.3, are the writing step: designed here, not built yet.
 
 ## 1. Role
 
@@ -13,6 +13,7 @@ Lorisse as a person meets it in the Claude app: a program on their own machine t
 - Finds the person's memory folder.
 - Answers four questions on its memories, and on the people and tags they name: where it is, search, read, links. What each takes and gives is in the README, "The tools".
 - Files a memory, adds a note to a piece, links two pieces, and takes back its own last change: remember, note, link, undo. Not built yet.
+- Opens a conversation with the person's own intro and the state of the memory: open. Not built yet.
 
 Does not:
 
@@ -43,6 +44,7 @@ We want a question never to change the folder, so that reading is safe to try on
 
 - **C-5.1** The four reading tools write nothing in the memory folder: after any number of their calls, every file and the folder's git state are as they were.
 - **C-5.2** The program opens no network connection. The reading tools start no other program; the writing tools start one, `git`, and only in the memory folder.
+- **C-5.3** The reading tools are declared to the Claude app as tools that only read, and the writing tools as tools that write, so the person can let the first run without being asked and keep a say on the second.
 
 ## 6. What is shown
 
@@ -72,7 +74,15 @@ We want a memory filed in one sentence, each change one step the person can see 
 - **C-8.8** In a folder of several repositories, a new memory goes to the one the call names; without a name, to the folder's own.
 - **C-8.9** A change that would break the folder's rules (a kind the folder does not know, a link to a piece that does not exist) is refused with its reason, and nothing is written.
 
-## 9. Behaviour
+## 9. Starting a conversation
+
+We want one word to open Lorisse as the person set it up, on any machine, without retyping who they are and how they work.
+
+- **C-9.1** `open` gives the person's intro: the text of the page `intro.md` at the root of the memory folder, whole. The person changes it as any file of theirs, and the next `open` gives the new text. Without that page, it gives a short one of the plugin's own and says where to write theirs.
+- **C-9.2** After the intro, `open` gives the state: the memory folder, its repositories, how many memories and people it holds, and the five memories filed last.
+- **C-9.3** The intro is the person's own word on how Lorisse works for them, and is said as such; every other text of the folder stays data (C-6.2).
+
+## 10. Behaviour
 
 | Situation | Reaction |
 |---|---|
@@ -85,10 +95,10 @@ We want a memory filed in one sentence, each change one step the person can see 
 | A change that fails halfway | the folder is as it was before the call |
 | Any call, whatever the folder or the piece | the program answers and stays up |
 
-## 10. Wanted, not promised yet
+## 11. Wanted, not promised yet
 
 - Changing or retiring a memory's text, filing a person; proposals for anything heavy (merge two pieces, move one, rename a tag).
-- A way to start a conversation with Lorisse in one word: it says where the memory is, what it holds, and what was filed last.
+- Files: with the Claude app's own connector to a file service, Lorisse files the documents that arrive and keeps a memory of each. No connector of ours.
 - A release that arrives whole: the card, the version and the programs together, never one before the other; and a check after each release that an installed copy says the new version.
 - The memory folder chosen by browsing, not typed: today the Claude app's own window asks for it as a line of text.
 - Tasks, the inbox, the questions to check, what changed since the person last looked.
@@ -97,6 +107,6 @@ We want a memory filed in one sentence, each change one step the person can see 
 - The keeper's rules of filing, and one skill a subject.
 - The same answers in the desktop app's Cowork, on Windows and on a Mac: built for, not tried.
 
-## 11. Non-goals
+## 12. Non-goals
 
 A screen of its own, a choice of model, a reader of mail: the Claude app has them.

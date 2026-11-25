@@ -66,6 +66,12 @@ The sample is a small memory folder kept in the repository, every word of it inv
   2. Type "Find gutter".
      - See: Lorisse answers that nothing matches.
 
+- [ ] **H-8** One word opens Lorisse with your own intro.
+  It proves C-9.1 and C-9.2: you set Lorisse up once, in a page of yours, and every conversation starts from it.
+  - Waits on: the writing pass, not built yet.
+  1. Type "Open Lorisse".
+     - See: the sample's intro, then the folder, its two repositories, and the memories filed last.
+
 ## On your own folder
 
 - [ ] **H-5** Lorisse answers from the folder you gave in the plugin's setting.
@@ -87,6 +93,7 @@ For the gate, which checks that each promise of the contract has one row here, a
 | C-4.4 | a second repository named in the sample's config | 2 checks · output (its piece found, its repository said) | — |
 | C-5.1 | the sample before and after every tool | 1 check · writes | H-4 |
 | C-5.2 | no connection, no other program | 1 check · the program's dependencies | — |
+| C-5.3 | each tool's declaration: reads only, or writes | 1 check · output (not built yet) | — |
 | C-6.1 | the confidential piece, by every tool | 4 checks · output | H-3 |
 | C-6.2 | the first line of an answer that carries a text | 2 checks · output | H-2 |
 | C-7.1 | a list past its limit | 1 check · output | — |
@@ -100,6 +107,9 @@ For the gate, which checks that each promise of the contract has one row here, a
 | C-8.7 | a write asked in the confidential part, and in a confidential repository | 2 checks · output (not built yet) | — |
 | C-8.8 | a memory filed in the named repository, and without a name | 2 checks · writes (not built yet) | — |
 | C-8.9 | an unknown kind, a link to no piece | 2 checks · output (not built yet) | — |
+| C-9.1 | the intro page given whole, changed between two calls, absent | 3 checks · output (not built yet) | H-8 |
+| C-9.2 | the state after the intro: the folder, the repositories, the counts, the five last | 1 check · output (not built yet) | H-8 |
+| C-9.3 | the intro said as the person's word, a memory's text as data | 1 check · output (not built yet) | — |
 
 ## Run log
 
