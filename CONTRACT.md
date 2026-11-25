@@ -2,20 +2,22 @@
 
 > written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
-Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change, and this page is the reading step's alone; it is rewritten when writing comes.
+Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step, built. Part 8 is the writing step: designed here, not built yet.
 
 ## 1. Role
 
-Lorisse as a person meets it in the Claude app: a program on their own machine that lets Claude read their memories through a short list of questions, on Windows and on a Mac.
+Lorisse as a person meets it in the Claude app: a program on their own machine that lets Claude read their memories and file new ones, through a short list of tools, on Windows and on a Mac.
 
 ## 2. Does and does not
 
 - Finds the person's memory folder.
 - Answers four questions on its memories, and on the people and tags they name: where it is, search, read, links. What each takes and gives is in the README, "The tools".
+- Files a memory, adds a note to a piece, links two pieces, and takes back its own last change: remember, note, link, undo. Not built yet.
 
 Does not:
 
-- Write, file or accept anything → the writing step, not built.
+- Change or retire the text of a memory, file a person, merge or move pieces → later; anything heavy will be a proposal the person accepts.
+- Pull or push the folder → the person's own git, when they want one.
 - Show tasks, the inbox or the questions to check, or say what to do next → later versions; ranking is Claude's.
 - Decide when a tool is called, or how a piece is filed → `keeper`.
 - Read a piece's file, its number, the confidential mark → `store`.
@@ -35,12 +37,12 @@ We want Lorisse to work on the one folder the person chose, and to say plainly w
 - **C-4.3** The folder is read at each call: a piece another program changed is seen at the next call.
 - **C-4.4** A memory folder can name several repositories in its config: their pieces are read as one memory, each said with the repository it comes from.
 
-## 5. Nothing is written
+## 5. Reading writes nothing
 
 We want a question never to change the folder, so that reading is safe to try on a real one.
 
-- **C-5.1** The program writes nothing in the memory folder: after any number of calls, every file and the folder's git state are as they were.
-- **C-5.2** The program opens no network connection and starts no other program.
+- **C-5.1** The four reading tools write nothing in the memory folder: after any number of their calls, every file and the folder's git state are as they were.
+- **C-5.2** The program opens no network connection. The reading tools start no other program; the writing tools start one, `git`, and only in the memory folder.
 
 ## 6. What is shown
 
@@ -56,24 +58,42 @@ We want every answer short enough for a conversation, and honest when it is cut.
 - **C-7.1** A list cut at its limit ends with one line that gives the count in all.
 - **C-7.2** A text cut at its limit ends with one line that says so and gives its full length.
 
-## 8. Behaviour
+## 8. Writing
+
+We want a memory filed in one sentence, each change one step the person can see in the folder's history and take back, and nothing else touched. When a tool is called is the keeper's: on the person's ask, or on their yes to an offer.
+
+- **C-8.1** `remember` files a new memory: its title, its text, its kind, its tags, the pieces it links to. The answer gives its number, and `read` gives it back as it was filed.
+- **C-8.2** `note` adds one dated line at the end of the text of a memory or of a person; what was there is unchanged.
+- **C-8.3** `link` links one piece to another. A link already there changes nothing, and the answer says so.
+- **C-8.4** Each change is exactly one commit, in the repository the piece lives in; its message says what was done and names the piece. Nothing else in the folder changes, and what the person had changed without committing is left as it was.
+- **C-8.5** `undo` takes back the last change Lorisse made, or the one named, as a new commit. The history is never rewritten, and a commit Lorisse did not make is never taken back.
+- **C-8.6** A number is given once and never reused, even after an undo. Nothing is deleted.
+- **C-8.7** Nothing is written in a part marked confidential, nor in a repository marked so: asked to, the tool refuses in one sentence.
+- **C-8.8** In a folder of several repositories, a new memory goes to the one the call names; without a name, to the folder's own.
+- **C-8.9** A change that would break the folder's rules (a kind the folder does not know, a link to a piece that does not exist) is refused with its reason, and nothing is written.
+
+## 9. Behaviour
 
 | Situation | Reaction |
 |---|---|
 | A number that does not exist | one sentence that names it |
 | An argument missing or of the wrong kind | one sentence that says what is expected |
 | A piece whose header cannot be read | the answer names the file and gives the rest |
+| A writing tool, the folder not under git | refused: one sentence that says so and how to put it under git; nothing written |
+| A writing tool, no git on the machine, or no name set for its commits | refused: one sentence that names what is missing; nothing written |
+| `undo` with no change of Lorisse's to take back | one sentence that says so |
+| A change that fails halfway | the folder is as it was before the call |
 | Any call, whatever the folder or the piece | the program answers and stays up |
 
-## 9. Wanted, not promised yet
+## 10. Wanted, not promised yet
 
-- Writing: a memory, a note, a link, each one step in the folder's history, with its undo; proposals for anything heavy.
+- Changing or retiring a memory's text, filing a person; proposals for anything heavy (merge two pieces, move one, rename a tag).
 - Tasks, the inbox, the questions to check, what changed since the person last looked.
 - A simple way to add the folder: a new person's empty folder made ready in one step, a memory kept by subject or by project.
 - The folder stays local unless the person wants more: a short tutorial to keep it on GitHub, never required. The plugin itself neither pulls nor pushes.
 - The keeper's rules of filing, and one skill a subject.
 - The same answers in the desktop app's Cowork, on Windows and on a Mac: built for, not tried.
 
-## 10. Non-goals
+## 11. Non-goals
 
 A screen of its own, a choice of model, a reader of mail: the Claude app has them.
