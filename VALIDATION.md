@@ -70,7 +70,10 @@ The sample is a small memory folder kept in the repository, every word of it inv
 
 - [ ] **H-5** Lorisse answers from the folder you gave in the plugin's setting.
   It proves C-4.1: from a session opened on a code project, your folder is still found.
-  - Waits on: how the setting is given. In Claude Code the folder is asked when the plugin is enabled, and is a row of `/config`: read on Anthropic's page, not tried in the panel. For the desktop app the page says nothing.
+  1. In the Claude app, install or update Lorisse. A small window asks to save the plugin's settings: type your folder under "Memory folder" and choose Save.
+     - See: the window closes, and Lorisse is listed with its version.
+  2. Open a session on a folder that is not your memory, and type "Lorisse, where are you?".
+     - See: your memory folder, the words "the plugin's setting", and the version you installed.
 
 ## For the gate: one row a promise
 

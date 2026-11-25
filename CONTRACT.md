@@ -88,6 +88,9 @@ We want a memory filed in one sentence, each change one step the person can see 
 ## 10. Wanted, not promised yet
 
 - Changing or retiring a memory's text, filing a person; proposals for anything heavy (merge two pieces, move one, rename a tag).
+- A way to start a conversation with Lorisse in one word: it says where the memory is, what it holds, and what was filed last.
+- A release that arrives whole: the card, the version and the programs together, never one before the other; and a check after each release that an installed copy says the new version.
+- The memory folder chosen by browsing, not typed: today the Claude app's own window asks for it as a line of text.
 - Tasks, the inbox, the questions to check, what changed since the person last looked.
 - A simple way to add the folder: a new person's empty folder made ready in one step, a memory kept by subject or by project.
 - The folder stays local unless the person wants more: a short tutorial to keep it on GitHub, never required. The plugin itself neither pulls nor pushes.
