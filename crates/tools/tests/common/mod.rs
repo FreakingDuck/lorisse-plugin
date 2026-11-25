@@ -240,6 +240,23 @@ pub fn snapshot(dir: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     out
 }
 
+/// What differs between two snapshots, one short line a file: so a failure names the file
+/// instead of printing every byte of the folder.
+pub fn differences(before: &BTreeMap<PathBuf, Vec<u8>>, after: &BTreeMap<PathBuf, Vec<u8>>) -> Vec<String> {
+    let mut out = Vec::new();
+    for (path, bytes) in before {
+        match after.get(path) {
+            None => out.push(format!("removed {}", path.display())),
+            Some(now) if now != bytes => out.push(format!("changed {}", path.display())),
+            Some(_) => {}
+        }
+    }
+    for path in after.keys().filter(|p| !before.contains_key(*p)) {
+        out.push(format!("added {}", path.display()));
+    }
+    out
+}
+
 /// A memory piece in the sample's style.
 pub fn memory(id: &str, title: &str, body: &str, links: &str) -> String {
     format!(

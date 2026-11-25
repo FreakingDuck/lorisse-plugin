@@ -42,7 +42,7 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          grep -E "^test .* FAILED$|panicked at|^ +left:|^ +right:|^error: test failed" test.log | head -n 20 | while IFS= read -r line; do echo "::error::$line"; done
+          grep -E -A1 "^test .* FAILED$|panicked at|^error: test failed" test.log | cut -c1-600 | head -n 20 | while IFS= read -r line; do echo "::error::$line"; done
       - name: Build for Apple silicon
         run: cargo build --release --locked -p lorisse --target aarch64-apple-darwin
       - name: Build for Intel
@@ -77,7 +77,7 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          grep -E "^test .* FAILED$|panicked at|^ +left:|^ +right:|^error: test failed" test.log | head -n 20 | while IFS= read -r line; do echo "::error::$line"; done
+          grep -E -A1 "^test .* FAILED$|panicked at|^error: test failed" test.log | cut -c1-600 | head -n 20 | while IFS= read -r line; do echo "::error::$line"; done
       - name: Build
         run: cargo build --release --locked -p lorisse
       - uses: actions/upload-artifact@v4

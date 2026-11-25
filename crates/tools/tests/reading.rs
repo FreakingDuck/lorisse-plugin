@@ -209,7 +209,8 @@ fn c_5_1_nothing_is_written_after_every_tool_called_many_times() {
         ask(&[(SETTING, &setting)], None, EVERY_CALL);
         ask(&[], Some(copy.path()), EVERY_CALL);
     }
-    assert_eq!(snapshot(copy.path()), before, "every file as before, none added");
+    let differs = differences(&before, &snapshot(copy.path()));
+    assert!(differs.is_empty(), "every file as before, none added: {differs:?}");
     assert_eq!(git(copy.path(), &["status", "--porcelain"]), "", "git status clean");
 }
 
