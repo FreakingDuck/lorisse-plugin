@@ -99,6 +99,92 @@ fn a_piece_whose_header_cannot_be_read_is_named_and_the_rest_is_given() {
     assert!(read.starts_with("The file memories/M-0070.md cannot be read"), "{read}");
 }
 
+const GUTTER: &str = r#"{"title":"The gutter was cleaned","text":"The gutter was cleaned in October."}"#;
+
+#[test]
+fn a_writing_tool_in_a_folder_not_under_git_is_refused_and_writes_nothing() {
+    let copy = Temp::sample("not_git");
+    let before = snapshot(copy.path());
+    let setting = copy.path().to_string_lossy().into_owned();
+    let calls = [
+        ("remember", GUTTER),
+        ("note", r#"{"piece":"M-0002","text":"x"}"#),
+        ("link", r#"{"from":"M-0003","to":"M-0001"}"#),
+        ("undo", "{}"),
+    ];
+    for said in ask(&[(SETTING, &setting)], None, &calls) {
+        assert!(said.starts_with("Lorisse cannot write because the memory folder"), "{said}");
+        assert!(said.contains("is not under git: run \"git init\""), "{said}");
+    }
+    assert_eq!(snapshot(copy.path()), before);
+}
+
+#[test]
+fn a_writing_tool_without_git_or_without_a_name_for_the_commits_names_what_is_missing() {
+    let copy = Temp::git_sample("no_name");
+    run_git(copy.path(), &["config", "--unset", "user.name"]);
+    run_git(copy.path(), &["config", "--unset", "user.email"]);
+    let empty = Temp::empty("no_global");
+    empty.write("gitconfig", "");
+    let global = empty.path().join("gitconfig").to_string_lossy().into_owned();
+    let setting = copy.path().to_string_lossy().into_owned();
+    let before = files_of(copy.path());
+    let commits = log(copy.path());
+    let env = [(SETTING, setting.as_str()), ("GIT_CONFIG_GLOBAL", &global), ("GIT_CONFIG_NOSYSTEM", "1")];
+    let said = ask(&env, None, &[("remember", GUTTER), ("undo", "{}")]);
+    for said in &said {
+        assert!(said.starts_with("Lorisse cannot write because git has no name or no address set for the commits of home"), "{said}");
+    }
+    let no_git = ask(&[(SETTING, &setting), ("PATH", "")], None, &[("note", r#"{"piece":"M-0002","text":"x"}"#)]);
+    assert!(no_git[0].starts_with("Lorisse cannot write because git is not found on this machine"), "{}", no_git[0]);
+    assert_eq!(files_of(copy.path()), before);
+    assert_eq!(log(copy.path()), commits);
+}
+
+#[test]
+fn undo_with_no_change_of_lorisse_s_says_so_in_one_sentence() {
+    let copy = Temp::git_sample("nothing_to_undo");
+    let said = ask_one(copy.path(), "undo", "{}");
+    assert_eq!(said, "Lorisse has no change of hers left to take back in this memory folder: nothing was done.");
+    ask_one(copy.path(), "remember", GUTTER);
+    ask_one(copy.path(), "undo", "{}");
+    assert_eq!(ask_one(copy.path(), "undo", "{}"), said, "once taken back, nothing is left");
+}
+
+/// A hook that refuses every commit, so a write fails after its files are written.
+fn refuse_commits(dir: &std::path::Path) {
+    let hook = dir.join(".git/hooks/pre-commit");
+    std::fs::create_dir_all(hook.parent().unwrap()).unwrap();
+    std::fs::write(&hook, "#!/bin/sh\nexit 1\n").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&hook, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+}
+
+#[test]
+fn a_change_that_fails_halfway_leaves_the_folder_as_it_was() {
+    let copy = Temp::git_sample("halfway");
+    ask_one(copy.path(), "remember", GUTTER);
+    refuse_commits(copy.path());
+    let before = files_of(copy.path());
+    let commits = log(copy.path());
+    let calls = [
+        ("remember", r#"{"title":"The hedge","text":"Cut in May."}"#),
+        ("note", r#"{"piece":"M-0002","text":"x"}"#),
+        ("link", r#"{"from":"M-0003","to":"M-0001"}"#),
+        ("undo", "{}"),
+    ];
+    let setting = copy.path().to_string_lossy().into_owned();
+    for said in ask(&[(SETTING, &setting)], None, &calls) {
+        assert!(said.starts_with("Nothing was written: the change could not be committed, the folder is as it was"), "{said}");
+    }
+    assert_eq!(files_of(copy.path()), before);
+    assert_eq!(log(copy.path()), commits);
+    assert_eq!(run_git(copy.path(), &["status", "--porcelain"]), "");
+}
+
 #[test]
 fn the_program_stays_up_whatever_comes() {
     let copy = Temp::sample("up");

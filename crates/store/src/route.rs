@@ -59,6 +59,8 @@ pub enum Kind {
     Rule,
     /// Anything that sends a mail.
     Mail,
+    /// A memory filed at once, on the person's word, without a capture.
+    Remember,
 }
 
 /// Where an action goes.
@@ -189,7 +191,7 @@ const GREETINGS: [&str; 15] = [
 /// The source of a capture typed in the app.
 const APP: &str = "app";
 
-const ALL: [Kind; 15] = [
+const ALL: [Kind; 16] = [
     Kind::Sort,
     Kind::Note,
     Kind::Link,
@@ -205,6 +207,7 @@ const ALL: [Kind; 15] = [
     Kind::Resume,
     Kind::Rule,
     Kind::Mail,
+    Kind::Remember,
 ];
 
 impl Default for Context {
@@ -252,6 +255,7 @@ fn word_of(kind: Kind) -> &'static str {
         Kind::Resume => "resume",
         Kind::Rule => "rule",
         Kind::Mail => "mail",
+        Kind::Remember => "remember",
     }
 }
 
@@ -281,7 +285,9 @@ fn kind_of_shape(action: &Action) -> Kind {
 
 fn table(kind: Kind) -> Route {
     match kind {
-        Kind::Sort | Kind::Note | Kind::Link | Kind::Edit | Kind::Retire => Route::Direct,
+        Kind::Sort | Kind::Note | Kind::Link | Kind::Edit | Kind::Retire | Kind::Remember => {
+            Route::Direct
+        }
         Kind::Rewrite | Kind::Dedupe | Kind::Split => Route::DirectFlagged,
         Kind::Move
         | Kind::Archive
@@ -548,7 +554,14 @@ mod tests {
 
     #[test]
     fn the_table_gives_each_kind_its_route() {
-        let direct = [Kind::Sort, Kind::Note, Kind::Link, Kind::Edit, Kind::Retire];
+        let direct = [
+            Kind::Sort,
+            Kind::Note,
+            Kind::Link,
+            Kind::Edit,
+            Kind::Retire,
+            Kind::Remember,
+        ];
         let flagged = [Kind::Rewrite, Kind::Dedupe, Kind::Split];
         assert!(direct.iter().all(|k| k.route() == Route::Direct));
         assert!(flagged.iter().all(|k| k.route() == Route::DirectFlagged));

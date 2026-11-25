@@ -400,6 +400,11 @@ pub(crate) fn home_of(store: &Store, rel: &str) -> Option<Home> {
     }
 }
 
+/// The repository a write at `rel` commits in: its row's own when it holds one, else the root's.
+pub(crate) fn home_for_write(store: &Store, rel: &str) -> Option<Home> {
+    home_of(store, rel).or_else(|| root_home(store))
+}
+
 /// Every repository present: the root, then each row's folder holding one.
 pub(crate) fn homes(store: &Store) -> Vec<Home> {
     let mut out: Vec<Home> = root_home(store).into_iter().collect();

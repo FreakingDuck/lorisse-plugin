@@ -97,6 +97,27 @@ fn hide_window(command: &mut Command) {
 #[cfg(not(windows))]
 fn hide_window(_command: &mut Command) {}
 
+/// Whether a `git` program can be started on this machine.
+pub(crate) fn available() -> bool {
+    let mut command = Command::new("git");
+    command.arg("--version");
+    hide_window(&mut command);
+    command.output().is_ok_and(|out| out.status.success())
+}
+
+/// Whether the repository's git has a name and an address for its own commits.
+pub(crate) fn has_identity(root: &Path) -> bool {
+    let set = |key: &str| {
+        run(root, &["config", "--get", key], Who::Folder).is_ok_and(|v| !v.trim().is_empty())
+    };
+    set("user.name") && set("user.email")
+}
+
+/// Whether git ignores `path` in the repository.
+pub(crate) fn is_ignored(root: &Path, path: &str) -> bool {
+    run(root, &["check-ignore", "-q", "--", path], Who::Folder).is_ok()
+}
+
 /// The given paths git sees changed or untracked.
 pub(crate) fn dirty(root: &Path, paths: &[String]) -> Result<Vec<String>, StoreError> {
     if paths.is_empty() {

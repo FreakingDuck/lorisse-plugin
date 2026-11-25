@@ -178,6 +178,51 @@ fn copy_tree(from: &Path, to: &Path) {
     }
 }
 
+/// `git <args>` in `dir`, which must succeed; its standard output.
+pub fn run_git(dir: &Path, args: &[&str]) -> String {
+    let out = Command::new("git").arg("-C").arg(dir).args(args).output().unwrap();
+    assert!(out.status.success(), "git {args:?}: {}", String::from_utf8_lossy(&out.stderr));
+    String::from_utf8_lossy(&out.stdout).into_owned()
+}
+
+/// `dir` made a git folder with one commit, a name and an address for its commits set in
+/// that folder only, never globally.
+pub fn make_git(dir: &Path) {
+    run_git(dir, &["init", "-q"]);
+    for (key, value) in [
+        ("user.name", "sample"),
+        ("user.email", "sample@example.invalid"),
+        ("commit.gpgsign", "false"),
+        ("core.autocrlf", "false"),
+    ] {
+        run_git(dir, &["config", key, value]);
+    }
+    run_git(dir, &["add", "-A"]);
+    run_git(dir, &["commit", "-q", "-m", "the sample"]);
+}
+
+impl Temp {
+    /// A copy of `sample/` made a git folder with one commit.
+    pub fn git_sample(tag: &str) -> Temp {
+        let temp = Temp::sample(tag);
+        make_git(temp.path());
+        temp
+    }
+}
+
+/// Every file under `dir` but its `.git` folder, with its bytes.
+pub fn files_of(dir: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
+    snapshot(dir)
+        .into_iter()
+        .filter(|(p, _)| !p.strip_prefix(dir).unwrap().starts_with(".git"))
+        .collect()
+}
+
+/// The commits of `dir`, newest first, one line each.
+pub fn log(dir: &Path) -> Vec<String> {
+    run_git(dir, &["log", "--format=%H %ae %s"]).lines().map(String::from).collect()
+}
+
 /// Every file under `dir`, the `.git` folder included, with its bytes.
 pub fn snapshot(dir: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     let mut out = BTreeMap::new();

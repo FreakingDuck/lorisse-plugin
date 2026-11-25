@@ -27,7 +27,7 @@ fn initialize_with_a_number_id() {
     assert!(res.get("capabilities").unwrap().get("tools").is_some());
     let info = res.get("serverInfo").unwrap();
     assert_eq!(info.get("name").and_then(Json::as_str), Some("lorisse"));
-    assert_eq!(info.get("version").and_then(Json::as_str), Some("0.1.0"));
+    assert_eq!(info.get("version").and_then(Json::as_str), Some("0.2.0"));
 }
 
 #[test]
@@ -50,14 +50,17 @@ fn a_notification_is_not_answered() {
 }
 
 #[test]
-fn tools_list_names_the_four_tools_each_with_its_description() {
+fn tools_list_names_the_nine_tools_each_with_its_description() {
     let got = talk(&[r#"{"jsonrpc":"2.0","id":3,"method":"tools/list"}"#]);
     let tools = match got[0].get("result").unwrap().get("tools").unwrap() {
         Json::Array(t) => t.clone(),
         _ => panic!("tools is an array"),
     };
     let names: Vec<&str> = tools.iter().filter_map(|t| t.get("name").and_then(Json::as_str)).collect();
-    assert_eq!(names, ["where", "search", "read", "links"]);
+    assert_eq!(
+        names,
+        ["where", "open", "search", "read", "links", "remember", "note", "link", "undo"]
+    );
     for tool in &tools {
         let said = tool.get("description").and_then(Json::as_str).unwrap();
         assert!(said.contains("Use it"), "{said}");
