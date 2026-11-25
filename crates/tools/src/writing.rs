@@ -1,6 +1,7 @@
-//! The four writing tools: remember, note, link, undo. Each opens the memory folder for writing
-//! at its call, without the confidential right, checks that git can commit there, and makes at
-//! most one commit by Lorisse, through the store; a refusal is one sentence and writes nothing.
+//! The five writing tools: remember, note, link, attach, undo. Each opens the memory folder for
+//! writing at its call, without the confidential right, checks that git can commit there, and
+//! makes at most one commit by Lorisse, through the store; a refusal is one sentence and writes
+//! nothing.
 
 use std::path::Path;
 
@@ -15,10 +16,11 @@ enum Asked {
     Remember(NewMemory),
     Note(String, String),
     Link(String, String),
+    Attach(String, String),
     Undo(Option<String>),
 }
 
-/// `remember`, `note`, `link` or `undo`, with the call's arguments.
+/// `remember`, `note`, `link`, `attach` or `undo`, with the call's arguments.
 pub fn call(tool: &str, args: Option<&Json>) -> Answer {
     let root = match tools::root() {
         Ok(root) => root,
@@ -38,6 +40,7 @@ pub fn call(tool: &str, args: Option<&Json>) -> Answer {
         Asked::Remember(new) => remember(&mut memory, &new),
         Asked::Note(piece, text) => note(&mut memory, &piece, &text),
         Asked::Link(from, to) => link(&mut memory, &from, &to),
+        Asked::Attach(piece, path) => attach(&mut memory, &root, &piece, &path),
         Asked::Undo(change) => undo(&mut memory, change.as_deref()),
     }
 }
@@ -53,6 +56,9 @@ pub fn expected(tool: &str) -> &'static str {
         }
         "link" => {
             "link needs \"from\" and \"to\": each a number such as M-0002, or a person's or a tag's name, as a text."
+        }
+        "attach" => {
+            "attach needs \"piece\": a number such as M-0002 or a person's name, and \"path\": the full path of a file on this machine, each as a text."
         }
         _ => "undo takes \"change\", if given: the commit, or the number of the piece, whose change to take back, as a text.",
     }
@@ -113,6 +119,7 @@ fn read_args(tool: &str, args: Option<&Json>) -> Option<Asked> {
         })),
         "note" => Some(Asked::Note(needed(args, "piece")?, needed(args, "text")?)),
         "link" => Some(Asked::Link(needed(args, "from")?, needed(args, "to")?)),
+        "attach" => Some(Asked::Attach(needed(args, "piece")?, needed(args, "path")?)),
         _ => Some(Asked::Undo(text_arg(args, "change").ok()?.map(str::to_string))),
     }
 }
@@ -225,6 +232,29 @@ fn link(memory: &mut Memory, from: &str, to: &str) -> Answer {
             memory.label_of(&written.id, &written.repo),
             written.repo,
             committed(&written)
+        )),
+        Err(e) => refused(e),
+    }
+}
+
+fn attach(memory: &mut Memory, root: &Path, piece: &str, path: &str) -> Answer {
+    let what = "a file goes with a memory or a person";
+    let id = match piece_of(memory, piece, &[Layer::Memory, Layer::Person], what) {
+        Ok(id) => id,
+        Err(answer) => return answer,
+    };
+    match memory.store.attach(&id, Path::new(path)) {
+        Ok(attached) => Answer::ok(format!(
+            "Attached {} to {}: the copy is kept at {}, in one commit of {} ({}); the original stays where it was, and undo takes it back.",
+            attached.name,
+            memory.label_of(&attached.id, &attached.repo),
+            folder::shown(&root.join(&attached.path)),
+            attached.repo,
+            short(&attached.commit)
+        )),
+        Err(StoreError::Invalid(reason)) | Err(StoreError::Git(reason)) => Answer::error(format!(
+            "Nothing was copied: {}.",
+            reason.trim_end_matches('.')
         )),
         Err(e) => refused(e),
     }

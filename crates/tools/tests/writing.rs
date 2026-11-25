@@ -1,5 +1,5 @@
 //! The root VALIDATION.md's table for the writing step, one test a check: C-5.3, C-8.1 to C-8.9
-//! and C-9.1 to C-9.3. The program is started and asked over stdin, without Claude, on
+//! and C-9.1 to C-9.3; the files are `files.rs`. The program is started and asked over stdin, without Claude, on
 //! temporary copies of the sample made git folders, a name and an address set in each copy only.
 
 mod common;
@@ -55,7 +55,7 @@ fn c_5_3_the_reading_tools_are_declared_read_only_and_the_writing_tools_as_writi
             assert_eq!(hint(tool, "idempotentHint"), Some(Json::Bool(once)), "{name}");
         }
     }
-    assert_eq!(tools.len(), 9);
+    assert_eq!(tools.len(), 10);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -421,7 +421,7 @@ fn c_9_2_open_gives_the_folder_its_repositories_the_counts_and_the_five_filed_la
     ask_one(copy.path(), "remember", GUTTER);
     let got = ask_one(copy.path(), "open", "{}");
     let shown = copy.path().to_string_lossy().replace('\\', "/");
-    let state = got.split("\n\n").last().unwrap();
+    let state = got.split("\n\n").find(|p| p.starts_with("The memory folder: ")).unwrap();
     let want = [
         format!("The memory folder: {shown}"),
         "Its repositories: home, club.".to_string(),

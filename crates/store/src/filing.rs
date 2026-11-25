@@ -4,15 +4,16 @@
 //! Each call checks first (git, the folder's identity, the folder's rules), then writes, then
 //! commits; a commit that fails puts every file back as it was. The undo of a filed memory keeps
 //! its number in `ids.json`, in the same commit, so the number is never given again.
-//! Flow: `Store::open_write` → `remember` / `note` / `link` → files → one commit; `undo`.
+//! Flow: `Store::open_write` → `remember` / `note` / `link` / `attach` → files → one commit; `undo`.
 
 use std::fmt;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use chrono::Local;
 use serde_yaml_ng::Value;
 
+use crate::attach::{self, Attachment};
 use crate::check;
 use crate::config::status;
 use crate::direct::{self, Since};
@@ -70,6 +71,21 @@ pub struct Written {
     pub repo: String,
     /// Lorisse's commit, its full id; `None` when nothing changed.
     pub commit: Option<String>,
+}
+
+/// What an attach did.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Attached {
+    /// The piece the file goes with.
+    pub id: PieceId,
+    /// The repository holding it, by its row's name.
+    pub repo: String,
+    /// The name the copy was given: the file's own, or a numbered one.
+    pub name: String,
+    /// The copy, relative to the memory folder, forward slashes.
+    pub path: String,
+    /// Lorisse's commit, its full id.
+    pub commit: String,
 }
 
 /// What an undo took back.
@@ -348,6 +364,72 @@ pub(crate) fn link(store: &mut Store, from: &PieceId, to: &PieceId) -> Result<Wr
         commit: Some(commit),
         ..unchanged
     })
+}
+
+pub(crate) fn attach(store: &mut Store, id: &PieceId, source: &Path) -> Result<Attached, StoreError> {
+    let given = attach::check_given(&store.root, source, store.config.attach_limit_mb)?;
+    let what = "a file goes with a memory or a person";
+    let entry = entry_of(store, id, &[Layer::Memory, Layer::Person], what)?.clone();
+    let rel = entry.path_text();
+    let path = store.root.join(&rel);
+    let before = fs::read_to_string(&path).map_err(|e| io_error(&path, e))?;
+    let mut piece = Piece::parse(&entry.path, &before)?;
+    let mut files = piece.files();
+    let md = Path::new(&rel);
+    let name = attach::free_name(&store.root, &attach::sidecar(md), &given, &files);
+    let file_rel = attach::beside(md, &name);
+    files.push(Attachment {
+        name: name.clone(),
+        path: file_rel.clone(),
+        kind: attach::kind_of(&name).to_string(),
+    });
+    piece.set(key::FILES, attach::to_value(&files));
+    let home = ready(store, &rel)?;
+    refuse_dirty(&home, &rel)?;
+    let subject = format!("{}({}): {}", Kind::Attach, entry.id, short(&name));
+    let commit = copy_and_commit(store, &home, source, &file_rel, &rel, &piece.render(), &subject)?;
+    Ok(Attached {
+        repo: repo_of(store, &entry),
+        id: entry.id,
+        name,
+        path: file_rel,
+        commit,
+    })
+}
+
+/// Copy `source` to `file_rel`, write the piece, then one commit by Lorisse of the two; on any
+/// failure both are put back, the copy removed with a folder made for it. The commit's full id.
+fn copy_and_commit(
+    store: &Store,
+    home: &Home,
+    source: &Path,
+    file_rel: &str,
+    piece_rel: &str,
+    text: &str,
+    subject: &str,
+) -> Result<String, StoreError> {
+    let file = store.root.join(file_rel);
+    let dir = file.parent().map(Path::to_path_buf);
+    let made_dir = dir.as_ref().is_some_and(|d| !d.exists());
+    let saved = save([store.root.join(piece_rel), file.clone()]);
+    let inner = vec![home.inner(file_rel), home.inner(piece_rel)];
+    let written = attach::copy_file(source, &file)
+        .and_then(|()| write_atomic(&store.root.join(piece_rel), text));
+    let made = written.and_then(|()| git::commit(&home.dir, &inner, &[subject, BODY], Who::Lorisse));
+    let error = match made {
+        Ok(Some(id)) => return Ok(id),
+        Ok(None) => StoreError::Git("nothing to commit".into()),
+        Err(e) => e,
+    };
+    unstage(home, &inner);
+    restore(&saved);
+    let mut tmp = file.into_os_string();
+    tmp.push(".tmp");
+    let _ = fs::remove_file(PathBuf::from(tmp));
+    if let (true, Some(dir)) = (made_dir, dir) {
+        let _ = fs::remove_dir(dir);
+    }
+    Err(failed(error))
 }
 
 /// The files as they were before a write: each path and its bytes, `None` when absent.

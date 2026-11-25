@@ -1,7 +1,8 @@
 //! Lorisse's plugin program: an MCP server over stdio, one JSON-RPC message a line, with five
-//! reading tools (`where`, `open`, `search`, `read`, `links`), which write nothing, and four
-//! writing tools (`remember`, `note`, `link`, `undo`), each at most one commit by Lorisse in the
-//! person's memory folder, through the store. Each tool is declared read-only or writing.
+//! reading tools (`where`, `open`, `search`, `read`, `links`), which write nothing, and five
+//! writing tools (`remember`, `note`, `link`, `attach`, `undo`), each at most one commit by
+//! Lorisse in the person's memory folder, through the store. Each tool is declared read-only or
+//! writing.
 //! Started with the word `guard`, it is the plugin's guard instead: one tool call judged.
 
 mod folder;
@@ -93,6 +94,7 @@ fn handle(line: &str) -> Option<String> {
                             ("version", Json::str(tools::VERSION)),
                         ]),
                     ),
+                    ("instructions", Json::str(tools::INSTRUCTIONS)),
                 ]),
             )
         }
@@ -138,8 +140,8 @@ fn answer(tool: &str, args: Option<&Json>) -> Json {
 }
 
 /// Every tool, in the order `tools/list` gives them.
-const NAMES: [&str; 9] = [
-    "where", "open", "search", "read", "links", "remember", "note", "link", "undo",
+const NAMES: [&str; 10] = [
+    "where", "open", "search", "read", "links", "remember", "note", "link", "attach", "undo",
 ];
 
 /// What a tool does to the folder, as its annotations declare it.
@@ -252,6 +254,15 @@ fn tool_list() -> Vec<Json> {
             "Links one piece of the person's memory to another, as one commit; a link already there changes nothing. Use it only when the person asks to link two pieces.",
             &[Arg("from", false, PIECE, true), Arg("to", false, PIECE, true)],
             Does::WritesOnce,
+        ),
+        card(
+            "attach",
+            "Keeps a file of the person's machine with the memory or the person it is about: a copy goes in the memory folder beside that piece, as one commit, and the original stays where it was. Use it when the person gives a document's path or says to keep a file; file the memory first if it does not exist yet.",
+            &[
+                Arg("piece", false, "a number such as M-0002, or a person's name", true),
+                Arg("path", false, "the full path of the file on this machine", true),
+            ],
+            Does::Writes,
         ),
         card(
             "undo",
