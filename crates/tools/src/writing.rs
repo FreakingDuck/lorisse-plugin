@@ -1,12 +1,13 @@
-//! The five writing tools: remember, note, link, attach, undo. Each opens the memory folder for
-//! writing at its call, without the confidential right, checks that git can commit there, and
-//! makes at most one commit by Lorisse, through the store; a refusal is one sentence and writes
-//! nothing.
+//! The six writing tools: remember, note, link, attach, import, undo. Each opens the memory
+//! folder for writing at its call, without the confidential right; under git it checks that git
+//! can commit there and makes at most one commit by Lorisse, through the store; not under git it
+//! writes the files alone. A refusal is one sentence and writes nothing.
 
 use std::path::Path;
 
 use lorisse_store::{Blocked, Layer, NewMemory, PieceId, StoreError, Written};
 
+use crate::first_day;
 use crate::folder;
 use crate::json::Json;
 use crate::tools::{self, Answer, Found, Memory};
@@ -17,10 +18,14 @@ enum Asked {
     Note(String, String),
     Link(String, String),
     Attach(String, String),
+    Import(String),
     Undo(Option<String>),
 }
 
-/// `remember`, `note`, `link`, `attach` or `undo`, with the call's arguments.
+/// What `undo` says in a folder not under git.
+pub const NO_UNDO: &str = "This memory folder keeps no history, it is not under git, so there is no change to go back through: to have one, install git and run \"git init\" in the folder, then make a first commit; nothing was done.";
+
+/// `remember`, `note`, `link`, `attach`, `import` or `undo`, with the call's arguments.
 pub fn call(tool: &str, args: Option<&Json>) -> Answer {
     let root = match tools::root() {
         Ok(root) => root,
@@ -41,6 +46,8 @@ pub fn call(tool: &str, args: Option<&Json>) -> Answer {
         Asked::Note(piece, text) => note(&mut memory, &piece, &text),
         Asked::Link(from, to) => link(&mut memory, &from, &to),
         Asked::Attach(piece, path) => attach(&mut memory, &root, &piece, &path),
+        Asked::Import(text) => first_day::import(&mut memory, &text),
+        Asked::Undo(_) if !memory.store.is_git() => Answer::ok(NO_UNDO.to_string()),
         Asked::Undo(change) => undo(&mut memory, change.as_deref()),
     }
 }
@@ -59,6 +66,9 @@ pub fn expected(tool: &str) -> &'static str {
         }
         "attach" => {
             "attach needs \"piece\": a number such as M-0002 or a person's name, and \"path\": the full path of a file on this machine, each as a text."
+        }
+        "import" => {
+            "import needs \"text\": the lines another assistant gave, \"[YYYY-MM-DD] - text\" under their headings, as a text."
         }
         _ => "undo takes \"change\", if given: the commit, or the number of the piece, whose change to take back, as a text.",
     }
@@ -120,6 +130,7 @@ fn read_args(tool: &str, args: Option<&Json>) -> Option<Asked> {
         "note" => Some(Asked::Note(needed(args, "piece")?, needed(args, "text")?)),
         "link" => Some(Asked::Link(needed(args, "from")?, needed(args, "to")?)),
         "attach" => Some(Asked::Attach(needed(args, "piece")?, needed(args, "path")?)),
+        "import" => Some(Asked::Import(needed(args, "text")?)),
         _ => Some(Asked::Undo(text_arg(args, "change").ok()?.map(str::to_string))),
     }
 }
@@ -152,16 +163,23 @@ fn remember(memory: &mut Memory, new: &NewMemory) -> Answer {
         Err(e) => return refused(e),
     };
     let label = memory.label_of(&written.id, &written.repo);
-    Answer::ok(format!(
-        "Filed as {label}: \"{}\", in one commit of {} ({}); undo takes it back.",
-        new.title.trim(),
-        written.repo,
-        committed(&written)
-    ))
+    let title = new.title.trim();
+    match &written.commit {
+        Some(commit) => Answer::ok(format!(
+            "Filed as {label}: \"{title}\", in one commit of {} ({}); undo takes it back.",
+            written.repo,
+            short(commit)
+        )),
+        None => Answer::ok(format!("Filed as {label}: \"{title}\".")),
+    }
 }
 
-fn committed(written: &Written) -> String {
-    written.commit.as_deref().map(short).unwrap_or_default()
+/// `, in one commit of <repo> (<id>)` under git; nothing without it.
+fn in_commit(written: &Written) -> String {
+    match &written.commit {
+        Some(commit) => format!(", in one commit of {} ({})", written.repo, short(commit)),
+        None => String::new(),
+    }
 }
 
 /// The entry a number or a name leads to among `layers`, or the answer that refuses it.
@@ -192,10 +210,9 @@ fn note(memory: &mut Memory, piece: &str, text: &str) -> Answer {
     };
     match memory.store.note(&id, text) {
         Ok(written) => Answer::ok(format!(
-            "Noted on {}: one dated line added at the end of its text, in one commit of {} ({}).",
+            "Noted on {}: one dated line added at the end of its text{}.",
             memory.label_of(&written.id, &written.repo),
-            written.repo,
-            committed(&written)
+            in_commit(&written)
         )),
         Err(e) => refused(e),
     }
@@ -223,15 +240,18 @@ fn link(memory: &mut Memory, from: &str, to: &str) -> Answer {
         None => to.to_string(),
     };
     match memory.store.link_to(&from, &to) {
-        Ok(written) if written.commit.is_none() => Answer::ok(format!(
+        Ok(written) if !written.changed && memory.store.is_git() => Answer::ok(format!(
             "{} already links to {to_label}: nothing changed, and no commit was made.",
             memory.label_of(&written.id, &written.repo)
         )),
+        Ok(written) if !written.changed => Answer::ok(format!(
+            "{} already links to {to_label}: nothing changed.",
+            memory.label_of(&written.id, &written.repo)
+        )),
         Ok(written) => Answer::ok(format!(
-            "Linked: {} now links to {to_label}, in one commit of {} ({}).",
+            "Linked: {} now links to {to_label}{}.",
             memory.label_of(&written.id, &written.repo),
-            written.repo,
-            committed(&written)
+            in_commit(&written)
         )),
         Err(e) => refused(e),
     }
@@ -244,14 +264,22 @@ fn attach(memory: &mut Memory, root: &Path, piece: &str, path: &str) -> Answer {
         Err(answer) => return answer,
     };
     match memory.store.attach(&id, Path::new(path)) {
-        Ok(attached) => Answer::ok(format!(
-            "Attached {} to {}: the copy is kept at {}, in one commit of {} ({}); the original stays where it was, and undo takes it back.",
-            attached.name,
-            memory.label_of(&attached.id, &attached.repo),
-            folder::shown(&root.join(&attached.path)),
-            attached.repo,
-            short(&attached.commit)
-        )),
+        Ok(attached) => {
+            let label = memory.label_of(&attached.id, &attached.repo);
+            let kept = folder::shown(&root.join(&attached.path));
+            Answer::ok(match &attached.commit {
+                Some(commit) => format!(
+                    "Attached {} to {label}: the copy is kept at {kept}, in one commit of {} ({}); the original stays where it was, and undo takes it back.",
+                    attached.name,
+                    attached.repo,
+                    short(commit)
+                ),
+                None => format!(
+                    "Attached {} to {label}: the copy is kept at {kept}; the original stays where it was.",
+                    attached.name
+                ),
+            })
+        }
         Err(StoreError::Invalid(reason)) | Err(StoreError::Git(reason)) => Answer::error(format!(
             "Nothing was copied: {}.",
             reason.trim_end_matches('.')

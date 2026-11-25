@@ -69,7 +69,33 @@ pub struct Written {
     pub id: PieceId,
     /// The repository holding it, by its row's name.
     pub repo: String,
-    /// Lorisse's commit, its full id; `None` when nothing changed.
+    /// Whether a file was written; `false` for a link already there.
+    pub changed: bool,
+    /// Lorisse's commit, its full id; `None` when nothing changed or no git holds the piece.
+    pub commit: Option<String>,
+}
+
+/// One dated line to import as a memory.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Dated {
+    /// Its title, one line.
+    pub title: String,
+    /// Its text, the person's words as given.
+    pub text: String,
+    /// Its category, kept as its tag.
+    pub tag: String,
+    /// Its date, `YYYY-MM-DD`; `None` when it is not known.
+    pub date: Option<String>,
+}
+
+/// What an import did.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Imported {
+    /// The memories filed, in the order given.
+    pub ids: Vec<PieceId>,
+    /// The repository holding them, by its row's name.
+    pub repo: String,
+    /// Lorisse's one commit of the whole import; `None` when no git holds the folder.
     pub commit: Option<String>,
 }
 
@@ -84,8 +110,8 @@ pub struct Attached {
     pub name: String,
     /// The copy, relative to the memory folder, forward slashes.
     pub path: String,
-    /// Lorisse's commit, its full id.
-    pub commit: String,
+    /// Lorisse's commit, its full id; `None` when no git holds the piece.
+    pub commit: Option<String>,
 }
 
 /// What an undo took back.
@@ -132,15 +158,14 @@ fn short(text: &str) -> String {
     }
 }
 
-/// What stops a write in the folder: git, the root's repository, its identity.
+/// What stops a write in the folder: under git, no git on the machine or no identity. A folder
+/// not under git is written all the same, without a history.
 pub(crate) fn blocked(store: &Store) -> Option<Blocked> {
+    let home = repos::root_home(store)?;
     if !git::available() {
         return Some(Blocked::NoGit);
     }
-    match repos::root_home(store) {
-        None => Some(Blocked::NotUnderGit),
-        Some(home) => unsigned(&home),
-    }
+    unsigned(&home)
 }
 
 /// `NoIdentity` when the repository's own commits have no name or address.
@@ -149,16 +174,21 @@ fn unsigned(home: &Home) -> Option<Blocked> {
     (!named && !git::has_identity(&home.dir)).then(|| Blocked::NoIdentity(home.name.clone()))
 }
 
-/// The repository a write at `rel` commits in, once nothing blocks it.
-fn ready(store: &Store, rel: &str) -> Result<Home, StoreError> {
+/// The repository a write at `rel` commits in, once nothing blocks it; `None` when no git
+/// holds it, the write then made without a commit.
+fn ready(store: &Store, rel: &str) -> Result<Option<Home>, StoreError> {
     if let Some(said) = blocked(store) {
         return Err(StoreError::Invalid(said.to_string()));
     }
-    let home = repos::home_for_write(store, rel)
-        .ok_or_else(|| StoreError::Invalid(Blocked::NotUnderGit.to_string()))?;
+    let Some(home) = repos::home_for_write(store, rel) else {
+        return Ok(None);
+    };
+    if !git::available() {
+        return Err(StoreError::Invalid(Blocked::NoGit.to_string()));
+    }
     match unsigned(&home) {
         Some(said) => Err(StoreError::Invalid(said.to_string())),
-        None => Ok(home),
+        None => Ok(Some(home)),
     }
 }
 
@@ -229,8 +259,9 @@ fn repo_of(store: &Store, entry: &Entry) -> String {
     entry.repo.clone().unwrap_or_else(|| root_name(store))
 }
 
-/// Refuse a piece whose file has changes the person has not committed.
-fn refuse_dirty(home: &Home, rel: &str) -> Result<(), StoreError> {
+/// Refuse a piece whose file has changes the person has not committed; none without git.
+fn refuse_dirty(home: Option<&Home>, rel: &str) -> Result<(), StoreError> {
+    let Some(home) = home else { return Ok(()) };
     match git::dirty(&home.dir, &[home.inner(rel)])?.is_empty() {
         true => Ok(()),
         false => Err(StoreError::Invalid(format!(
@@ -265,9 +296,40 @@ pub(crate) fn remember(store: &mut Store, memory: &NewMemory) -> Result<Written,
         }
     }
     let row = folder.as_ref().map(|_| repo.as_str());
-    let id = store.next_id("M", row).padded(store.config.id_width);
+    let id = store.next_id("M", row);
+    let tags: Vec<String> = memory.tags.iter().map(|t| one_line(t)).filter(|t| !t.is_empty()).collect();
+    let fields = Fields { title: &title, text, kind: &kind, tags: &tags, links: linked, date: None, source: "chat" };
+    let (rel, piece) = new_piece(store, folder.as_deref(), &id, fields)?;
+    let home = ready(store, &rel)?;
+    let id_text = id.padded(store.config.id_width);
+    let subject = format!("{}({id_text}): {}", Kind::Remember, short(&title));
+    let commit = write_and_commit(store, home.as_ref(), &[(rel, Some(piece.render()))], &subject)?;
+    let id = PieceId::parse(&id_text).ok_or_else(|| StoreError::Invalid(format!("{id_text}: not an id")))?;
+    Ok(Written {
+        id,
+        repo,
+        changed: true,
+        commit,
+    })
+}
+
+/// What a new memory's header and text are made of.
+struct Fields<'a> {
+    title: &'a str,
+    text: &'a str,
+    kind: &'a str,
+    tags: &'a [String],
+    links: Vec<Value>,
+    date: Option<&'a str>,
+    /// The source written when the folder's settings list it.
+    source: &'a str,
+}
+
+/// A new memory's path, relative to the root, and its piece, checked against the folder's lists.
+fn new_piece(store: &Store, folder: Option<&str>, id: &PieceId, fields: Fields) -> Result<(String, Piece), StoreError> {
+    let id = id.padded(store.config.id_width);
     let memories = store.config.folder_of(Layer::Memory).unwrap_or("memories");
-    let rel = match &folder {
+    let rel = match folder {
         Some(f) => format!("{f}/{memories}/{id}.md"),
         None => format!("{memories}/{id}.md"),
     };
@@ -277,31 +339,65 @@ pub(crate) fn remember(store: &mut Store, memory: &NewMemory) -> Result<Written,
     let now = Local::now().fixed_offset();
     let mut piece = Piece::empty(PathBuf::from(&rel));
     piece.set(key::ID, Value::from(id.as_str()));
-    piece.set(key::TITLE, Value::from(title.as_str()));
-    piece.set(key::KIND, Value::from(kind));
-    let tags = memory.tags.iter().map(|t| one_line(t)).filter(|t| !t.is_empty());
-    piece.set(key::TAGS, Value::Sequence(tags.map(Value::from).collect()));
-    if store.config.sources.iter().any(|s| s == "chat") {
-        piece.set(key::SOURCE, Value::from("chat"));
+    piece.set(key::TITLE, Value::from(fields.title));
+    if let Some(date) = fields.date {
+        piece.set(key::DATE, Value::from(date));
+    }
+    piece.set(key::KIND, Value::from(fields.kind));
+    piece.set(key::TAGS, Value::Sequence(fields.tags.iter().map(|t| Value::from(t.as_str())).collect()));
+    let sources = &store.config.sources;
+    let source = [fields.source, "chat"].into_iter().find(|s| sources.iter().any(|w| w == s));
+    if let Some(source) = source {
+        piece.set(key::SOURCE, Value::from(source));
     }
     piece.set(key::CAPTURED, Value::from(now.format(TIME_FORMAT).to_string()));
     piece.set(key::UPDATED, Value::from(now.format(DATE_FORMAT).to_string()));
     piece.set(key::STATUS, Value::from(status::SORTED));
-    piece.set(key::LINKS, Value::Sequence(linked));
-    piece.set_body(format!("{text}\n"));
+    piece.set(key::LINKS, Value::Sequence(fields.links));
+    piece.set_body(format!("{}\n", fields.text));
     let outside = check::outside_lists(Layer::Memory, &piece, &store.config);
     if !outside.is_empty() {
         return Err(StoreError::Invalid(outside.join("; ")));
     }
-    let home = ready(store, &rel)?;
-    let subject = format!("{}({id}): {}", Kind::Remember, short(&title));
-    let commit = write_and_commit(store, &home, &[(rel, Some(piece.render()))], &subject)?;
-    let id = PieceId::parse(&id).ok_or_else(|| StoreError::Invalid(format!("{id}: not an id")))?;
-    Ok(Written {
-        id,
-        repo,
-        commit: Some(commit),
-    })
+    Ok((rel, piece))
+}
+
+pub(crate) fn import(store: &mut Store, lines: &[Dated]) -> Result<Imported, StoreError> {
+    if lines.is_empty() {
+        return Err(StoreError::Invalid("there is no line to import".into()));
+    }
+    let repo = root_name(store);
+    let kind = store.config.kinds.first().cloned().unwrap_or_else(|| "fact".into());
+    let first = store.next_id("M", None);
+    let PieceId::Numbered { prefix, n } = first else {
+        return Err(StoreError::Invalid("a memory's number cannot be made".into()));
+    };
+    let mut changes = Vec::new();
+    let mut ids = Vec::new();
+    for (i, line) in lines.iter().enumerate() {
+        let title = one_line(&line.title);
+        let text = line.text.trim();
+        if title.is_empty() || text.is_empty() {
+            return Err(StoreError::Invalid("a memory needs a title and a text".into()));
+        }
+        let date = line.date.as_deref().map(str::trim);
+        if let Some(day) = date {
+            chrono::NaiveDate::parse_from_str(day, DATE_FORMAT)
+                .map_err(|_| StoreError::Invalid(format!("{day} is not a date")))?;
+        }
+        let tags: Vec<String> = Some(one_line(&line.tag)).filter(|t| !t.is_empty()).into_iter().collect();
+        let id = PieceId::Numbered { prefix: prefix.clone(), n: n + i as u64 };
+        let fields = Fields { title: &title, text, kind: &kind, tags: &tags, links: Vec::new(), date, source: "import" };
+        let (rel, piece) = new_piece(store, None, &id, fields)?;
+        changes.push((rel, Some(piece.render())));
+        ids.push(id);
+    }
+    let home = ready(store, &changes[0].0)?;
+    let named: Vec<String> = ids.iter().map(|id| id.padded(store.config.id_width)).collect();
+    let subject = format!("{}({}): imported, {} memories", Kind::Remember, named.join(", "), ids.len());
+    let commit = write_and_commit(store, home.as_ref(), &changes, &subject)?;
+    let ids = named.iter().filter_map(|i| PieceId::parse(i)).collect();
+    Ok(Imported { ids, repo, commit })
 }
 
 pub(crate) fn note(store: &mut Store, id: &PieceId, text: &str) -> Result<Written, StoreError> {
@@ -322,13 +418,14 @@ pub(crate) fn note(store: &mut Store, id: &PieceId, text: &str) -> Result<Writte
     let today = Local::now().format(DATE_FORMAT);
     after.push_str(&format!("- {today}: {line}{nl}"));
     let home = ready(store, &rel)?;
-    refuse_dirty(&home, &rel)?;
+    refuse_dirty(home.as_ref(), &rel)?;
     let subject = format!("{}({}): {}", Kind::Note, entry.id, short(&line));
-    let commit = write_and_commit(store, &home, &[(rel, Some(after))], &subject)?;
+    let commit = write_and_commit(store, home.as_ref(), &[(rel, Some(after))], &subject)?;
     Ok(Written {
         repo: repo_of(store, &entry),
         id: entry.id,
-        commit: Some(commit),
+        changed: true,
+        commit,
     })
 }
 
@@ -344,6 +441,7 @@ pub(crate) fn link(store: &mut Store, from: &PieceId, to: &PieceId) -> Result<Wr
     let unchanged = Written {
         id: entry.id.clone(),
         repo: repo_of(store, &entry),
+        changed: false,
         commit: None,
     };
     if entry.links.iter().any(|l| links::names(l, &target, archive)) {
@@ -357,11 +455,12 @@ pub(crate) fn link(store: &mut Store, from: &PieceId, to: &PieceId) -> Result<Wr
     list.push(Value::from(target.id.to_string()));
     piece.set(key::LINKS, Value::Sequence(list));
     let home = ready(store, &rel)?;
-    refuse_dirty(&home, &rel)?;
+    refuse_dirty(home.as_ref(), &rel)?;
     let subject = format!("{}({}): to {}", Kind::Link, entry.id, target.id);
-    let commit = write_and_commit(store, &home, &[(rel, Some(piece.render()))], &subject)?;
+    let commit = write_and_commit(store, home.as_ref(), &[(rel, Some(piece.render()))], &subject)?;
     Ok(Written {
-        commit: Some(commit),
+        changed: true,
+        commit,
         ..unchanged
     })
 }
@@ -385,9 +484,9 @@ pub(crate) fn attach(store: &mut Store, id: &PieceId, source: &Path) -> Result<A
     });
     piece.set(key::FILES, attach::to_value(&files));
     let home = ready(store, &rel)?;
-    refuse_dirty(&home, &rel)?;
+    refuse_dirty(home.as_ref(), &rel)?;
     let subject = format!("{}({}): {}", Kind::Attach, entry.id, short(&name));
-    let commit = copy_and_commit(store, &home, source, &file_rel, &rel, &piece.render(), &subject)?;
+    let commit = copy_and_commit(store, home.as_ref(), source, &file_rel, &rel, &piece.render(), &subject)?;
     Ok(Attached {
         repo: repo_of(store, &entry),
         id: entry.id,
@@ -397,31 +496,40 @@ pub(crate) fn attach(store: &mut Store, id: &PieceId, source: &Path) -> Result<A
     })
 }
 
-/// Copy `source` to `file_rel`, write the piece, then one commit by Lorisse of the two; on any
-/// failure both are put back, the copy removed with a folder made for it. The commit's full id.
+/// Copy `source` to `file_rel`, write the piece, then one commit by Lorisse of the two when git
+/// holds them; on any failure both are put back, the copy removed with a folder made for it.
+/// The commit's full id, `None` without git.
 fn copy_and_commit(
     store: &Store,
-    home: &Home,
+    home: Option<&Home>,
     source: &Path,
     file_rel: &str,
     piece_rel: &str,
     text: &str,
     subject: &str,
-) -> Result<String, StoreError> {
+) -> Result<Option<String>, StoreError> {
     let file = store.root.join(file_rel);
     let dir = file.parent().map(Path::to_path_buf);
     let made_dir = dir.as_ref().is_some_and(|d| !d.exists());
     let saved = save([store.root.join(piece_rel), file.clone()]);
-    let inner = vec![home.inner(file_rel), home.inner(piece_rel)];
+    let inner = match home {
+        Some(home) => vec![home.inner(file_rel), home.inner(piece_rel)],
+        None => Vec::new(),
+    };
     let written = attach::copy_file(source, &file)
         .and_then(|()| write_atomic(&store.root.join(piece_rel), text));
-    let made = written.and_then(|()| git::commit(&home.dir, &inner, &[subject, BODY], Who::Lorisse));
+    let made = written.and_then(|()| match home {
+        Some(home) => git::commit(&home.dir, &inner, &[subject, BODY], Who::Lorisse).map(|c| c.map(Some)),
+        None => Ok(Some(None)),
+    });
     let error = match made {
         Ok(Some(id)) => return Ok(id),
         Ok(None) => StoreError::Git("nothing to commit".into()),
         Err(e) => e,
     };
-    unstage(home, &inner);
+    if let Some(home) = home {
+        unstage(home, &inner);
+    }
     restore(&saved);
     let mut tmp = file.into_os_string();
     tmp.push(".tmp");
@@ -462,15 +570,15 @@ fn failed(e: StoreError) -> StoreError {
 }
 
 /// Write each change (a text, or `None` for a removal), then one commit by Lorisse of exactly
-/// those paths; on any failure every file is put back and unstaged. The commit's full id.
+/// those paths when git holds them; on any failure every file is put back and unstaged. The
+/// commit's full id, `None` without git.
 fn write_and_commit(
     store: &Store,
-    home: &Home,
+    home: Option<&Home>,
     changes: &[(String, Option<String>)],
     subject: &str,
-) -> Result<String, StoreError> {
+) -> Result<Option<String>, StoreError> {
     let saved = save(changes.iter().map(|(rel, _)| store.root.join(rel)));
-    let inner: Vec<String> = changes.iter().map(|(rel, _)| home.inner(rel)).collect();
     let mut outcome = Ok(());
     for (rel, after) in changes {
         let path = store.root.join(rel);
@@ -482,9 +590,17 @@ fn write_and_commit(
             break;
         }
     }
+    let Some(home) = home else {
+        if let Err(e) = outcome {
+            restore(&saved);
+            return Err(StoreError::Io(format!("the change could not be written, the folder is as it was: {e}")));
+        }
+        return Ok(None);
+    };
+    let inner: Vec<String> = changes.iter().map(|(rel, _)| home.inner(rel)).collect();
     let made = outcome.and_then(|()| git::commit(&home.dir, &inner, &[subject, BODY], Who::Lorisse));
     match made {
-        Ok(Some(id)) => Ok(id),
+        Ok(Some(id)) => Ok(Some(id)),
         Ok(None) => {
             restore(&saved);
             Err(failed(StoreError::Git("nothing to commit".into())))

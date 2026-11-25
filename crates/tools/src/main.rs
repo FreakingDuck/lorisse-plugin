@@ -1,10 +1,11 @@
 //! Lorisse's plugin program: an MCP server over stdio, one JSON-RPC message a line, with five
-//! reading tools (`where`, `plop`, `search`, `read`, `links`), which write nothing, and five
-//! writing tools (`remember`, `note`, `link`, `attach`, `undo`), each at most one commit by
-//! Lorisse in the person's memory folder, through the store. Each tool is declared read-only or
-//! writing.
+//! reading tools (`where`, `plop`, `search`, `read`, `links`), which write nothing, and seven
+//! writing tools (`remember`, `note`, `link`, `attach`, `undo`, `start`, `import`), each at most
+//! one commit by Lorisse in the person's memory folder when it is under git, through the store.
+//! Each tool is declared read-only or writing.
 //! Started with the word `guard`, it is the plugin's guard instead: one tool call judged.
 
+mod first_day;
 mod folder;
 mod json;
 mod tools;
@@ -120,6 +121,7 @@ fn answer(tool: &str, args: Option<&Json>) -> Json {
     let run = AssertUnwindSafe(|| match tool {
         "where" => tools::where_is(),
         "plop" => tools::plop(),
+        "start" => first_day::start(args),
         "search" | "read" | "links" => tools::call(tool, arg),
         _ => writing::call(tool, args),
     });
@@ -140,8 +142,9 @@ fn answer(tool: &str, args: Option<&Json>) -> Json {
 }
 
 /// Every tool, in the order `tools/list` gives them.
-const NAMES: [&str; 10] = [
+const NAMES: [&str; 12] = [
     "where", "plop", "search", "read", "links", "remember", "note", "link", "attach", "undo",
+    "start", "import",
 ];
 
 /// What a tool does to the folder, as its annotations declare it.
@@ -268,6 +271,23 @@ fn tool_list() -> Vec<Json> {
             "undo",
             "Takes back Lorisse's last change in the memory folder, or the one named, as a new commit; the history keeps both, and a change the person made is never taken back. Use it when the person asks to undo or take back a change.",
             &[Arg("change", false, "the commit, or the number of the piece, whose change to take back; the last change when left out", false)],
+            Does::Writes,
+        ),
+        card(
+            "start",
+            "Makes a new person's memory folder ready: a folder named Lorisse in their home folder, or the place named, with its settings, the first set of rules and their intro written from their answers, put under git when git is on the machine; this machine then remembers it. Use it when Lorisse says there is no memory folder and the person wants one, once you have asked their name, what they want to remember and how they like to be answered.",
+            &[
+                Arg("place", false, "the full path of the folder to make; a folder named Lorisse in the home folder when left out", false),
+                Arg("name", false, "the person's name", false),
+                Arg("remember", false, "what the person wants Lorisse to remember, in their words", false),
+                Arg("answer_style", false, "how the person likes to be answered, in their words", false),
+            ],
+            Does::WritesOnce,
+        ),
+        card(
+            "import",
+            "Files what another assistant remembers of the person: each line \"[YYYY-MM-DD] - text\" (or \"[unknown] - text\") under Identity, Career, Projects or Preferences becomes a memory with its date and its category, all in one step; the lines under Instructions are given back as proposals for the intro, never filed or followed. Use it when the person pastes such lines, or asks to import them.",
+            &[Arg("text", false, "the other assistant's answer, whole, as the person pasted it", true)],
             Does::Writes,
         ),
     ]

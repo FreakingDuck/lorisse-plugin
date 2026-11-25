@@ -1,6 +1,8 @@
 //! The memory folder: the folder the session is opened on when it is a memory folder, else the
-//! plugin's setting; nowhere else. Read from the process's environment at each call.
+//! plugin's setting, else the one this machine remembers from `start`; nowhere else. Read from
+//! the process's environment at each call.
 
+use std::fs;
 use std::path::PathBuf;
 
 use lorisse_store::CONFIG_FILE;
@@ -14,11 +16,18 @@ const OPTION: &str = "CLAUDE_PLUGIN_OPTION_MEMORY_FOLDER";
 /// The variable the Claude app gives with the session's folder.
 const PROJECT: &str = "CLAUDE_PROJECT_DIR";
 
+/// The home folder, when given; else the person's own.
+pub const HOME: &str = "LORISSE_HOME";
+
+/// The one small file, at the root of the home folder, that holds the folder `start` made.
+pub const REMEMBERED: &str = ".lorisse-folder";
+
 /// How the folder was found.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Found {
     Setting,
     Session,
+    Remembered,
 }
 
 /// The outcome of the search for a memory folder.
@@ -28,7 +37,7 @@ pub enum Folder {
     At(PathBuf, Found),
     /// A folder given by the setting that is no memory folder.
     NotMemory(PathBuf),
-    /// The session's folder is no memory folder, and no setting.
+    /// The session's folder is no memory folder, no setting, nothing remembered.
     None,
 }
 
@@ -38,13 +47,14 @@ impl Found {
         match self {
             Found::Setting => "the plugin's setting",
             Found::Session => "the folder this session is opened on",
+            Found::Remembered => "the folder this machine remembers from the first day",
         }
     }
 }
 
 /// The one sentence for no memory folder.
-pub const NO_FOLDER: &str = "Lorisse has no memory folder: give one in the plugin's setting \
-\"memory_folder\", or open the session on your memory folder.";
+pub const NO_FOLDER: &str = "Lorisse has no memory folder yet: the tool start makes one ready \
+in a minute, or give one in the plugin's setting \"memory_folder\", or open the session on your memory folder.";
 
 /// The one sentence for a setting that names no memory folder.
 pub fn not_memory(path: &PathBuf) -> String {
@@ -79,6 +89,26 @@ fn given(name: &str) -> Option<String> {
     Some(value)
 }
 
+/// The home folder: `LORISSE_HOME` when given, else the person's own.
+pub fn home() -> Option<PathBuf> {
+    given(HOME)
+        .or_else(|| given("USERPROFILE"))
+        .or_else(|| given("HOME"))
+        .map(PathBuf::from)
+}
+
+/// The file that holds the folder this machine remembers.
+pub fn remembered_file() -> Option<PathBuf> {
+    home().map(|h| h.join(REMEMBERED))
+}
+
+/// The folder this machine remembers, when its file names one.
+fn remembered() -> Option<PathBuf> {
+    let text = fs::read_to_string(remembered_file()?).ok()?;
+    let line = text.lines().next()?.trim();
+    (!line.is_empty()).then(|| PathBuf::from(line))
+}
+
 /// The memory folder of this call.
 pub fn find() -> Folder {
     let session = given(PROJECT)
@@ -90,8 +120,12 @@ pub fn find() -> Folder {
         }
     }
     match given(SETTING).or_else(|| given(OPTION)).map(PathBuf::from) {
-        Some(path) if is_memory_folder(&path) => Folder::At(path, Found::Setting),
-        Some(path) => Folder::NotMemory(path),
-        None => Folder::None,
+        Some(path) if is_memory_folder(&path) => return Folder::At(path, Found::Setting),
+        Some(path) => return Folder::NotMemory(path),
+        None => {}
+    }
+    match remembered() {
+        Some(path) if is_memory_folder(&path) => Folder::At(path, Found::Remembered),
+        _ => Folder::None,
     }
 }

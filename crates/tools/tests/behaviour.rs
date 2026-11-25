@@ -101,22 +101,35 @@ fn a_piece_whose_header_cannot_be_read_is_named_and_the_rest_is_given() {
 
 const GUTTER: &str = r#"{"title":"The gutter was cleaned","text":"The gutter was cleaned in October."}"#;
 
+/// Every writing tool on a folder, with good arguments; `file` a file of the machine to attach.
+fn every_write(file: &str) -> Vec<(&'static str, String)> {
+    vec![
+        ("remember", GUTTER.to_string()),
+        ("note", r#"{"piece":"M-0002","text":"x"}"#.to_string()),
+        ("link", r#"{"from":"M-0003","to":"M-0001"}"#.to_string()),
+        ("attach", format!(r#"{{"piece":"M-0001","path":"{}"}}"#, file.replace('\\', "/"))),
+        ("import", r#"{"text":"Identity\n[2020-01-01] - Lives by a lake."}"#.to_string()),
+        ("undo", "{}".to_string()),
+    ]
+}
+
 #[test]
-fn a_writing_tool_in_a_folder_not_under_git_is_refused_and_writes_nothing() {
-    let copy = Temp::sample("not_git");
-    let before = snapshot(copy.path());
+fn a_writing_tool_in_a_folder_under_git_without_git_on_the_machine_is_refused_and_writes_nothing() {
+    let copy = Temp::git_sample("under_git_no_git");
+    let mine = Temp::empty("under_git_file");
+    mine.write("quote.txt", "a quote");
+    let file = mine.path().join("quote.txt").to_string_lossy().into_owned();
+    let before = files_of(copy.path());
+    let commits = log(copy.path());
     let setting = copy.path().to_string_lossy().into_owned();
-    let calls = [
-        ("remember", GUTTER),
-        ("note", r#"{"piece":"M-0002","text":"x"}"#),
-        ("link", r#"{"from":"M-0003","to":"M-0001"}"#),
-        ("undo", "{}"),
-    ];
-    for said in ask(&[(SETTING, &setting)], None, &calls) {
-        assert!(said.starts_with("Lorisse cannot write because the memory folder"), "{said}");
-        assert!(said.contains("is not under git: run \"git init\""), "{said}");
+    let calls = every_write(&file);
+    let calls: Vec<(&str, &str)> = calls.iter().map(|(t, a)| (*t, a.as_str())).collect();
+    for said in ask(&[(SETTING, &setting), ("PATH", "")], None, &calls) {
+        assert!(said.starts_with("Lorisse cannot write because git is not found on this machine"), "{said}");
+        assert!(said.ends_with("nothing was written."), "{said}");
     }
-    assert_eq!(snapshot(copy.path()), before);
+    assert_eq!(files_of(copy.path()), before);
+    assert_eq!(log(copy.path()), commits);
 }
 
 #[test]
@@ -131,7 +144,8 @@ fn a_writing_tool_without_git_or_without_a_name_for_the_commits_names_what_is_mi
     let before = files_of(copy.path());
     let commits = log(copy.path());
     let env = [(SETTING, setting.as_str()), ("GIT_CONFIG_GLOBAL", &global), ("GIT_CONFIG_NOSYSTEM", "1")];
-    let said = ask(&env, None, &[("remember", GUTTER), ("undo", "{}")]);
+    let import = r#"{"text":"Identity\n[2020-01-01] - Lives by a lake."}"#;
+    let said = ask(&env, None, &[("remember", GUTTER), ("import", import), ("undo", "{}")]);
     for said in &said {
         assert!(said.starts_with("Lorisse cannot write because git has no name or no address set for the commits of home"), "{said}");
     }
@@ -139,6 +153,26 @@ fn a_writing_tool_without_git_or_without_a_name_for_the_commits_names_what_is_mi
     assert!(no_git[0].starts_with("Lorisse cannot write because git is not found on this machine"), "{}", no_git[0]);
     assert_eq!(files_of(copy.path()), before);
     assert_eq!(log(copy.path()), commits);
+}
+
+#[test]
+fn start_when_this_machine_already_has_a_memory_folder_names_it_and_makes_nothing() {
+    let home = Temp::empty("already_home");
+    let copy = Temp::sample("already_setting");
+    let setting = copy.path().to_string_lossy().into_owned();
+    let home_text = home.path().to_string_lossy().into_owned();
+    let shown = setting.replace('\\', "/");
+    let by_setting = ask(&[(SETTING, &setting), (HOME, &home_text)], None, &[("start", r#"{"name":"Sam"}"#)]);
+    assert_eq!(by_setting[0], format!("This machine already has a memory folder: {shown}, found by the plugin's setting; nothing was made."));
+    let by_session = ask(&[(HOME, &home_text)], Some(copy.path()), &[("start", "{}")]);
+    assert!(by_session[0].starts_with(&format!("This machine already has a memory folder: {shown}, found by the folder this session")), "{}", by_session[0]);
+    home.write(".lorisse-folder", &format!("{setting}\n"));
+    let before = snapshot(home.path());
+    let elsewhere = Temp::empty("already_cwd");
+    let by_machine = ask(&[(HOME, &home_text)], Some(elsewhere.path()), &[("start", "{}")]);
+    assert!(by_machine[0].ends_with("found by the folder this machine remembers from the first day; nothing was made."), "{}", by_machine[0]);
+    assert_eq!(snapshot(home.path()), before, "nothing made in the home folder");
+    assert!(!home.path().join("Lorisse").exists());
 }
 
 #[test]

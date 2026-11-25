@@ -42,6 +42,9 @@ const PLUGIN_INTRO: &str = "Lorisse keeps the person's memory in plain files in 
 Search before you answer what they know, decided or noted, and say the number of each piece you use. \
 Undo takes back the last change.";
 
+/// What `plop` says once of git, in a folder not under git.
+pub const NO_HISTORY: &str = "This folder is not under git: with git, every change Lorisse makes would be kept in a history and could be taken back, and it can be added at any time.";
+
 /// The rules of keeping, the last lines of `plop`.
 pub const KEEPING: &str = "The rules of keeping:
 - File by yourself what the person says that is worth keeping: a decision, a date, a price, a promise, a fact about a person.
@@ -134,6 +137,9 @@ pub fn plop() -> Answer {
     }
     lines.push(String::new());
     lines.extend(memory.state(&root));
+    if !memory.store.is_git() {
+        lines.push(NO_HISTORY.to_string());
+    }
     lines.push(String::new());
     lines.push(KEEPING.to_string());
     Answer::ok(lines.join("\n"))

@@ -134,7 +134,7 @@ impl Default for StoreConfig {
                 status::RETIRED,
             ]),
             priorities: words(&["high", "medium", "low"]),
-            categories: words(&["admin", "hardware", "firmware", "cakeboard", "perso"]),
+            categories: words(&["home", "family", "work", "health", "money", "admin"]),
             sources: words(&["phone", "chat", "agent", "console", "app"]),
             owner: String::new(),
             id_width: MIN_WIDTH,
@@ -207,6 +207,12 @@ mod tests {
         let french = "person_sections: [Ce que je sais, Comment je gère]\n";
         let french: StoreConfig = serde_yaml_ng::from_str(french).unwrap();
         assert_eq!(french.person_sections[0], "Ce que je sais");
+    }
+
+    #[test]
+    fn a_folder_without_settings_gets_plain_categories() {
+        let config = StoreConfig::default();
+        assert_eq!(config.categories, ["home", "family", "work", "health", "money", "admin"]);
     }
 
     #[test]

@@ -20,6 +20,7 @@ fn guard(received: &str, cwd: &Path) -> String {
         .env_remove("LORISSE_MEMORY_FOLDER")
         .env_remove("CLAUDE_PLUGIN_OPTION_MEMORY_FOLDER")
         .env_remove("CLAUDE_PROJECT_DIR")
+        .env("LORISSE_HOME", cwd.join("no_home"))
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
@@ -55,6 +56,21 @@ fn the_rules_of_the_folder_the_session_is_opened_on_are_obeyed() {
     let passed = guard(&call("mcp__plugin_lorisse_lorisse__where"), &memory);
     assert!(passed.contains(r#""permissionDecision":"allow""#), "{passed}");
     let _ = fs::remove_dir_all(&memory);
+}
+
+#[test]
+fn the_rules_of_the_folder_this_machine_remembers_are_obeyed() {
+    let place = folder("remembered");
+    let memory = place.join("memory");
+    let home = place.join("no_home");
+    fs::create_dir_all(&memory).unwrap();
+    fs::create_dir_all(&home).unwrap();
+    fs::write(memory.join("config.yaml"), "kinds: [fact]\n").unwrap();
+    fs::write(memory.join("rules.yaml"), "never:\n  lorisse: [import]\n").unwrap();
+    fs::write(home.join(".lorisse-folder"), format!("{}\n", memory.display())).unwrap();
+    let refused = guard(&call("mcp__plugin_lorisse_lorisse__import"), &place);
+    assert!(refused.contains(r#""permissionDecision":"deny""#), "{refused}");
+    let _ = fs::remove_dir_all(&place);
 }
 
 #[test]

@@ -34,7 +34,7 @@ fn c_4_1_the_setting_gives_the_folder_whatever_folder_the_program_runs_in() {
     );
     assert!(got[0].contains(&shown(copy.path())), "{}", got[0]);
     assert!(got[0].contains("the plugin's setting"), "{}", got[0]);
-    assert!(got[0].contains("0.3.1"), "{}", got[0]);
+    assert!(got[0].contains("0.4.0"), "{}", got[0]);
     assert!(got[1].contains("M-0001 [home] · The boiler's contract"), "{}", got[1]);
 }
 
@@ -83,13 +83,16 @@ fn c_4_2_no_folder_where_says_so_and_every_other_tool_the_same_sentence() {
         Some(empty.path()),
         &[
             ("where", "{}"),
+            ("plop", "{}"),
             ("search", r#"{"text":"boiler"}"#),
             ("read", r#"{"piece":"M-0001"}"#),
             ("links", r#"{"piece":"M-0001"}"#),
             ("read", "{}"),
+            ("import", r#"{"text":"[2020-01-01] - x"}"#),
         ],
     );
     assert_eq!(got[0].lines().next(), Some(NO_FOLDER), "{}", got[0]);
+    assert!(NO_FOLDER.contains("the tool start makes one ready"), "where and plop offer start");
     for other in &got[1..] {
         assert_eq!(other, NO_FOLDER);
     }
@@ -227,9 +230,8 @@ fn c_5_2_an_empty_path_changes_no_answer_and_the_source_names_no_network() {
     assert_eq!(with_path, without);
     let remember = r#"{"title":"A try","text":"Written without git."}"#;
     let writes = ask(&[(SETTING, &setting), ("PATH", "")], None, &[("remember", remember), ("undo", "{}")]);
-    for said in &writes {
-        assert!(said.starts_with("Lorisse cannot write because git is not found"), "{said}");
-    }
+    assert_eq!(writes[0], "Filed as M-0007 [home]: \"A try\".", "not under git, filed without it");
+    assert!(writes[1].starts_with("This memory folder keeps no history"), "{}", writes[1]);
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut sources = Vec::new();
     for dir in ["src", "../store/src", "../store/src/actions"] {

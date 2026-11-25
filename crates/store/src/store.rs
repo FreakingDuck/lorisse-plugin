@@ -17,7 +17,7 @@ use crate::diary::{self, Speaker};
 use crate::diff::{self, Diff};
 use crate::direct::{self, Applied, Fined, Flagged, LorisseCommit, Since};
 use crate::error::StoreError;
-use crate::filing::{self, Attached, Blocked, NewMemory, Undone, Written};
+use crate::filing::{self, Attached, Blocked, Dated, Imported, NewMemory, Undone, Written};
 use crate::flags::Flags;
 use crate::git;
 use crate::ids::PieceId;
@@ -155,6 +155,17 @@ impl Store {
     pub fn attach(&mut self, id: &PieceId, source: &Path) -> Result<Attached, StoreError> {
         self.writable("attach")?;
         filing::attach(self, id, source)
+    }
+
+    /// File every dated line given as a new memory, already sorted, its date and its category
+    /// kept, as one commit by Lorisse in the folder's own repository; without git, the files
+    /// alone.
+    ///
+    /// # Errors
+    /// As [`Store::remember`]; [`StoreError::Invalid`] for no line, or a date that is not one.
+    pub fn import(&mut self, lines: &[Dated]) -> Result<Imported, StoreError> {
+        self.writable("import")?;
+        filing::import(self, lines)
     }
 
     /// Take back Lorisse's last change still standing, or the one named (a commit, or a piece's
