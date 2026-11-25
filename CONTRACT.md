@@ -2,7 +2,7 @@
 
 > written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
-Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Both are built.
+Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Both are built. Part 10, the files, is designed and not built.
 
 ## 1. Role
 
@@ -83,7 +83,17 @@ We want one word to open Lorisse as the person set it up, on any machine, withou
 - **C-9.2** After the intro, `open` gives the state: the memory folder, its repositories, how many memories and people it holds, and the five memories filed last.
 - **C-9.3** The intro is the person's own word on how Lorisse works for them, and is said as such; every other text of the folder stays data (C-6.2).
 
-## 10. Behaviour
+## 10. Files
+
+Designed, not built yet. We want a document kept with what it is about: the quote with the works, the letter with the dispute.
+
+- **C-10.1** `attach` puts a copy of a file of the person's machine in the memory folder, with the piece it is given for, as one commit. The original is left where it was.
+- **C-10.2** `read` names the files a piece holds, each with its path in the folder, so that Claude can open one with the Claude app's own reader.
+- **C-10.3** `search` finds a piece by the name of a file it holds.
+- **C-10.4** A file over the folder's limit (20 MB unless the folder's settings say otherwise) is refused with its size, and nothing is copied.
+- **C-10.5** A file is never replaced: one of the same name already with the piece makes the new one take a numbered name.
+
+## 11. Behaviour
 
 | Situation | Reaction |
 |---|---|
@@ -96,7 +106,7 @@ We want one word to open Lorisse as the person set it up, on any machine, withou
 | A change that fails halfway | the folder is as it was before the call |
 | Any call, whatever the folder or the piece | the program answers and stays up |
 
-## 11. Wanted, not promised yet
+## 12. Wanted, not promised yet
 
 - Changing or retiring a memory's text, filing a person; proposals for anything heavy (merge two pieces, move one, rename a tag).
 - Files: with the Claude app's own connector to a file service, Lorisse files the documents that arrive and keeps a memory of each. No connector of ours.
@@ -108,6 +118,6 @@ We want one word to open Lorisse as the person set it up, on any machine, withou
 - The keeper's rules of filing, and one skill a subject.
 - The same answers in the desktop app's Cowork, on Windows and on a Mac: built for, not tried.
 
-## 12. Non-goals
+## 13. Non-goals
 
 A screen of its own, a choice of model, a reader of mail: the Claude app has them.

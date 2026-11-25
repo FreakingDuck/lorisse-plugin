@@ -107,6 +107,11 @@ For the gate, which checks that each promise of the contract has one row here, a
 | C-9.1 | the intro page given whole, changed between two calls, absent | 3 checks · output | H-8 |
 | C-9.2 | the state after the intro: the folder, the repositories, the counts, the five last | 1 check · output | H-8 |
 | C-9.3 | the intro said as the person's word, a memory's text as data | 1 check · output | — |
+| C-10.1 | a file attached: its copy, its commit, the original untouched | 2 checks · writes (not built yet) | — |
+| C-10.2 | the files of a piece named by `read`, with their paths | 1 check · output (not built yet) | — |
+| C-10.3 | a piece found by its file's name | 1 check · output (not built yet) | — |
+| C-10.4 | a file over the limit | 1 check · output (not built yet) | — |
+| C-10.5 | a second file of the same name | 1 check · writes (not built yet) | — |
 
 ## Run log
 
