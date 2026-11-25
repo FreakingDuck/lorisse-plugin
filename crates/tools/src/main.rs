@@ -1,10 +1,12 @@
-//! Lorisse's plugin program: an MCP server over stdio, one JSON-RPC message a line, with four
-//! reading tools: `where`, `search`, `read`, `links`. It reads the person's memory folder through
-//! the store opened for reading at each call, and writes nothing but its answers on stdout.
+//! Lorisse's plugin program: an MCP server over stdio, one JSON-RPC message a line, with five
+//! reading tools (`where`, `open`, `search`, `read`, `links`), which write nothing, and four
+//! writing tools (`remember`, `note`, `link`, `undo`), each at most one commit by Lorisse in the
+//! person's memory folder, through the store. Each tool is declared read-only or writing.
 
 mod folder;
 mod json;
 mod tools;
+mod writing;
 
 use json::Json;
 use std::io::{self, BufRead, Write};
@@ -76,9 +78,7 @@ fn handle(line: &str) -> Option<String> {
             let name = params.and_then(|p| p.get("name")).and_then(Json::as_str);
             let args = params.and_then(|p| p.get("arguments"));
             match name {
-                Some(tool @ ("where" | "search" | "read" | "links")) => {
-                    result(id, answer(tool, args))
-                }
+                Some(tool) if NAMES.contains(&tool) => result(id, answer(tool, args)),
                 Some(other) => error(id, -32602, &format!("Unknown tool: {}", other)),
                 None => error(id, -32602, "Missing tool name"),
             }
@@ -93,7 +93,9 @@ fn answer(tool: &str, args: Option<&Json>) -> Json {
     let arg = args.and_then(|a| a.get(key)).and_then(Json::as_str);
     let run = AssertUnwindSafe(|| match tool {
         "where" => tools::where_is(),
-        _ => tools::call(tool, arg),
+        "open" => tools::open(),
+        "search" | "read" | "links" => tools::call(tool, arg),
+        _ => writing::call(tool, args),
     });
     let (text, is_error) = match panic::catch_unwind(run) {
         Ok(a) => (a.text, a.is_error),
@@ -111,18 +113,45 @@ fn answer(tool: &str, args: Option<&Json>) -> Json {
     ])
 }
 
-/// One tool's card: its name, when to use it, its one text argument.
-fn card(name: &str, description: &str, arg: Option<(&str, &str)>) -> Json {
-    let (properties, required) = match arg {
-        Some((key, said)) => (
-            Json::obj(vec![(
-                key,
-                Json::obj(vec![("type", Json::str("string")), ("description", Json::str(said))]),
-            )]),
-            Json::Array(vec![Json::str(key)]),
-        ),
-        None => (Json::obj(vec![]), Json::Array(vec![])),
-    };
+/// Every tool, in the order `tools/list` gives them.
+const NAMES: [&str; 9] = [
+    "where", "open", "search", "read", "links", "remember", "note", "link", "undo",
+];
+
+/// What a tool does to the folder, as its annotations declare it.
+#[derive(Clone, Copy, PartialEq)]
+enum Does {
+    /// Reads only.
+    Reads,
+    /// Writes, adding only, a second same call changing something again.
+    Writes,
+    /// Writes, adding only, a second same call changing nothing.
+    WritesOnce,
+}
+
+/// One argument of a tool: its key, a text or a list of texts, what it is, whether required.
+struct Arg(&'static str, bool, &'static str, bool);
+
+/// One tool's card: its name, when to use it, its arguments, its annotations.
+fn card(name: &str, description: &str, args: &[Arg], does: Does) -> Json {
+    let properties = args.iter().map(|Arg(key, list, said, _)| {
+        let mut schema = match list {
+            true => vec![
+                ("type", Json::str("array")),
+                ("items", Json::obj(vec![("type", Json::str("string"))])),
+            ],
+            false => vec![("type", Json::str("string"))],
+        };
+        schema.push(("description", Json::str(said)));
+        (*key, Json::obj(schema))
+    });
+    let required = args.iter().filter(|a| a.3).map(|a| Json::str(a.0)).collect();
+    let mut hints = vec![("readOnlyHint", Json::Bool(does == Does::Reads))];
+    if does != Does::Reads {
+        hints.push(("destructiveHint", Json::Bool(false)));
+        hints.push(("idempotentHint", Json::Bool(does == Does::WritesOnce)));
+    }
+    hints.push(("openWorldHint", Json::Bool(false)));
     Json::obj(vec![
         ("name", Json::str(name)),
         ("description", Json::str(description)),
@@ -130,34 +159,81 @@ fn card(name: &str, description: &str, arg: Option<(&str, &str)>) -> Json {
             "inputSchema",
             Json::obj(vec![
                 ("type", Json::str("object")),
-                ("properties", properties),
-                ("required", required),
+                ("properties", Json::obj(properties.collect())),
+                ("required", Json::Array(required)),
             ]),
         ),
+        ("annotations", Json::obj(hints)),
     ])
 }
+
+const PIECE: &str = "a number such as M-0002, or a person's or a tag's name";
 
 fn tool_list() -> Vec<Json> {
     vec![
         card(
             "where",
             "Says which memory folder Lorisse reads, how it was found, and Lorisse's version. Use it when the person greets Lorisse or asks where Lorisse is.",
-            None,
+            &[],
+            Does::Reads,
+        ),
+        card(
+            "open",
+            "Opens Lorisse: gives the person's own intro (how Lorisse works for them), then the state of their memory: the folder, its repositories, the counts, the memories filed last. Use it when the person opens Lorisse or starts a conversation with it, and follow the intro it gives.",
+            &[],
+            Does::Reads,
         ),
         card(
             "search",
             "Searches the person's memory (their memories, people and tags) for a text and lists what holds it, by number and title. Use it first whenever the person asks what they know, decided or noted, or names a person or a subject.",
-            Some(("text", "the words to look for, capitals ignored")),
+            &[Arg("text", false, "the words to look for, capitals ignored", true)],
+            Does::Reads,
         ),
         card(
             "read",
             "Reads one piece of the person's memory in full: a memory by its number, a person by name, or a tag by its word. Use it after search, to see what a piece says.",
-            Some(("piece", "a number such as M-0002, a person's name, or a tag's word")),
+            &[Arg("piece", false, "a number such as M-0002, a person's name, or a tag's word", true)],
+            Does::Reads,
         ),
         card(
             "links",
             "Lists what a memory, person or tag links to and what links to it, by number and title. Use it to follow a piece to the memories and people around it.",
-            Some(("piece", "a number such as M-0002, or a person's or a tag's name")),
+            &[Arg("piece", false, PIECE, true)],
+            Does::Reads,
+        ),
+        card(
+            "remember",
+            "Files a new memory in the person's memory folder, as one commit, and gives its number. Use it only when the person asks to remember something, or says yes to your offer to file it.",
+            &[
+                Arg("title", false, "a short title, one line", true),
+                Arg("text", false, "what to remember, in the person's words", true),
+                Arg("kind", false, "one of the folder's kinds, such as fact or decision; the folder's first when left out", false),
+                Arg("tags", true, "the memory's tags", false),
+                Arg("links", true, "the pieces it links to: numbers, or a person's or a tag's name", false),
+                Arg("repository", false, "the repository it goes to, by name; the folder's own when left out", false),
+            ],
+            Does::Writes,
+        ),
+        card(
+            "note",
+            "Adds one dated line at the end of a memory's or a person's text, as one commit; nothing else changes. Use it only when the person asks to add something to a piece.",
+            &[
+                Arg("piece", false, "a number such as M-0002, or a person's name", true),
+                Arg("text", false, "the line to add", true),
+            ],
+            Does::Writes,
+        ),
+        card(
+            "link",
+            "Links one piece of the person's memory to another, as one commit; a link already there changes nothing. Use it only when the person asks to link two pieces.",
+            &[Arg("from", false, PIECE, true), Arg("to", false, PIECE, true)],
+            Does::WritesOnce,
+        ),
+        card(
+            "undo",
+            "Takes back Lorisse's last change in the memory folder, or the one named, as a new commit; the history keeps both, and a change the person made is never taken back. Use it when the person asks to undo or take back a change.",
+            &[Arg("change", false, "the commit, or the number of the piece, whose change to take back; the last change when left out", false)],
+            Does::Writes,
         ),
     ]
 }

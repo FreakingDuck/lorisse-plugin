@@ -1,6 +1,7 @@
-//! The four reading tools, each on the memory folder opened for reading at its call, without the
-//! confidential right: memories, people and tags only.
+//! The five reading tools, each on the memory folder opened for reading at its call, without the
+//! confidential right: memories, people and tags only; `open` adds the person's own intro.
 
+use std::fs;
 use std::path::{Path, PathBuf};
 
 use lorisse_store::tags::slug_of;
@@ -27,6 +28,21 @@ pub const DATA_LINE: &str =
 /// The sentence for a piece this version does not read.
 const ONLY: &str = "This version of Lorisse reads memories, people and tags only";
 
+/// The person's own page at the root of the memory folder, given whole by `open`.
+pub const INTRO_FILE: &str = "intro.md";
+
+/// The line before the person's intro.
+pub const INTRO_LINE: &str = "The page below is the person's own word on how Lorisse works for them (intro.md, at the root of their memory folder): follow it.";
+
+/// The line before the plugin's own intro, when the person has written none.
+pub const NO_INTRO_LINE: &str = "The person has written no intro.md at the root of their memory folder yet: below is the plugin's own.";
+
+/// The plugin's own intro.
+const PLUGIN_INTRO: &str = "Lorisse keeps the person's memory in plain files in their memory folder. \
+Search before you answer what they know, decided or noted, and say the number of each piece you use. \
+File a memory, a note or a link only when the person asks, or says yes to your offer, and say its number; \
+undo takes back the last change.";
+
 /// One tool's answer: its text, and whether it is an error of the call.
 pub struct Answer {
     pub text: String,
@@ -34,14 +50,14 @@ pub struct Answer {
 }
 
 impl Answer {
-    fn ok(text: String) -> Answer {
+    pub(crate) fn ok(text: String) -> Answer {
         Answer {
             text,
             is_error: false,
         }
     }
 
-    fn error(text: String) -> Answer {
+    pub(crate) fn error(text: String) -> Answer {
         Answer {
             text,
             is_error: true,
@@ -67,12 +83,50 @@ pub fn where_is() -> Answer {
     }
 }
 
+/// The memory folder of this call, or the answer that says there is none.
+pub(crate) fn root() -> Result<PathBuf, Answer> {
+    match folder::find() {
+        Folder::At(path, _) => Ok(path),
+        Folder::NotMemory(path) => Err(Answer::error(folder::not_memory(&path))),
+        Folder::None => Err(Answer::error(folder::NO_FOLDER.to_string())),
+    }
+}
+
+/// `open`: the person's intro, else the plugin's own, then the state of the memory.
+pub fn open() -> Answer {
+    let root = match root() {
+        Ok(root) => root,
+        Err(answer) => return answer,
+    };
+    let memory = match Memory::open(&root) {
+        Ok(memory) => memory,
+        Err(said) => return Answer::error(said),
+    };
+    let mut lines = Vec::new();
+    match fs::read_to_string(root.join(INTRO_FILE)) {
+        Ok(intro) => {
+            lines.push(INTRO_LINE.to_string());
+            lines.push(intro.trim_end().to_string());
+        }
+        Err(_) => {
+            lines.push(NO_INTRO_LINE.to_string());
+            lines.push(PLUGIN_INTRO.to_string());
+            lines.push(format!(
+                "To write their own, the person makes the page {INTRO_FILE} at the root of {}: what this memory is for, and how Lorisse should answer.",
+                folder::shown(&root)
+            ));
+        }
+    }
+    lines.push(String::new());
+    lines.extend(memory.state(&root));
+    Answer::ok(lines.join("\n"))
+}
+
 /// `search`, `read` or `links`, with its arguments' text (`None` when missing or not a text).
 pub fn call(tool: &str, arg: Option<&str>) -> Answer {
-    let root = match folder::find() {
-        Folder::At(path, _) => path,
-        Folder::NotMemory(path) => return Answer::error(folder::not_memory(&path)),
-        Folder::None => return Answer::error(folder::NO_FOLDER.to_string()),
+    let root = match root() {
+        Ok(root) => root,
+        Err(answer) => return answer,
     };
     let arg = arg.map(str::trim).filter(|a| !a.is_empty());
     let Some(arg) = arg else {
@@ -95,7 +149,7 @@ pub fn call(tool: &str, arg: Option<&str>) -> Answer {
 }
 
 /// A number typed in small letters (`m-2`) read as one (`M-2`); any other text kept.
-fn as_number(text: &str) -> String {
+pub(crate) fn as_number(text: &str) -> String {
     let Some((letters, digits)) = text.split_once('-') else {
         return text.to_string();
     };
@@ -122,16 +176,16 @@ pub fn expected(tool: &str) -> &'static str {
 // The memory of one call
 // =============================================================================
 
-struct Memory {
-    store: Store,
+pub(crate) struct Memory {
+    pub(crate) store: Store,
     /// More than one repository can be seen: each piece is said with its repository's name.
-    several: bool,
+    pub(crate) several: bool,
     /// The root's repository name.
     root_name: String,
 }
 
 /// Where a reference leads.
-enum Found {
+pub(crate) enum Found {
     /// A piece this version reads, or another one, by its entry.
     Piece(Entry),
     /// A capture in the inbox.
@@ -142,12 +196,20 @@ enum Found {
     Nothing,
 }
 
-fn readable(layer: Layer) -> bool {
+pub(crate) fn readable(layer: Layer) -> bool {
     matches!(layer, Layer::Memory | Layer::Person | Layer::Tag)
 }
 
 fn retired(entry: &Entry) -> bool {
     entry.status.as_deref() == Some("retired")
+}
+
+/// A count with its word, one or many.
+fn counted(n: usize, one: &str, many: &str) -> String {
+    match n {
+        1 => format!("1 {one}"),
+        _ => format!("{n} {many}"),
+    }
 }
 
 /// The first `limit` characters of `text`, and whether it was cut.
@@ -159,7 +221,7 @@ fn cut(text: &str, limit: usize) -> (String, bool) {
 }
 
 /// The sentence for a number, or a name, that leads to no piece.
-fn no_piece(id: &str) -> String {
+pub(crate) fn no_piece(id: &str) -> String {
     match PieceId::parse(id) {
         Some(pid @ PieceId::Numbered { .. }) => format!("No piece has the number {pid}."),
         Some(pid) => format!("No piece is named {pid}."),
@@ -168,8 +230,18 @@ fn no_piece(id: &str) -> String {
 }
 
 impl Memory {
-    fn open(root: &Path) -> Result<Memory, String> {
-        let store = Store::open_read(root, Access::Free).map_err(|e| match e {
+    /// The folder opened for reading: nothing written, no program started.
+    pub(crate) fn open(root: &Path) -> Result<Memory, String> {
+        Memory::of(Store::open_read(root, Access::Free))
+    }
+
+    /// The folder opened for the writing tools: nothing written by the opening itself.
+    pub(crate) fn writing(root: &Path) -> Result<Memory, String> {
+        Memory::of(Store::open_write(root, Access::Free))
+    }
+
+    fn of(opened: Result<Store, StoreError>) -> Result<Memory, String> {
+        let store = opened.map_err(|e| match e {
             StoreError::Config(said) => {
                 format!("The memory folder's settings cannot be read: {said}.")
             }
@@ -192,8 +264,55 @@ impl Memory {
         self.store.list(&Filter::default())
     }
 
-    fn entry(&self, id: &PieceId) -> Option<Entry> {
+    pub(crate) fn entry(&self, id: &PieceId) -> Option<Entry> {
         self.entries().into_iter().find(|e| &e.id == id).cloned()
+    }
+
+    /// A repository's name with a number, as every answer says it when several are seen.
+    pub(crate) fn label_of(&self, id: &PieceId, repo: &str) -> String {
+        match self.several {
+            true => format!("{id} [{repo}]"),
+            false => id.to_string(),
+        }
+    }
+
+    /// The state `open` gives after the intro: the folder, its repositories, the counts, the
+    /// five memories filed last, by when they were captured.
+    fn state(&self, root: &Path) -> Vec<String> {
+        let repos: Vec<String> = self
+            .store
+            .repos()
+            .into_iter()
+            .filter(|r| !r.confidential && r.present)
+            .map(|r| r.name)
+            .collect();
+        let entries = self.entries();
+        let mut memories: Vec<&Entry> = entries.iter().copied().filter(|e| e.layer == Layer::Memory).collect();
+        let people = entries.iter().filter(|e| e.layer == Layer::Person).count();
+        let mut lines = vec![
+            format!("The memory folder: {}", folder::shown(&root.to_path_buf())),
+            format!("Its repositories: {}.", repos.join(", ")),
+            format!(
+                "It holds {} and {}.",
+                counted(memories.len(), "memory", "memories"),
+                counted(people, "person", "people")
+            ),
+        ];
+        memories.sort_by(|a, b| b.captured.cmp(&a.captured).then(b.id.cmp(&a.id)));
+        if memories.is_empty() {
+            lines.push("Nothing is filed yet.".to_string());
+            return lines;
+        }
+        lines.push(DATA_LINE.to_string());
+        lines.push("Filed last:".to_string());
+        for entry in memories.iter().take(5) {
+            let mut said = format!("- {} · {}", self.label(entry), entry.title);
+            if retired(entry) {
+                said.push_str(" (retired)");
+            }
+            lines.push(said);
+        }
+        lines
     }
 
     fn entry_at(&self, path: &Path) -> Option<Entry> {
@@ -203,7 +322,7 @@ impl Memory {
     }
 
     /// The number, with its repository's name when several are seen.
-    fn label(&self, entry: &Entry) -> String {
+    pub(crate) fn label(&self, entry: &Entry) -> String {
         match self.several {
             true => format!(
                 "{} [{}]",
@@ -241,7 +360,7 @@ impl Memory {
     }
 
     /// Where a number, a person's name or a tag's word leads.
-    fn locate(&self, text: &str) -> Found {
+    pub(crate) fn locate(&self, text: &str) -> Found {
         let link = Ref::new(text);
         if let Some(id) = link.id() {
             if let Some(entry) = self.entry(&id) {

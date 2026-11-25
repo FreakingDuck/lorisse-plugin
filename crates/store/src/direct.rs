@@ -576,7 +576,7 @@ pub(crate) fn undo(store: &mut Store, commit: &str) -> Result<String, StoreError
 
 /// Refuse an undo when a file of the commit changed since, committed, pending or staged; a
 /// later commit undone and its revert cancel out.
-fn refuse_later(root: &Path, full: &str, files: &[String]) -> Result<(), StoreError> {
+pub(crate) fn refuse_later(root: &Path, full: &str, files: &[String]) -> Result<(), StoreError> {
     let pairs = git::reverts(root)?;
     let cancelled = |id: &String| {
         let paired =

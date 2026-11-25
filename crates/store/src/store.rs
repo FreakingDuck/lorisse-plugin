@@ -17,6 +17,7 @@ use crate::diary::{self, Speaker};
 use crate::diff::{self, Diff};
 use crate::direct::{self, Applied, Fined, Flagged, LorisseCommit, Since};
 use crate::error::StoreError;
+use crate::filing::{self, Blocked, NewMemory, Undone, Written};
 use crate::flags::Flags;
 use crate::git;
 use crate::ids::PieceId;
@@ -96,6 +97,64 @@ impl Store {
     /// [`StoreError::Config`] for a bad `config.yaml`; [`StoreError::Io`] for a missing folder.
     pub fn open_read(root: &Path, access: Access) -> Result<Store, StoreError> {
         open_reading(root, access)
+    }
+
+    /// Open a data folder for the plugin's writing calls: indexed in memory as for reading, and
+    /// nothing written, created or committed by the opening itself; [`Store::remember`],
+    /// [`Store::note`], [`Store::link_to`] and [`Store::undo_change`] then write one commit each.
+    ///
+    /// # Errors
+    /// As [`Store::open_read`].
+    pub fn open_write(root: &Path, access: Access) -> Result<Store, StoreError> {
+        let mut store = open_reading(root, access)?;
+        store.read_only = false;
+        Ok(store)
+    }
+
+    /// What stops the plugin's writing calls here, checked before anything is touched: no git
+    /// on the machine, a folder not under git, no name or address for its commits.
+    pub fn write_blocked(&self) -> Option<Blocked> {
+        filing::blocked(self)
+    }
+
+    /// File a new memory, already sorted, as one commit by Lorisse in its repository.
+    ///
+    /// # Errors
+    /// [`StoreError::Invalid`] (a blank title or text, an unknown kind or repository, a blocked
+    /// write), [`StoreError::Unknown`] (a link to no visible piece), [`StoreError::Confidential`],
+    /// [`StoreError::Git`] when the commit fails, the folder then as it was.
+    pub fn remember(&mut self, memory: &NewMemory) -> Result<Written, StoreError> {
+        self.writable("remember")?;
+        filing::remember(self, memory)
+    }
+
+    /// Add one dated line at the end of a memory's or a person's text, as one commit.
+    ///
+    /// # Errors
+    /// As [`Store::remember`]; [`StoreError::Invalid`] for a file with changes not committed.
+    pub fn note(&mut self, id: &PieceId, text: &str) -> Result<Written, StoreError> {
+        self.writable("note")?;
+        filing::note(self, id, text)
+    }
+
+    /// Link one piece to another, as one commit; a link already there writes nothing.
+    ///
+    /// # Errors
+    /// As [`Store::note`].
+    pub fn link_to(&mut self, from: &PieceId, to: &PieceId) -> Result<Written, StoreError> {
+        self.writable("link_to")?;
+        filing::link(self, from, to)
+    }
+
+    /// Take back Lorisse's last change still standing, or the one named (a commit, or a piece's
+    /// number for her last change on it), as a new commit; `None` when there is none.
+    ///
+    /// # Errors
+    /// [`StoreError::Invalid`] with a plain reason (not hers, taken back already, changed
+    /// since); [`StoreError::Confidential`]; [`StoreError::Git`], the folder then as it was.
+    pub fn undo_change(&mut self, change: Option<&str>) -> Result<Option<Undone>, StoreError> {
+        self.writable("undo_change")?;
+        filing::undo(self, change)
     }
 
     /// Whether the store was opened for reading ([`Store::open_read`]).

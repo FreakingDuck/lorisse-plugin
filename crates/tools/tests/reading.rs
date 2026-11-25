@@ -34,7 +34,7 @@ fn c_4_1_the_setting_gives_the_folder_whatever_folder_the_program_runs_in() {
     );
     assert!(got[0].contains(&shown(copy.path())), "{}", got[0]);
     assert!(got[0].contains("the plugin's setting"), "{}", got[0]);
-    assert!(got[0].contains("0.1.0"), "{}", got[0]);
+    assert!(got[0].contains("0.2.0"), "{}", got[0]);
     assert!(got[1].contains("M-0001 [home] · The boiler's contract"), "{}", got[1]);
 }
 
@@ -172,6 +172,7 @@ fn git(dir: &Path, args: &[&str]) -> String {
 /// Every tool, with good and bad arguments.
 const EVERY_CALL: &[(&str, &str)] = &[
     ("where", "{}"),
+    ("open", "{}"),
     ("search", r#"{"text":"boiler"}"#),
     ("search", r#"{"text":"surprise"}"#),
     ("search", r#"{"text":""}"#),
@@ -223,6 +224,11 @@ fn c_5_2_an_empty_path_changes_no_answer_and_the_source_names_no_network() {
     let with_path = ask(&[(SETTING, &setting)], None, EVERY_CALL);
     let without = ask(&[(SETTING, &setting), ("PATH", "")], None, EVERY_CALL);
     assert_eq!(with_path, without);
+    let remember = r#"{"title":"A try","text":"Written without git."}"#;
+    let writes = ask(&[(SETTING, &setting), ("PATH", "")], None, &[("remember", remember), ("undo", "{}")]);
+    for said in &writes {
+        assert!(said.starts_with("Lorisse cannot write because git is not found"), "{said}");
+    }
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut sources = Vec::new();
     for dir in ["src", "../store/src", "../store/src/actions"] {
