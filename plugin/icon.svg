@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Lorisse">
+  <defs>
+    <radialGradient id="light" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".55"/>
+      <stop offset=".64" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#07111a"/>
+  <g transform="translate(128 128)" fill="none" stroke-width="17">
+    <circle r="87.5" stroke="#4cc9f0" stroke-dasharray="132.9 416.9" transform="rotate(-135)"/>
+    <circle r="87.5" stroke="#ffb703" stroke-opacity=".55" stroke-dasharray="132.9 416.9" transform="rotate(-45)"/>
+    <circle r="87.5" stroke="#2f4558" stroke-dasharray="132.9 416.9" transform="rotate(45)"/>
+    <circle r="87.5" stroke="#2f4558" stroke-dasharray="132.9 416.9" transform="rotate(135)"/>
+  </g>
+  <circle cx="128" cy="128" r="76" fill="#03080d"/>
+  <circle cx="128" cy="128" r="36" fill="#4cc9f0"/>
+  <circle cx="128" cy="128" r="36" fill="url(#light)"/>
+  <path d="M102.5 128a25.5 25.5 0 0 1 25.5-25.5" fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="4" stroke-linecap="round"/>
+</svg>

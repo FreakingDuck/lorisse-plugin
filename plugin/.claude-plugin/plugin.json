@@ -1,10 +1,15 @@
 {
   "name": "lorisse",
-  "version": "0.2.0",
-  "description": "A memory that is yours, in plain files. Reads your memory folder (where, open, search, read, links) and, when you ask, files a memory, a note or a link as one commit you can undo (remember, note, link, undo).",
+  "displayName": "Lorisse",
+  "version": "0.2.1",
+  "description": "Your own memory, in plain files on your machine. Lorisse finds what you noted, files what you ask it to remember, and every change can be taken back.",
   "author": {
-    "name": "FreakingDuck"
+    "name": "Lorisse",
+    "url": "https://lorisse.ai"
   },
+  "icon": "./icon.svg",
+  "license": "MIT",
+  "keywords": ["memory", "notes", "files"],
   "homepage": "https://lorisse.ai",
   "repository": "https://github.com/FreakingDuck/lorisse-plugin",
   "userConfig": {
