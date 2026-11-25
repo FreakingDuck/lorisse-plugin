@@ -15,7 +15,7 @@ Lorisse as a plugin of the Claude app. The repository is the workshop; the folde
 | `crates/store/` | the one door to the memory folder |
 | `crates/tools/` | the program the Claude app starts: the protocol and the tools |
 | `sample/` | a small memory folder made for the checks and the walk; no person's data |
-| `scripts/` | the gate (`verify.ps1`), the sample's copy for the walk (`walk_sample.ps1`), and the method's checks, copied whole from the method and never edited here |
+| `scripts/` | the gate (`verify.ps1`), the sample's copy for the walk (`walk_sample.ps1`), the try with Claude in one call (`try_plugin.ps1`), the release after a push (`release.ps1`), and the method's checks, copied whole from the method and never edited here |
 | `docs/contract_spec.md` | how a part's three pages are written, copied from the method |
 | `.github/workflows/build.yml` | builds the program for Windows and for a Mac and commits both to `plugin/server/` |
 
@@ -25,7 +25,7 @@ Lorisse as a plugin of the Claude app. The repository is the workshop; the folde
 - **The review line**: under every page's title, `> written by <who> <date> · reviewed by the owner: <not yet, or his date and his word>`. Only the owner writes his mark. His `// ` lines in a page are notes: answer under each with a `// Lorisse: ` line, never remove his.
 - **The gate**: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1`, called by its absolute path with forward slashes, green before any commit that touches code.
 - **The sample only.** No check, no test and no walk ever opens a person's own memory folder. The program never writes in a memory folder before the writing step's contract says how.
-- **A release is a version raised.** While `plugin/.claude-plugin/plugin.json` names a version, an installed copy stays as it is until that string changes. Raise it at each release, and never set a version in the marketplace entry.
+- **A release is a version raised.** While `plugin/.claude-plugin/plugin.json` names a version, an installed copy stays as it is until that string changes. It is raised by `scripts/release.ps1`, after the push and after GitHub has built the programs, never by hand before them; the script ends by checking that an installed copy answers with the new version. Never set a version in the marketplace entry.
 - **The built programs are GitHub's.** `plugin/server/` is written by the workflow from the source alone. A local build copied there is for a try, never committed.
 - **A dependency is announced** to the owner by name and version before it enters `Cargo.toml`.
 - **The pages are Lorisse's.** A builder writes code and tests; the contract, the validation and `status.yaml` are written before the pass and are not a builder's to change.
