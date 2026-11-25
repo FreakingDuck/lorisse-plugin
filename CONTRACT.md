@@ -67,7 +67,7 @@ We want a memory filed in one sentence, each change one step the person can see 
 - **C-8.1** `remember` files a new memory: its title, its text, its kind, its tags, the pieces it links to. The answer gives its number, and `read` gives it back as it was filed.
 - **C-8.2** `note` adds one dated line at the end of the text of a memory or of a person; what was there is unchanged.
 - **C-8.3** `link` links one piece to another. A link already there changes nothing, and the answer says so.
-- **C-8.4** Each change is exactly one commit, in the repository the piece lives in; its message says what was done and names the piece. Nothing else in the folder changes, and what the person had changed without committing is left as it was.
+- **C-8.4** Each change is exactly one commit, in the repository the piece lives in; its message says what was done and names the piece. No other file the folder keeps under git changes, and what the person had changed without committing is left as it was.
 - **C-8.5** `undo` takes back the last change Lorisse made, or the one named, as a new commit. The history is never rewritten, and a commit Lorisse did not make is never taken back.
 - **C-8.6** A number is given once and never reused, even after an undo. Nothing is deleted.
 - **C-8.7** Nothing is written in a part marked confidential, nor in a repository marked so: asked to, the tool refuses in one sentence.
