@@ -17,7 +17,7 @@ use crate::diary::{self, Speaker};
 use crate::diff::{self, Diff};
 use crate::direct::{self, Applied, Fined, Flagged, LorisseCommit, Since};
 use crate::error::StoreError;
-use crate::filing::{self, Blocked, NewMemory, Undone, Written};
+use crate::filing::{self, Attached, Blocked, NewMemory, Undone, Written};
 use crate::flags::Flags;
 use crate::git;
 use crate::ids::PieceId;
@@ -144,6 +144,17 @@ impl Store {
     pub fn link_to(&mut self, from: &PieceId, to: &PieceId) -> Result<Written, StoreError> {
         self.writable("link_to")?;
         filing::link(self, from, to)
+    }
+
+    /// Copy a file of the machine beside a memory or a person, named in its `files:`, as one
+    /// commit; the original is left as it was, and a name taken makes a numbered one.
+    ///
+    /// # Errors
+    /// [`StoreError::Invalid`] (not a file, a key or a secret, inside the folder, over the
+    /// limit, a blocked write); as [`Store::note`]; [`StoreError::Git`], the folder then as it was.
+    pub fn attach(&mut self, id: &PieceId, source: &Path) -> Result<Attached, StoreError> {
+        self.writable("attach")?;
+        filing::attach(self, id, source)
     }
 
     /// Take back Lorisse's last change still standing, or the one named (a commit, or a piece's

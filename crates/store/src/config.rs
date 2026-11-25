@@ -52,7 +52,12 @@ pub struct StoreConfig {
     pub person_sections: [String; 2],
     /// The repositories under the data folder; empty = the root alone.
     pub repos: Vec<RepoRow>,
+    /// The largest file `attach` copies in, in MB.
+    pub attach_limit_mb: u64,
 }
+
+/// The largest file `attach` copies in when the folder's settings say nothing, in MB.
+pub const ATTACH_LIMIT_MB: u64 = 20;
 
 impl StoreConfig {
     /// Read `config.yaml` under `root`; the defaults when there is none.
@@ -135,6 +140,7 @@ impl Default for StoreConfig {
             id_width: MIN_WIDTH,
             person_sections: ["What I know".into(), "How I handle".into()],
             repos: Vec::new(),
+            attach_limit_mb: ATTACH_LIMIT_MB,
         }
     }
 }

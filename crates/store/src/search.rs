@@ -1,7 +1,8 @@
 //! Find and search — case-insensitive substring matches, title hits first.
 //!
-//! `find` reads the index only (titles, then tags); `search` also reads the bodies.
-//! Flow: text → lowercase → titles → tags → bodies → `Hit`s in id order per group.
+//! `find` reads the index only (titles, then tags); `search` also reads the bodies and the
+//! names of the files a piece holds.
+//! Flow: text → lowercase → titles → tags → bodies or file names → `Hit`s in id order per group.
 
 use std::fs;
 use std::path::Path;
@@ -24,6 +25,8 @@ pub struct Hit {
     pub title: String,
     /// The first body line that matched; `None` for a title or tag hit.
     pub line: Option<String>,
+    /// The name of a file the piece holds that matched, when no body line did.
+    pub file: Option<String>,
 }
 
 // =============================================================================
@@ -64,6 +67,14 @@ pub(crate) fn search(root: &Path, index: &Index, text: &str) -> Result<Vec<Hit>,
             .find(|l| l.to_lowercase().contains(&needle));
         if let Some(line) = line {
             hits.push(hit(entry, Some(line.to_string())));
+            continue;
+        }
+        let files = piece.files();
+        if let Some(file) = files.iter().find(|f| f.name.to_lowercase().contains(&needle)) {
+            hits.push(Hit {
+                file: Some(file.name.clone()),
+                ..hit(entry, None)
+            });
         }
     }
     Ok(hits)
@@ -74,5 +85,6 @@ fn hit(entry: &Entry, line: Option<String>) -> Hit {
         id: entry.id.clone(),
         title: entry.title.clone(),
         line,
+        file: None,
     }
 }

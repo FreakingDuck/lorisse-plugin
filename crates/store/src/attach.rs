@@ -184,6 +184,85 @@ pub(crate) fn copy_file(from: &Path, to: &Path) -> Result<(), StoreError> {
     fs::rename(&tmp, to).map_err(|e| io_error(to, e))
 }
 
+/// Why a file must never be kept in the memory: a key or a secret, by its folder or its name.
+pub(crate) fn secret_reason(source: &Path) -> Option<&'static str> {
+    let part = |c: std::path::Component| c.as_os_str().to_string_lossy().to_lowercase();
+    if source.components().any(|c| part(c) == ".ssh") {
+        return Some("it is under a .ssh folder, where keys are kept");
+    }
+    let name = source.file_name().map(|n| n.to_string_lossy().to_lowercase());
+    let name = name.unwrap_or_default();
+    let stem = Path::new(&name).file_stem().map(|s| s.to_string_lossy().into_owned());
+    let stem = stem.unwrap_or_default();
+    if name.ends_with(".pem") {
+        return Some("a .pem file holds a key or a certificate");
+    }
+    if name == ".env" || name.starts_with(".env.") || name.ends_with(".env") {
+        return Some("a .env file holds secrets");
+    }
+    let keyed = |s: &str| s.ends_with("_key") || s.ends_with("_token");
+    (keyed(&name) || keyed(&stem)).then_some("its name says it is a key or a token")
+}
+
+/// A size said in MB, one decimal.
+fn in_mb(bytes: u64) -> String {
+    format!("{:.1} MB", bytes as f64 / (1024.0 * 1024.0))
+}
+
+/// The file a person gives to `attach`, checked: a file, no secret, outside the folder, under
+/// the limit (in MB). Its plain name.
+pub(crate) fn check_given(root: &Path, source: &Path, limit_mb: u64) -> Result<String, StoreError> {
+    let shown = slashed(source);
+    let meta = fs::metadata(source).ok().filter(|m| m.is_file());
+    let meta = meta.ok_or_else(|| StoreError::Invalid(format!("{shown} is not a file")))?;
+    let name = source.file_name().map(|n| n.to_string_lossy().into_owned());
+    let name = name
+        .filter(|n| plain_name(n))
+        .ok_or_else(|| StoreError::Invalid(format!("{shown} is not a file")))?;
+    if let Some(why) = secret_reason(source) {
+        return Err(StoreError::Invalid(format!(
+            "{name} is a key or a secret ({why}), and one is never kept in the memory"
+        )));
+    }
+    let inside = match (fs::canonicalize(source), fs::canonicalize(root)) {
+        (Ok(file), Ok(root)) => file.starts_with(root),
+        _ => false,
+    };
+    if inside {
+        return Err(StoreError::Invalid(format!(
+            "{shown} is already inside the memory folder"
+        )));
+    }
+    let limit = limit_mb.saturating_mul(1024 * 1024);
+    if meta.len() > limit {
+        return Err(StoreError::Invalid(format!(
+            "{name} is {}, over this memory folder's limit of {limit_mb} MB (attach_limit_mb in config.yaml)",
+            in_mb(meta.len())
+        )));
+    }
+    Ok(name)
+}
+
+/// A name free beside a piece: `name` itself, else `<stem>-2.<ext>`, `<stem>-3.<ext>` ...
+pub(crate) fn free_name(root: &Path, dir: &Path, name: &str, files: &[Attachment]) -> String {
+    let taken = |n: &str| root.join(under(dir, n)).exists() || files.iter().any(|f| f.name == n);
+    if !taken(name) {
+        return name.to_string();
+    }
+    let path = Path::new(name);
+    let stem = path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+    let ext = path.extension().map(|e| format!(".{}", e.to_string_lossy())).unwrap_or_default();
+    (2..)
+        .map(|n| format!("{stem}-{n}{ext}"))
+        .find(|n| !taken(n))
+        .unwrap_or_default()
+}
+
+/// The path of `name` beside the piece at `md`, relative to the root, forward slashes.
+pub(crate) fn beside(md: &Path, name: &str) -> String {
+    slashed(&under(&sidecar(md), name))
+}
+
 /// Point the piece's files beside `to` and give the file moves from beside `from`.
 pub(crate) fn relocate(
     piece: &mut Piece,
@@ -239,6 +318,16 @@ mod tests {
             Path::new("inbox/M-0001")
         );
         assert!(!plain_name("..") && !plain_name("a/b") && plain_name("a.b"));
+    }
+
+    #[test]
+    fn a_key_or_a_secret_is_known_by_its_folder_or_its_name() {
+        for path in ["home/.SSH/id_rsa", "a/server.PEM", "a/.env", "a/.env.local", "a/Api_Token", "a/deploy_key.txt"] {
+            assert!(secret_reason(Path::new(path)).is_some(), "{path}");
+        }
+        for path in ["a/quote.pdf", "a/keys.txt", "a/environment.md"] {
+            assert!(secret_reason(Path::new(path)).is_none(), "{path}");
+        }
     }
 
     #[test]
