@@ -4,7 +4,7 @@
 
 Human file; format: `docs/contract_spec.md`.
 
-Not built yet: this page says how it is meant to be made, so the contract can be read against something.
+The crate is built: given what the Claude app sends before a tool call, and the memory folder, it gives the answer to print. It is not wired into the plugin yet: the program's guard mode and `plugin/hooks/hooks.json` come next.
 
 ## The words
 
@@ -17,7 +17,9 @@ Not built yet: this page says how it is meant to be made, so the contract can be
 
 The Claude app can start a program before each tool call and take its answer: a hook. The plugin ships one hook, in `plugin/hooks/hooks.json`, that starts the same program as the tools, in its guard mode. The program finds the memory folder as the tools do, reads `rules.yaml`, and answers.
 
-A service is matched by its name inside the tool's full name, capitals ignored: `dropbox` matches the tools of the Claude app's Dropbox connector, `lorisse` those of this plugin.
+A service is matched by its name as a whole word inside the tool's full name, capitals ignored: `dropbox` matches the tools of the Claude app's Dropbox connector, `lorisse` those of this plugin; `mail` does not match `gmail`.
+
+A rules file that cannot be read (a broken layout, a list other than pass, ask and never) makes every call of a connector or of Lorisse ask, with the reason. An empty file is no rule at all.
 
 ## The rules file, as it reads
 

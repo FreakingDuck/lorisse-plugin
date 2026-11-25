@@ -6,7 +6,7 @@ Human file; format: `docs/contract_spec.md`.
 
 | Last run | Where it stands | Waiting on |
 |---|---|---|
-| never | Not built. | Your read of the contract, then a pass on your go. |
+| never | The guard's heart is built and green in the gate: it reads the rules and gives the three answers. It is not wired into the plugin yet, so no step can be walked. | The wiring, after the writing pass. |
 
 This part is validated two ways:
 
@@ -48,14 +48,14 @@ For the gate and for the assistant; nothing here is yours to read.
 
 | Clause | What is checked | Automated | By hand |
 |---|---|---|---|
-| C-4.1 | a rules file read, changed between two calls | 2 checks · input (not built yet) | H-2 |
-| C-4.2 | a folder without the file: the first set | 2 checks · output (not built yet) | H-1 |
-| C-4.3 | a tool in two lists | 1 check · output (not built yet) | — |
-| C-4.4 | a call no rule names | 1 check · output (not built yet) | — |
-| C-5.1 | the three answers, the rule named in a refusal | 3 checks · output (not built yet) | H-1, H-2, H-3 |
-| C-5.2 | nothing passes unnamed; a file that cannot be read | 2 checks · output (not built yet) | — |
-| C-5.3 | a file tool writing the rules file | 1 check · output (not built yet) | — |
-| C-5.4 | the folder before and after; the program's dependencies | 1 check · writes (not built yet) | — |
+| C-4.1 | a rules file read, changed between two calls | 2 checks · input | H-2 |
+| C-4.2 | a folder without the file: the first set | 2 checks · output | H-1 |
+| C-4.3 | a tool in two lists | 1 check · output | — |
+| C-4.4 | a call no rule names | 1 check · output | — |
+| C-5.1 | the three answers, the rule named in a refusal | 3 checks · output | H-1, H-2, H-3 |
+| C-5.2 | nothing passes unnamed; a file that cannot be read | 2 checks · output | — |
+| C-5.3 | a file tool writing the rules file | 1 check · output | — |
+| C-5.4 | the folder before and after; the crate's dependencies | 1 check · writes | — |
 
 ## Run log
 
