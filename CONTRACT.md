@@ -82,6 +82,7 @@ We want one word to open Lorisse as the person set it up, on any machine, withou
 - **C-9.1** `open` gives the person's intro: the text of the page `intro.md` at the root of the memory folder, whole. The person changes it as any file of theirs, and the next `open` gives the new text. Without that page, it gives a short one of the plugin's own and says where to write theirs.
 - **C-9.2** After the intro, `open` gives the state: the memory folder, its repositories, how many memories and people it holds, and the five memories filed last.
 - **C-9.3** The intro is the person's own word on how Lorisse works for them, and is said as such; every other text of the folder stays data (C-6.2).
+- **C-9.4** `open` ends with the rules of keeping, in a few lines: what is filed without being asked, what is never filed, how a filing is said. So each conversation opened with it starts with the rules in front of Claude, whatever else it has read. Not built yet.
 
 ## 10. Files
 
@@ -92,6 +93,7 @@ Designed, not built yet. We want a document kept with what it is about: the quot
 - **C-10.3** `search` finds a piece by the name of a file it holds.
 - **C-10.4** A file over the folder's limit (20 MB unless the folder's settings say otherwise) is refused with its size, and nothing is copied.
 - **C-10.5** A file is never replaced: one of the same name already with the piece makes the new one take a numbered name.
+- **C-10.6** A key or a secret is never attached: a file under a `.ssh` folder, a `.pem`, a `.env`, or a name that ends in `_key` or `_token`, is refused with the reason.
 
 ## 11. Behaviour
 
