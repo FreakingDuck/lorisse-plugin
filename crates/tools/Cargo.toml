@@ -1,8 +1,8 @@
 [package]
 name = "lorisse"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
-description = "Lorisse's first plugin program: an MCP server over stdio with one tool, where"
+description = "Lorisse's plugin program: an MCP server over stdio with four reading tools, where, search, read, links"
 publish = false
 
 [[bin]]
@@ -10,3 +10,4 @@ name = "lorisse"
 path = "src/main.rs"
 
 [dependencies]
+lorisse-store = { path = "../store" }

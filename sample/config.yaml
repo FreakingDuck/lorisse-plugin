@@ -6,3 +6,7 @@ priorities: [high, medium, low]
 categories: [home, garden, admin]
 sources: [phone, chat, agent, console, app]
 person_sections: [What I know, How I handle]
+# Two repositories read as one memory: the root, named home, and the club, numbered on its own.
+repos:
+  - { name: home, folder: . }
+  - { name: club, folder: club, prefix: C }

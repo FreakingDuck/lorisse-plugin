@@ -3,7 +3,10 @@
     "lorisse": {
       "type": "stdio",
       "command": "${CLAUDE_PLUGIN_ROOT}/server/lorisse",
-      "args": []
+      "args": [],
+      "env": {
+        "LORISSE_MEMORY_FOLDER": "${user_config.memory_folder}"
+      }
     }
   }
 }
