@@ -2,7 +2,7 @@
 
 > written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
-Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Both are built. Part 10, the files, is designed and not built.
+Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files. All are built.
 
 ## 1. Role
 
@@ -13,7 +13,8 @@ Lorisse as a person meets it in the Claude app: a program on their own machine t
 - Finds the person's memory folder.
 - Answers four questions on its memories, and on the people and tags they name: where it is, search, read, links. What each takes and gives is in the README, "The tools".
 - Files a memory, adds a note to a piece, links two pieces, and takes back its own last change: remember, note, link, undo.
-- Opens a conversation with the person's own intro and the state of the memory: open.
+- Opens a conversation with the person's own intro, the state of the memory and the rules of keeping: open.
+- Keeps a document with the memory it is about: attach.
 
 Does not:
 
@@ -82,12 +83,12 @@ We want one word to open Lorisse as the person set it up, on any machine, withou
 - **C-9.1** `open` gives the person's intro: the text of the page `intro.md` at the root of the memory folder, whole. The person changes it as any file of theirs, and the next `open` gives the new text. Without that page, it gives a short one of the plugin's own and says where to write theirs.
 - **C-9.2** After the intro, `open` gives the state: the memory folder, its repositories, how many memories and people it holds, and the five memories filed last.
 - **C-9.3** The intro is the person's own word on how Lorisse works for them, and is said as such; every other text of the folder stays data (C-6.2).
-- **C-9.4** `open` ends with the rules of keeping, in a few lines: what is filed without being asked, what is never filed, how a filing is said. So each conversation opened with it starts with the rules in front of Claude, whatever else it has read. Not built yet.
-- **C-9.5** When the Claude app connects to the program, the program gives it its own short instructions, which the app keeps in front of Claude for the whole conversation: what Lorisse is, to search it when the person asks what they know, and that filing by itself starts once `open` has been called in the conversation; before that, Lorisse files only when asked. Not built yet.
+- **C-9.4** `open` ends with the rules of keeping, in a few lines: what is filed without being asked, what is never filed, how a filing is said. So each conversation opened with it starts with the rules in front of Claude, whatever else it has read.
+- **C-9.5** When the Claude app connects to the program, the program gives it its own short instructions, which the app keeps in front of Claude for the whole conversation: what Lorisse is, to search it when the person asks what they know, and that filing by itself starts once `open` has been called in the conversation; before that, Lorisse files only when asked.
 
 ## 10. Files
 
-Designed, not built yet. We want a document kept with what it is about: the quote with the works, the letter with the dispute.
+We want a document kept with what it is about: the quote with the works, the letter with the dispute.
 
 - **C-10.1** `attach` puts a copy of a file of the person's machine in the memory folder, with the piece it is given for, as one commit. The original is left where it was.
 - **C-10.2** `read` names the files a piece holds, each with its path in the folder, so that Claude can open one with the Claude app's own reader.

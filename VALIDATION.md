@@ -6,7 +6,7 @@ Human file; format: `docs/contract_spec.md`.
 
 | Last run | Where it stands | Waiting on |
 |---|---|---|
-| never by you | Reading, writing and the open are built and green in the gate. Claude, run once without a person on the sample (`scripts/try_plugin.ps1`), opened Lorisse, filed a memory, found it, took it back and found nothing: two commits in the sample's history, and no tool had been allowed beforehand. H-5 walked by you on 2026-11-25 as far as "where". | Your walk of H-1 to H-8, once the new version is on GitHub and updated in your Claude app. |
+| never by you | Reading, writing and the open are built and green in the gate. Claude, run once without a person on the sample (`scripts/try_plugin.ps1`), opened Lorisse, filed a memory, found it, took it back and found nothing: two commits in the sample's history, and no tool had been allowed beforehand. A second run attached a file to a memory in one commit and read it back with the file's path. H-5 walked by you on 2026-11-25 as far as "where". | Your walk of H-1 to H-9, once the new version is on GitHub and updated in your Claude app. |
 
 This part is validated two ways:
 
@@ -67,11 +67,10 @@ The sample is a small memory folder kept in the repository, every word of it inv
 - [ ] **H-8** One word opens Lorisse with your own intro.
   It proves C-9.1 and C-9.2: you set Lorisse up once, in a page of yours, and every conversation starts from it.
   1. Type "Open Lorisse".
-     - See: the sample's intro, then the folder, its two repositories, and the memories filed last.
+     - See: the sample's intro, then the folder, its two repositories, the memories filed last, and the rules of keeping.
 
 - [ ] **H-9** A file is kept with the memory it belongs to.
   It proves C-10.1 and C-10.2: a document is found again from what it is about.
-  - Waits on: the files pass, not built yet.
   1. Type "Attach the file README.md of the lorisse-plugin repository to the boiler's contract".
      - See: Lorisse says the file is attached to M-0001.
   2. Type "Read M-0001".
@@ -115,14 +114,14 @@ For the gate, which checks that each promise of the contract has one row here, a
 | C-9.1 | the intro page given whole, changed between two calls, absent | 3 checks · output | H-8 |
 | C-9.2 | the state after the intro: the folder, the repositories, the counts, the five last | 1 check · output | H-8 |
 | C-9.3 | the intro said as the person's word, a memory's text as data | 1 check · output | — |
-| C-9.4 | the rules of keeping at the end of `open` | 1 check · output (not built yet) | H-8 |
-| C-9.5 | the instructions given when the app connects | 1 check · output (not built yet) | — |
-| C-10.1 | a file attached: its copy, its commit, the original untouched | 2 checks · writes (not built yet) | H-9 |
-| C-10.2 | the files of a piece named by `read`, with their paths | 1 check · output (not built yet) | H-9 |
-| C-10.3 | a piece found by its file's name | 1 check · output (not built yet) | — |
-| C-10.4 | a file over the limit | 1 check · output (not built yet) | — |
-| C-10.5 | a second file of the same name | 1 check · writes (not built yet) | — |
-| C-10.6 | a key file, a secret's name | 2 checks · output (not built yet) | — |
+| C-9.4 | the rules of keeping at the end of `open` | 1 check · output | H-8 |
+| C-9.5 | the instructions given when the app connects | 1 check · output | — |
+| C-10.1 | a file attached: its copy, its commit, the original untouched | 2 checks · writes | H-9 |
+| C-10.2 | the files of a piece named by `read`, with their paths | 1 check · output | H-9 |
+| C-10.3 | a piece found by its file's name | 1 check · output | — |
+| C-10.4 | a file over the limit | 1 check · output | — |
+| C-10.5 | a second file of the same name | 1 check · writes | — |
+| C-10.6 | a key file, a secret's name | 2 checks · output | — |
 
 ## Run log
 

@@ -38,8 +38,9 @@ Lorisse reads a memory folder, files in it, and opens a conversation with your o
 | 2. reading | open your memory folder: search your memories, read one, follow its links | done, version 0.1.0 |
 | 3. writing | file a memory, a note, a link; each change is one commit in the folder's history, and can be taken back. `open` starts a conversation with your intro. | built, version 0.2.0 |
 | 4. the guard | your rules, in a file of your folder: what passes alone, what asks, what never happens, for Lorisse's tools and for the Claude app's connectors | built, version 0.2.0 |
-| 5. the first day | a simple way to add the folder: an empty one made ready for a new person | after |
-| 6. the keeper | the skill that holds the rules of filing: what is filed at once, what stays a proposal, what is never done | after |
+| 5. the files | a document kept with the memory it is about; reading a memory names its files, a search finds a memory by a file's name. The program gives Claude its rules when it connects, and `open` repeats them. | built, version 0.3.0 |
+| 6. the first day | a simple way to add the folder: an empty one made ready for a new person | after |
+| 7. the keeper | the skill that holds the rules of filing: what is filed at once, what stays a proposal, what is never done | after |
 
 Tasks, the inbox and "what to do next" come after the memory itself is in place.
 
@@ -63,6 +64,7 @@ What Claude can ask the program. Memories, people and tags are read; a task or a
 | `remember` | a title and a text; a kind, tags, links and a repository if wanted | a new memory, filed as one commit; its number |
 | `note` | a number or a person's name, and a text | one dated line added at the end of the piece, as one commit |
 | `link` | two pieces | the first linked to the second, as one commit; a link already there changes nothing |
+| `attach` | a memory or a person, and the path of a file on your machine | a copy of the file kept beside the piece (`memories/M-0001/invoice.pdf`), as one commit; the original is left where it was. 20 MB at most unless your folder's settings say otherwise (`attach_limit_mb`); never a key or a secret |
 | `undo` | nothing, or the change to take back | Lorisse's last change taken back as a new commit; never a change made by someone else |
 
 Writing needs the folder under git, and a name set for its commits. Each change of Lorisse's is signed `lorisse@local` in the history, so you can tell them from yours.
