@@ -11,7 +11,7 @@ use chrono::NaiveDate;
 
 use crate::actions::{self, Action};
 use crate::attach::Attachment;
-use crate::check::{self, Report};
+use crate::check::{self, Finding, Report};
 use crate::config::{StoreConfig, status};
 use crate::diary::{self, Speaker};
 use crate::diff::{self, Diff};
@@ -72,6 +72,10 @@ pub struct Store {
     pub(crate) access: Access,
     /// The pieces this access sees.
     pub(crate) index: Index,
+    /// Opened for reading: every writing call is refused, no file is written, no program run.
+    pub(crate) read_only: bool,
+    /// The files of the last walk whose piece could not be read, and ids used twice.
+    pub(crate) problems: Vec<Finding>,
 }
 
 impl Store {
@@ -82,6 +86,40 @@ impl Store {
     /// [`StoreError::Config`] for a bad `config.yaml`; [`StoreError::Io`] for the folder.
     pub fn open(root: &Path, access: Access) -> Result<Store, StoreError> {
         open_store(root, access)
+    }
+
+    /// Open a data folder for reading: indexed in memory, no file written or created, no other
+    /// program started; every writing call is refused with [`StoreError::ReadOnly`], and
+    /// `check` leaves out the findings on commits.
+    ///
+    /// # Errors
+    /// [`StoreError::Config`] for a bad `config.yaml`; [`StoreError::Io`] for a missing folder.
+    pub fn open_read(root: &Path, access: Access) -> Result<Store, StoreError> {
+        open_reading(root, access)
+    }
+
+    /// Whether the store was opened for reading ([`Store::open_read`]).
+    pub fn is_read_only(&self) -> bool {
+        self.read_only
+    }
+
+    /// The files of the walk whose piece could not be read (a header that is not YAML, a bad
+    /// value) and the ids used twice, each with its path; none of them is in the index.
+    pub fn unreadable(&self) -> &[Finding] {
+        &self.problems
+    }
+
+    /// Whether `id` names a capture waiting in the inbox: a visible inbox entry, or, for a free
+    /// store, an inbox file it was not handed.
+    pub fn in_inbox(&self, id: &Ref) -> bool {
+        let prefix = format!("{}/", self.config.inbox);
+        let Some(pid) = id.id() else { return false };
+        self.index.hidden_inbox.contains(&pid)
+            || self
+                .index
+                .entries
+                .iter()
+                .any(|e| e.id == pid && e.path_text().starts_with(&prefix))
     }
 
     /// The data folder.
@@ -119,6 +157,7 @@ impl Store {
         flags: &Flags,
         files: &[PathBuf],
     ) -> Result<Piece, StoreError> {
+        self.writable("capture")?;
         capture_given(self, None, text, &source, flags, files)
     }
 
@@ -135,6 +174,7 @@ impl Store {
         flags: &Flags,
         files: &[PathBuf],
     ) -> Result<Piece, StoreError> {
+        self.writable("capture_in")?;
         capture_given(self, Some(repo), text, &source, flags, files)
     }
 
@@ -179,6 +219,7 @@ impl Store {
     /// [`StoreError::Invalid`] for a blank text, [`StoreError::Confidential`] for a day behind
     /// the gate, [`StoreError::Exists`] for a file the index does not hold; [`StoreError::Io`].
     pub fn diary_append(&mut self, date: NaiveDate, text: &str) -> Result<PieceId, StoreError> {
+        self.writable("diary_append")?;
         let id = diary::append(self, Layer::Diary, date, text)?;
         self.rebuild_index()?;
         Ok(id)
@@ -195,6 +236,7 @@ impl Store {
         who: Speaker,
         text: &str,
     ) -> Result<PieceId, StoreError> {
+        self.writable("conversation_append")?;
         append_spoken(self, date, who, text)
     }
 
@@ -204,6 +246,7 @@ impl Store {
     /// # Errors
     /// [`StoreError::Invalid`] for a blank thread or body; as [`Store::accept`].
     pub fn keep_conversation(&mut self, conversation: &Conversation) -> Result<Kept, StoreError> {
+        self.writable("keep_conversation")?;
         kept::keep(self, conversation)
     }
 
@@ -249,6 +292,7 @@ impl Store {
     /// [`StoreError::Changed`], [`StoreError::Exists`], [`StoreError::Invalid`],
     /// [`StoreError::Confidential`]; nothing is written on any of them.
     pub fn accept(&mut self, diff: Diff) -> Result<Vec<PieceId>, StoreError> {
+        self.writable("accept")?;
         let written = diff::accept(self, &diff)?;
         self.rebuild_index()?;
         Ok(written)
@@ -259,6 +303,7 @@ impl Store {
     /// # Errors
     /// [`StoreError::Io`] when the proposal file cannot be deleted.
     pub fn reject(&self, diff: Diff) -> Result<(), StoreError> {
+        self.writable("reject")?;
         diff::reject(self, &diff)
     }
 
@@ -268,6 +313,7 @@ impl Store {
     /// # Errors
     /// [`StoreError::Confidential`] for a free store, [`StoreError::Exists`], [`StoreError::Io`].
     pub fn skip(&mut self, proposal: &Proposal) -> Result<Vec<PieceId>, StoreError> {
+        self.writable("skip")?;
         skip_file(self, proposal)
     }
 
@@ -282,6 +328,7 @@ impl Store {
     /// # Errors
     /// [`StoreError::Io`] when the folder, `index.json` or `ids.json` cannot be read or written.
     pub fn rebuild_index(&mut self) -> Result<usize, StoreError> {
+        self.writable("rebuild_index")?;
         rebuild(self)
     }
 
@@ -329,6 +376,7 @@ impl Store {
     /// # Errors
     /// [`StoreError::Invalid`] for a blank tag or text, or a text of two lines; [`StoreError::Io`].
     pub fn tag_define(&mut self, tag: &str, definition: &str) -> Result<PieceId, StoreError> {
+        self.writable("tag_define")?;
         let id = tags::define(self, tag, definition)?;
         self.rebuild_index()?;
         Ok(id)
@@ -349,6 +397,7 @@ impl Store {
     /// [`Store::accept`]; [`StoreError::Git`] when the files' pending state cannot be committed
     /// first (nothing written then).
     pub fn apply(&mut self, action: Action, context: &Context) -> Result<Applied, StoreError> {
+        self.writable("apply")?;
         direct::apply(self, action, context)
     }
 
@@ -358,6 +407,7 @@ impl Store {
     /// [`StoreError::Invalid`] with a plain reason: no repository, not hers, undone already, a
     /// file changed since; [`StoreError::Git`] when the revert fails.
     pub fn undo(&mut self, commit: &str) -> Result<String, StoreError> {
+        self.writable("undo")?;
         direct::undo(self, commit)
     }
 
@@ -366,6 +416,7 @@ impl Store {
     /// # Errors
     /// [`StoreError::Invalid`] for an unknown commit; [`StoreError::Git`].
     pub fn lorisse_commits(&self, since: &Since) -> Result<Vec<LorisseCommit>, StoreError> {
+        self.writable("lorisse_commits")?;
         direct::commits(self, since)
     }
 
@@ -391,6 +442,7 @@ impl Store {
     /// # Errors
     /// [`StoreError::Unknown`], [`StoreError::Invalid`] for another layer or an archived piece, as [`Store::accept`].
     pub fn fine(&mut self, id: &PieceId) -> Result<Fined, StoreError> {
+        self.writable("fine")?;
         direct::fine(self, id)
     }
 
@@ -410,8 +462,20 @@ impl Store {
 // Implementation
 // =============================================================================
 
+impl Store {
+    /// Refuse `call` on a store opened for reading.
+    fn writable(&self, call: &str) -> Result<(), StoreError> {
+        match self.read_only {
+            true => Err(StoreError::ReadOnly(call.to_string())),
+            false => Ok(()),
+        }
+    }
+}
+
 fn rebuild(store: &mut Store) -> Result<usize, StoreError> {
-    store.index = index::scan(&store.root, &store.config, store.access)?.index;
+    let scan = index::scan(&store.root, &store.config, store.access)?;
+    store.index = scan.index;
+    store.problems = scan.problems;
     index::keep_high(&store.root, &store.config, &mut store.index.max)?;
     index::write_index(&store.root, &store.index.entries)?;
     Ok(store.index.entries.len())
@@ -419,7 +483,10 @@ fn rebuild(store: &mut Store) -> Result<usize, StoreError> {
 
 fn check_folder(store: &Store) -> Result<Report, StoreError> {
     let scan = index::scan(&store.root, &store.config, store.access)?;
-    let commits = direct::findings(store, &scan);
+    let commits = match store.read_only {
+        true => Vec::new(),
+        false => direct::findings(store, &scan),
+    };
     let mut report = check::report(scan, &store.config);
     report.findings.extend(commits);
     Ok(report)
@@ -431,10 +498,30 @@ fn open_store(root: &Path, access: Access) -> Result<Store, StoreError> {
         config: StoreConfig::load(root)?,
         access,
         index: Index::default(),
+        read_only: false,
+        problems: Vec::new(),
     };
     repos::ignore_rows(&store);
     store.rebuild_index()?;
     Ok(store)
+}
+
+fn open_reading(root: &Path, access: Access) -> Result<Store, StoreError> {
+    if !root.is_dir() {
+        return Err(StoreError::Io(format!("{}: not a folder", root.display())));
+    }
+    let config = StoreConfig::load(root)?;
+    let scan = index::scan(root, &config, access)?;
+    let mut index = scan.index;
+    index::read_high(root, &config, &mut index.max);
+    Ok(Store {
+        root: root.to_path_buf(),
+        config,
+        access,
+        index,
+        read_only: true,
+        problems: scan.problems,
+    })
 }
 
 fn append_spoken(

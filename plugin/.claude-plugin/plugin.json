@@ -1,10 +1,18 @@
 {
   "name": "lorisse",
   "version": "0.0.1",
-  "description": "A memory that is yours, in plain files. First version: one tool, to see that Lorisse answers.",
+  "description": "A memory that is yours, in plain files. This version reads your memory folder: where, search, read, links; nothing is written.",
   "author": {
     "name": "FreakingDuck"
   },
   "homepage": "https://lorisse.ai",
-  "repository": "https://github.com/FreakingDuck/lorisse-plugin"
+  "repository": "https://github.com/FreakingDuck/lorisse-plugin",
+  "userConfig": {
+    "memory_folder": {
+      "type": "directory",
+      "title": "Memory folder",
+      "description": "The folder that holds your memory. Leave it empty to use the folder the session is opened on, when it is a memory folder.",
+      "required": false
+    }
+  }
 }

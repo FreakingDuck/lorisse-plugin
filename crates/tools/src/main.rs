@@ -1,14 +1,16 @@
-//! Lorisse's plugin program: an MCP server over stdio, one JSON-RPC message a line,
-//! with one tool, `where`. It reads nothing but stdin and three values of its own
-//! process, and writes nothing but its answers on stdout.
+//! Lorisse's plugin program: an MCP server over stdio, one JSON-RPC message a line, with four
+//! reading tools: `where`, `search`, `read`, `links`. It reads the person's memory folder through
+//! the store opened for reading at each call, and writes nothing but its answers on stdout.
 
+mod folder;
 mod json;
+mod tools;
 
 use json::Json;
 use std::io::{self, BufRead, Write};
+use std::panic::{self, AssertUnwindSafe};
 
 const NAME: &str = "lorisse";
-const VERSION: &str = env!("CARGO_PKG_VERSION");
 const DEFAULT_PROTOCOL: &str = "2025-06-18";
 
 fn main() {
@@ -60,48 +62,23 @@ fn handle(line: &str) -> Option<String> {
                     ("capabilities", Json::obj(vec![("tools", Json::obj(vec![]))])),
                     (
                         "serverInfo",
-                        Json::obj(vec![("name", Json::str(NAME)), ("version", Json::str(VERSION))]),
+                        Json::obj(vec![
+                            ("name", Json::str(NAME)),
+                            ("version", Json::str(tools::VERSION)),
+                        ]),
                     ),
                 ]),
             )
         }
         "ping" => result(id, Json::obj(vec![])),
-        "tools/list" => result(
-            id,
-            Json::obj(vec![(
-                "tools",
-                Json::Array(vec![Json::obj(vec![
-                    ("name", Json::str("where")),
-                    (
-                        "description",
-                        Json::str("Says that Lorisse is here, the folder the program was started in, and the plugin and project folders it was given."),
-                    ),
-                    (
-                        "inputSchema",
-                        Json::obj(vec![
-                            ("type", Json::str("object")),
-                            ("properties", Json::obj(vec![])),
-                        ]),
-                    ),
-                ])]),
-            )]),
-        ),
+        "tools/list" => result(id, Json::obj(vec![("tools", Json::Array(tool_list()))])),
         "tools/call" => {
             let name = params.and_then(|p| p.get("name")).and_then(Json::as_str);
+            let args = params.and_then(|p| p.get("arguments"));
             match name {
-                Some("where") => result(
-                    id,
-                    Json::obj(vec![
-                        (
-                            "content",
-                            Json::Array(vec![Json::obj(vec![
-                                ("type", Json::str("text")),
-                                ("text", Json::Str(where_text())),
-                            ])]),
-                        ),
-                        ("isError", Json::Bool(false)),
-                    ]),
-                ),
+                Some(tool @ ("where" | "search" | "read" | "links")) => {
+                    result(id, answer(tool, args))
+                }
                 Some(other) => error(id, -32602, &format!("Unknown tool: {}", other)),
                 None => error(id, -32602, "Missing tool name"),
             }
@@ -110,17 +87,79 @@ fn handle(line: &str) -> Option<String> {
     })
 }
 
-fn where_text() -> String {
-    let cwd = std::env::current_dir()
-        .map(|p| p.display().to_string())
-        .unwrap_or_else(|_| "not given".to_string());
-    let var = |k: &str| std::env::var(k).unwrap_or_else(|_| "not given".to_string());
-    format!(
-        "Lorisse is here.\nStarted in: {}\nCLAUDE_PLUGIN_ROOT: {}\nCLAUDE_PROJECT_DIR: {}",
-        cwd,
-        var("CLAUDE_PLUGIN_ROOT"),
-        var("CLAUDE_PROJECT_DIR")
-    )
+/// A tool's answer as the protocol carries it; a fault inside a tool is one sentence, never a stop.
+fn answer(tool: &str, args: Option<&Json>) -> Json {
+    let key = if tool == "search" { "text" } else { "piece" };
+    let arg = args.and_then(|a| a.get(key)).and_then(Json::as_str);
+    let run = AssertUnwindSafe(|| match tool {
+        "where" => tools::where_is(),
+        _ => tools::call(tool, arg),
+    });
+    let (text, is_error) = match panic::catch_unwind(run) {
+        Ok(a) => (a.text, a.is_error),
+        Err(_) => (format!("Lorisse could not answer {tool} this time."), true),
+    };
+    Json::obj(vec![
+        (
+            "content",
+            Json::Array(vec![Json::obj(vec![
+                ("type", Json::str("text")),
+                ("text", Json::Str(text)),
+            ])]),
+        ),
+        ("isError", Json::Bool(is_error)),
+    ])
+}
+
+/// One tool's card: its name, when to use it, its one text argument.
+fn card(name: &str, description: &str, arg: Option<(&str, &str)>) -> Json {
+    let (properties, required) = match arg {
+        Some((key, said)) => (
+            Json::obj(vec![(
+                key,
+                Json::obj(vec![("type", Json::str("string")), ("description", Json::str(said))]),
+            )]),
+            Json::Array(vec![Json::str(key)]),
+        ),
+        None => (Json::obj(vec![]), Json::Array(vec![])),
+    };
+    Json::obj(vec![
+        ("name", Json::str(name)),
+        ("description", Json::str(description)),
+        (
+            "inputSchema",
+            Json::obj(vec![
+                ("type", Json::str("object")),
+                ("properties", properties),
+                ("required", required),
+            ]),
+        ),
+    ])
+}
+
+fn tool_list() -> Vec<Json> {
+    vec![
+        card(
+            "where",
+            "Says which memory folder Lorisse reads, how it was found, and Lorisse's version. Use it when the person greets Lorisse or asks where Lorisse is.",
+            None,
+        ),
+        card(
+            "search",
+            "Searches the person's memory (their memories, people and tags) for a text and lists what holds it, by number and title. Use it first whenever the person asks what they know, decided or noted, or names a person or a subject.",
+            Some(("text", "the words to look for, capitals ignored")),
+        ),
+        card(
+            "read",
+            "Reads one piece of the person's memory in full: a memory by its number, a person by name, or a tag by its word. Use it after search, to see what a piece says.",
+            Some(("piece", "a number such as M-0002, a person's name, or a tag's word")),
+        ),
+        card(
+            "links",
+            "Lists what a memory, person or tag links to and what links to it, by number and title. Use it to follow a piece to the memories and people around it.",
+            Some(("piece", "a number such as M-0002, or a person's or a tag's name")),
+        ),
+    ]
 }
 
 fn result(id: Json, value: Json) -> String {

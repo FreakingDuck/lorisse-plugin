@@ -84,6 +84,8 @@ pub(crate) struct Index {
     pub(crate) entries: Vec<Entry>,
     /// The ids behind the gate, from their file names.
     pub(crate) hidden: BTreeSet<PieceId>,
+    /// The hidden ids that are captures in the inbox, from their file names.
+    pub(crate) hidden_inbox: BTreeSet<PieceId>,
     /// The largest number per prefix, over every file name and `id:` read in its numbering.
     pub(crate) max: BTreeMap<String, u64>,
 }
@@ -178,9 +180,11 @@ pub(crate) fn scan(root: &Path, config: &StoreConfig, access: Access) -> Result<
             scan.index.count(&id, &rel, config);
         }
         if access == Access::Free && slice::is_gated(&rel, config) {
-            scan.index
-                .hidden
-                .extend(ids::from_path(&rel, &config.archive));
+            let id = ids::from_path(&rel, &config.archive);
+            if place.inbox {
+                scan.index.hidden_inbox.extend(id.clone());
+            }
+            scan.index.hidden.extend(id);
             continue;
         }
         match read_piece(root, &rel) {
@@ -215,23 +219,40 @@ pub(crate) fn keep_high(
     config: &StoreConfig,
     max: &mut BTreeMap<String, u64>,
 ) -> Result<(), StoreError> {
+    each_ids_file(root, config, max, true)
+}
+
+/// Raise `max` to the numbers each `ids.json` kept, as [`keep_high`] does, writing nothing.
+pub(crate) fn read_high(root: &Path, config: &StoreConfig, max: &mut BTreeMap<String, u64>) {
+    let _ = each_ids_file(root, config, max, false);
+}
+
+/// Every `ids.json` of the folder read into `max`, and written back when `write` is set.
+fn each_ids_file(
+    root: &Path,
+    config: &StoreConfig,
+    max: &mut BTreeMap<String, u64>,
+    write: bool,
+) -> Result<(), StoreError> {
     let rows = repos::numbered_rows(config);
     let theirs = |p: &str| rows.iter().any(|(_, own)| *own == p);
-    keep_in(&root.join(IDS_FILE), max, &|p| !theirs(p))?;
+    keep_in(&root.join(IDS_FILE), max, &|p| !theirs(p), write)?;
     for (folder, own) in &rows {
         let dir = root.join(folder);
         if dir.is_dir() {
-            keep_in(&dir.join(IDS_FILE), max, &|p| p == *own)?;
+            keep_in(&dir.join(IDS_FILE), max, &|p| p == *own, write)?;
         }
     }
     Ok(())
 }
 
-/// One `ids.json`: the prefixes `mine` names raised both ways, written when it changed.
+/// One `ids.json`: the prefixes `mine` names raised both ways, written when it changed and
+/// `write` is set.
 fn keep_in(
     path: &Path,
     max: &mut BTreeMap<String, u64>,
     mine: &dyn Fn(&str) -> bool,
+    write: bool,
 ) -> Result<(), StoreError> {
     let kept: BTreeMap<String, u64> = fs::read_to_string(path)
         .ok()
@@ -240,6 +261,9 @@ fn keep_in(
     for (prefix, n) in kept.iter().filter(|(p, _)| mine(p)) {
         let high = max.entry(prefix.clone()).or_default();
         *high = (*high).max(*n);
+    }
+    if !write {
+        return Ok(());
     }
     let file: BTreeMap<String, u64> = max
         .iter()

@@ -51,6 +51,9 @@ pub enum StoreError {
     /// A git call failed; names the call and what git said.
     #[error("{0}")]
     Git(String),
+    /// A writing call on a store opened for reading; names the call.
+    #[error("read only: {0} is refused, this store was opened for reading")]
+    ReadOnly(String),
 }
 
 // =============================================================================

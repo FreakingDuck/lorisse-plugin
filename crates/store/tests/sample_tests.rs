@@ -52,7 +52,18 @@ fn count(store: &Store, layer: Layer) -> usize {
 fn the_sample_opens_with_its_counts_and_its_check_is_clean() {
     let copy = sample_copy("full");
     let store = Store::open(&copy.0, Access::Full).unwrap();
-    assert_eq!(count(&store, Layer::Memory), 6, "four memories, the inbox's, the confidential one");
+    assert_eq!(
+        count(&store, Layer::Memory),
+        7,
+        "four memories, the inbox's, the confidential one, the club's"
+    );
+    let club: Vec<String> = store
+        .list(&Filter::default())
+        .iter()
+        .filter(|e| e.repo.as_deref() == Some("club"))
+        .map(|e| e.id.to_string())
+        .collect();
+    assert_eq!(club, ["C-0001"]);
     assert_eq!(count(&store, Layer::Task), 5, "four open tasks and the archived one");
     assert_eq!(count(&store, Layer::Person), 1);
     assert_eq!(count(&store, Layer::Tag), 2);
