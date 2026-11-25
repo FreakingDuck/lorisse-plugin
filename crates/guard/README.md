@@ -4,7 +4,7 @@
 
 Human file; format: `docs/contract_spec.md`.
 
-The crate is built: given what the Claude app sends before a tool call, and the memory folder, it gives the answer to print. It is not wired into the plugin yet: the program's guard mode and `plugin/hooks/hooks.json` come next.
+Built and wired: given what the Claude app sends before a tool call, and the memory folder, the crate gives the answer to print; the program started with the word `guard` carries it, and `plugin/hooks/hooks.json` tells the Claude app to start it.
 
 ## The words
 

@@ -4,7 +4,8 @@
 
 .DESCRIPTION
     Removes target/walk-sample when it is there, copies sample/ to it, makes it a git folder
-    with one commit (an identity given on the command line, no setting changed), and prints
+    with one commit and a name for its commits set in the copy only (so Lorisse can write in
+    it on any machine; no setting outside the copy is changed), and prints
     "sample ready: target/walk-sample" as its last line. Run twice, it starts clean again.
     sample/ itself is only read.
 
@@ -34,6 +35,10 @@ $ErrorActionPreference = 'Continue'
 $id = @('-c', 'user.name=sample', '-c', 'user.email=sample@example.invalid', '-c', 'commit.gpgsign=false')
 & git -C $to init -q
 if ($LASTEXITCODE -ne 0) { Write-Host 'git init failed'; exit 1 }
+& git -C $to config user.name sample
+if ($LASTEXITCODE -ne 0) { Write-Host 'git config failed'; exit 1 }
+& git -C $to config user.email sample@example.invalid
+if ($LASTEXITCODE -ne 0) { Write-Host 'git config failed'; exit 1 }
 & git -C $to -c core.autocrlf=false add -A
 if ($LASTEXITCODE -ne 0) { Write-Host 'git add failed'; exit 1 }
 & git -C $to @id commit -q -m 'the sample, as the repository holds it'

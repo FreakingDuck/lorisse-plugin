@@ -6,7 +6,7 @@ Human file; format: `docs/contract_spec.md`.
 
 | Last run | Where it stands | Waiting on |
 |---|---|---|
-| never | The guard's heart is built and green in the gate: it reads the rules and gives the three answers. It is not wired into the plugin yet, so no step can be walked. | The wiring, after the writing pass. |
+| never by you | Built, wired into the plugin and green in the gate. In one run of Claude Code without a person, with no tool allowed beforehand, every tool of Lorisse ran: the guard let them pass. Cowork is not tried. | Your walk of H-1 to H-3, once the new version is on GitHub and updated in your Claude app. |
 
 This part is validated two ways:
 
@@ -24,13 +24,11 @@ This part is validated two ways:
 
 - [ ] **H-1** A tool the rules let pass runs without a prompt.
   It proves C-5.1: the rules you wrote spare you the prompt.
-  - Waits on: the guard's pass, not built yet.
   1. Open `target/walk-sample` in VS Code, open the Claude panel, and type "Find boiler".
      - See: the answer, with no prompt before it.
 
 - [ ] **H-2** A tool the rules refuse is refused, with the rule.
   It proves C-5.1: what you wrote as never does not happen.
-  - Waits on: the guard's pass, not built yet.
   1. In `target/walk-sample/rules.yaml`, move `search` under `never`, and type "Find boiler" again.
      - See: Lorisse says the search was refused by your rules.
 
@@ -38,7 +36,6 @@ This part is validated two ways:
 
 - [ ] **H-3** Cowork obeys the guard.
   It proves C-5.1 where Anthropic's pages are silent.
-  - Waits on: the guard's pass, not built yet.
   1. In the Claude app, open Cowork on `target/walk-sample` and type "Find boiler".
      - See: the answer, with no prompt before it.
 

@@ -2,7 +2,7 @@
 
 > written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
-Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step, built. Parts 8 and 9, and C-5.3, are the writing step: designed here, not built yet.
+Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Both are built.
 
 ## 1. Role
 
@@ -12,8 +12,8 @@ Lorisse as a person meets it in the Claude app: a program on their own machine t
 
 - Finds the person's memory folder.
 - Answers four questions on its memories, and on the people and tags they name: where it is, search, read, links. What each takes and gives is in the README, "The tools".
-- Files a memory, adds a note to a piece, links two pieces, and takes back its own last change: remember, note, link, undo. Not built yet.
-- Opens a conversation with the person's own intro and the state of the memory: open. Not built yet.
+- Files a memory, adds a note to a piece, links two pieces, and takes back its own last change: remember, note, link, undo.
+- Opens a conversation with the person's own intro and the state of the memory: open.
 
 Does not:
 
@@ -21,13 +21,14 @@ Does not:
 - Pull or push the folder → the person's own git, when they want one.
 - Show tasks, the inbox or the questions to check, or say what to do next → later versions; ranking is Claude's.
 - Decide when a tool is called, or how a piece is filed → `keeper`.
+- Say whether a call passes, asks or is refused → `guard`, by the person's rules.
 - Read a piece's file, its number, the confidential mark → `store`.
 - Speak the Claude app's protocol → `tools`.
 - Read mail, a calendar or the web → the Claude app's own connectors.
 
 ## 3. Depends on
 
-`store`, `tools`, `keeper`. Nothing else from the repository.
+`store`, `tools`, `keeper`, `guard`. Nothing else from the repository.
 
 ## 4. The memory folder
 

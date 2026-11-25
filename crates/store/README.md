@@ -29,7 +29,8 @@ crates/store/
 - Opens a folder for reading only (`Store::open_read`): the index is built in memory, no file is written, no git is run, and a writing call is refused. It is the opening the plugin uses.
 - Reads one piece, lists pieces by kind, tag, state or date, searches titles, tags and texts, gives a piece's links both ways.
 - Lists the inbox and the proposals waiting.
-- Writes: a capture, a proposal and its acceptance, a direct change as one commit with its undo. The plugin uses none of the writing yet.
+- Writes: a capture, a proposal and its acceptance, a direct change as one commit with its undo.
+- Opens a folder for the plugin's writing (`Store::open_write`): nothing is written by the opening itself, and four calls each make at most one commit: a memory filed, a note, a link, a change taken back. The file is put back if the commit fails.
 - Checks a folder and reports each problem found.
 
 ## The proposal file
@@ -188,6 +189,6 @@ action: sort, id: M-0007, layer: tag, set: { tag: famille, definition: le père,
 
 ## Chosen, not promised
 
-- The full opening writes the folder's index and its counters; the opening for reading writes nothing. The plugin uses the second only, until the writing step.
+- The full opening writes the folder's index and its counters; the opening for reading writes nothing. The plugin never uses the full opening: it reads through the second, and writes through a third that writes nothing by itself.
 - Git is run as a program, one call at a time; no git library.
 - Five crates: chrono, serde, serde_json, serde_yaml_ng, thiserror.

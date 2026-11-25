@@ -6,7 +6,7 @@ Human file; format: `docs/contract_spec.md`.
 
 | Last run | Where it stands | Waiting on |
 |---|---|---|
-| never by you | The reading tools are built and green in the gate. Claude, run once without a person on the sample, found the boiler's pieces, read one with its link, and was told the confidential one does not exist. | Your walk of H-1 to H-4, once the new version is on GitHub and updated in your Claude panel. |
+| never by you | Reading, writing and the open are built and green in the gate. Claude, run once without a person on the sample (`scripts/try_plugin.ps1`), opened Lorisse, filed a memory, found it, took it back and found nothing: two commits in the sample's history, and no tool had been allowed beforehand. H-5 walked by you on 2026-11-25 as far as "where". | Your walk of H-1 to H-8, once the new version is on GitHub and updated in your Claude app. |
 
 This part is validated two ways:
 
@@ -52,7 +52,6 @@ The sample is a small memory folder kept in the repository, every word of it inv
 
 - [ ] **H-6** A memory is filed in one sentence, as one step of the folder's history.
   It proves C-8.1 and C-8.4: what you ask Lorisse to remember is in a file of yours, and you can see when it got there.
-  - Waits on: the writing pass, not built yet.
   1. Type "Remember that the gutter was cleaned in October".
      - See: Lorisse says it is filed, and gives its number.
   2. In the terminal, run `git -C target/walk-sample log --oneline -1`.
@@ -60,7 +59,6 @@ The sample is a small memory folder kept in the repository, every word of it inv
 
 - [ ] **H-7** The last change is taken back.
   It proves C-8.5: a memory filed by mistake costs you one sentence.
-  - Waits on: the writing pass, not built yet.
   1. Type "Undo that".
      - See: Lorisse says the change is taken back.
   2. Type "Find gutter".
@@ -68,7 +66,6 @@ The sample is a small memory folder kept in the repository, every word of it inv
 
 - [ ] **H-8** One word opens Lorisse with your own intro.
   It proves C-9.1 and C-9.2: you set Lorisse up once, in a page of yours, and every conversation starts from it.
-  - Waits on: the writing pass, not built yet.
   1. Type "Open Lorisse".
      - See: the sample's intro, then the folder, its two repositories, and the memories filed last.
 
@@ -93,23 +90,23 @@ For the gate, which checks that each promise of the contract has one row here, a
 | C-4.4 | a second repository named in the sample's config | 2 checks · output (its piece found, its repository said) | — |
 | C-5.1 | the sample before and after every tool | 1 check · writes | H-4 |
 | C-5.2 | no connection, no other program | 1 check · the program's dependencies | — |
-| C-5.3 | each tool's declaration: reads only, or writes | 1 check · output (not built yet) | — |
+| C-5.3 | each tool's declaration: reads only, or writes | 1 check · output | — |
 | C-6.1 | the confidential piece, by every tool | 4 checks · output | H-3 |
 | C-6.2 | the first line of an answer that carries a text | 2 checks · output | H-2 |
 | C-7.1 | a list past its limit | 1 check · output | — |
 | C-7.2 | a text past its limit | 1 check · output | — |
-| C-8.1 | a memory filed, then read back | 2 checks · writes (not built yet) | H-6 |
-| C-8.2 | a note on a memory and on a person | 2 checks · writes (not built yet) | — |
-| C-8.3 | a link, and the same link twice | 2 checks · writes (not built yet) | — |
-| C-8.4 | one commit a change, its message, the person's own uncommitted change left | 3 checks · writes (not built yet) | H-6 |
-| C-8.5 | the last change taken back, a named one, a commit that is not Lorisse's | 3 checks · writes (not built yet) | H-7 |
-| C-8.6 | the number after an undo | 1 check · writes (not built yet) | — |
-| C-8.7 | a write asked in the confidential part, and in a confidential repository | 2 checks · output (not built yet) | — |
-| C-8.8 | a memory filed in the named repository, and without a name | 2 checks · writes (not built yet) | — |
-| C-8.9 | an unknown kind, a link to no piece | 2 checks · output (not built yet) | — |
-| C-9.1 | the intro page given whole, changed between two calls, absent | 3 checks · output (not built yet) | H-8 |
-| C-9.2 | the state after the intro: the folder, the repositories, the counts, the five last | 1 check · output (not built yet) | H-8 |
-| C-9.3 | the intro said as the person's word, a memory's text as data | 1 check · output (not built yet) | — |
+| C-8.1 | a memory filed, then read back | 2 checks · writes | H-6 |
+| C-8.2 | a note on a memory and on a person | 2 checks · writes | — |
+| C-8.3 | a link, and the same link twice | 2 checks · writes | — |
+| C-8.4 | one commit a change, its message, the person's own uncommitted change left | 3 checks · writes | H-6 |
+| C-8.5 | the last change taken back, a named one, a commit that is not Lorisse's | 3 checks · writes | H-7 |
+| C-8.6 | the number after an undo | 1 check · writes | — |
+| C-8.7 | a write asked in the confidential part, and in a confidential repository | 2 checks · output | — |
+| C-8.8 | a memory filed in the named repository, and without a name | 2 checks · writes | — |
+| C-8.9 | an unknown kind, a link to no piece | 2 checks · output | — |
+| C-9.1 | the intro page given whole, changed between two calls, absent | 3 checks · output | H-8 |
+| C-9.2 | the state after the intro: the folder, the repositories, the counts, the five last | 1 check · output | H-8 |
+| C-9.3 | the intro said as the person's word, a memory's text as data | 1 check · output | — |
 
 ## Run log
 

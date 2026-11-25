@@ -14,14 +14,15 @@ The folder `plugin/` is what the Claude app installs, and nothing else ships. It
 |---|---|---|
 | the program | `plugin/server/` | a small program the Claude app starts on your machine. It gives Claude a short list of tools and nothing else. It is the only thing that will ever read or write your memory folder. |
 | the skill | `plugin/skills/lorisse/` | one page that tells Claude when to use the tools, and the rules to follow |
-| the cards | `plugin/.claude-plugin/`, `plugin/.mcp.json` | the plugin's name and version, and the line that says how to start the program |
+| the cards | `plugin/.claude-plugin/`, `plugin/.mcp.json`, `plugin/hooks/` | the plugin's name and version, the line that says how to start the program, and the line that starts it as the guard before a tool call |
 
 The rest is the workshop:
 
 | Where | What |
 |---|---|
 | `crates/tools/` | the program's source: the Claude app's protocol and the tools |
-| `crates/store/` | the one door to a memory folder: how a piece is read, numbered and, later, written |
+| `crates/store/` | the one door to a memory folder: how a piece is read, numbered and written |
+| `crates/guard/` | the guard: the person's rules read before each tool call |
 | `sample/` | a small memory folder, every word invented, that the checks and the walk run on |
 | `status.yaml` | the table: one row per part, where it stands, what comes next |
 | `scripts/verify.ps1` | the gate: every check of the repository in one command |
@@ -29,15 +30,16 @@ The rest is the workshop:
 
 ## Where it stands
 
-Two of five steps are built. Lorisse reads a memory folder and cannot write in it yet.
+Lorisse reads a memory folder, files in it, and opens a conversation with your own intro. Your rules say which tool calls run without asking.
 
 | Step | What the program can do | State |
 |---|---|---|
 | 1. the way in | one tool, `where`: the Claude app accepts the plugin and Claude calls the program by itself | done, version 0.0.1 |
-| 2. reading | open your memory folder: search your memories, read one, follow its links. Nothing can be written. | built, version 0.1.0 |
-| 3. writing | file a memory, a note, a link; each change is one step in the folder's history, and can be undone. Anything heavy is a proposal you accept. | next |
-| 4. the first day | a simple way to add the folder: an empty one made ready for a new person | after |
-| 5. the keeper | the skill that holds the rules of filing: what is filed at once, what stays a proposal, what is never done | after |
+| 2. reading | open your memory folder: search your memories, read one, follow its links | done, version 0.1.0 |
+| 3. writing | file a memory, a note, a link; each change is one commit in the folder's history, and can be taken back. `open` starts a conversation with your intro. | built, version 0.2.0 |
+| 4. the guard | your rules, in a file of your folder: what passes alone, what asks, what never happens, for Lorisse's tools and for the Claude app's connectors | built, version 0.2.0 |
+| 5. the first day | a simple way to add the folder: an empty one made ready for a new person | after |
+| 6. the keeper | the skill that holds the rules of filing: what is filed at once, what stays a proposal, what is never done | after |
 
 Tasks, the inbox and "what to do next" come after the memory itself is in place.
 
@@ -57,6 +59,17 @@ What Claude can ask the program. Memories, people and tags are read; a task or a
 | `search` | a text | the memories, people and tags whose title, tags or text hold it, capitals ignored, a match in a title first: number, title, the line that matched. Ten at most. |
 | `read` | a number, a person's name or a tag's name | every field of the piece's header, then its text, cut past 6000 characters |
 | `links` | a number | the pieces it links to and the pieces that link to it, each with number and title; a link that leads to no piece is said as such |
+| `open` | nothing | your intro (the page `intro.md` at the root of your folder), then the state: the folder, its repositories, how many memories and people, the five filed last |
+| `remember` | a title and a text; a kind, tags, links and a repository if wanted | a new memory, filed as one commit; its number |
+| `note` | a number or a person's name, and a text | one dated line added at the end of the piece, as one commit |
+| `link` | two pieces | the first linked to the second, as one commit; a link already there changes nothing |
+| `undo` | nothing, or the change to take back | Lorisse's last change taken back as a new commit; never a change made by someone else |
+
+Writing needs the folder under git, and a name set for its commits. Each change of Lorisse's is signed `lorisse@local` in the history, so you can tell them from yours.
+
+## Your rules
+
+A file of yours, `rules.yaml` at the root of the memory folder, says which tool calls pass without asking, which ask, and which never happen, for Lorisse's tools and for the Claude app's connectors. Without it, Lorisse's own tools pass and everything else stays as the Claude app does it. How it reads: `crates/guard/README.md`.
 
 ## How the memory is kept
 
