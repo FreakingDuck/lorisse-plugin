@@ -13,7 +13,7 @@ This part is validated two ways:
 - **By the gate**: every tool is asked directly, without Claude, on the sample folder, and the sample is compared before and after. Promise by promise, it is in the table at the end.
 - **By hand**: the steps below, in the Claude panel of VS Code, on a copy of the sample: what only a person can see, Claude asking Lorisse by itself and saying what it answers.
 
-The sample is a small memory folder kept in the repository, every word of it invented: four memories, one person, two tags, one memory in a part marked confidential, a second repository named `club` with one memory, and a few tasks and a raw piece kept for the later steps. With two repositories, each piece is said with its own: `M-0001 [home]`. Its dates are far behind or far ahead, so the walk reads the same any day.
+The sample is a small memory folder kept in the repository, every word of it invented: four memories, one person, two tags, one memory in a part marked confidential, a second repository named `club` with one memory, a third named `office`, confidential and open to Claude, with one memory, and a few tasks and a raw piece kept for the later steps. With several repositories, each piece is said with its own: `M-0001 [home]`. Its dates are far behind or far ahead, so the walk reads the same any day.
 
 ## Before you start
 
@@ -67,7 +67,7 @@ The sample is a small memory folder kept in the repository, every word of it inv
 - [ ] **H-8** One word opens Lorisse with your own intro.
   It proves C-9.1 and C-9.2: you set Lorisse up once, in a page of yours, and every conversation starts from it.
   1. Type "plop".
-     - See: the sample's intro, then the folder, its two repositories, the memories filed last, and the rules of keeping.
+     - See: the sample's intro, then the folder, its three repositories, the memories filed last, and the rules of keeping.
 
 - [ ] **H-9** A file is kept with the memory it belongs to.
   It proves C-10.1 and C-10.2: a document is found again from what it is about.
@@ -75,6 +75,18 @@ The sample is a small memory folder kept in the repository, every word of it inv
      - See: Lorisse says the file is attached to M-0001.
   2. Type "Read M-0001".
      - See: the memory, and the file `README.md` named with its path in the sample.
+
+- [ ] **H-12** After "plop", Lorisse files by itself.
+  It proves C-9.4 and C-9.6: you never dictate what to keep.
+  1. In a new conversation, type "plop", then "By the way, the chimney sweep comes on the 3rd of March".
+     - See: an answer that ends with one line saying it is filed, with its number.
+
+- [ ] **H-13** A confidential repository you opened to Claude is read and written.
+  It proves C-6.3 and C-8.7: your work memory serves you in a work conversation, and stays in its own repository.
+  1. Type "Find printer".
+     - See: "The printer's lease", said with its repository, `office`.
+  2. Type "Remember, for the office, that the lease ends in June".
+     - See: Lorisse says it is filed, with a number that starts with `O-`.
 
 ## The first day, on a machine that has no memory yet
 
@@ -116,23 +128,25 @@ For the gate, which checks that each promise of the contract has one row here, a
 | C-5.3 | each tool's declaration: reads only, or writes | 1 check · output | — |
 | C-6.1 | the confidential piece, by every tool | 4 checks · output | H-3 |
 | C-6.2 | the first line of an answer that carries a text | 2 checks · output | H-2 |
+| C-6.3 | a confidential repository open to Claude: its piece found and read with its repository, counted and named confidential by `plop`; one without Anthropic among its providers still hidden | 3 checks · output | H-13 |
 | C-7.1 | a list past its limit | 1 check · output | — |
 | C-7.2 | a text past its limit | 1 check · output | — |
 | C-8.1 | a memory filed, then read back | 2 checks · writes | H-6 |
 | C-8.2 | a note on a memory and on a person | 2 checks · writes | — |
 | C-8.3 | a link, and the same link twice | 2 checks · writes | — |
-| C-8.4 | one commit a change, its message, the person's own uncommitted change left | 3 checks · writes | H-6 |
+| C-8.4 | one commit a change, its message, the person's own uncommitted change left; a repository with its own history and the folder's counter: nothing uncommitted after a change and after its undo | 4 checks · writes | H-6 |
 | C-8.5 | the last change taken back, a named one, a commit that is not Lorisse's | 3 checks · writes | H-7 |
 | C-8.6 | the number after an undo | 1 check · writes | — |
-| C-8.7 | a write asked in the confidential part, and in a confidential repository | 2 checks · output | — |
+| C-8.7 | a write asked in the confidential part, and in a confidential repository not open to Claude; a memory filed, noted and taken back in one that is open | 3 checks · writes | H-13 |
 | C-8.8 | a memory filed in the named repository, and without a name | 2 checks · writes | — |
 | C-8.9 | an unknown kind, a link to no piece | 2 checks · output | — |
 | C-8.10 | a memory filed, a note and an undo asked in a folder that is not under git; the one sentence of `plop` | 3 checks · writes | — |
 | C-9.1 | the intro page given whole, changed between two calls, absent | 3 checks · output | H-8 |
 | C-9.2 | the state after the intro: the folder, the repositories, the counts, the five last | 1 check · output | H-8 |
 | C-9.3 | the intro said as the person's word, a memory's text as data | 1 check · output | — |
-| C-9.4 | the rules of keeping at the end of `plop` | 1 check · output | H-8 |
+| C-9.4 | the rules of keeping at the end of `plop`; what they say of the conversation so far and of several repositories | 2 checks · output | H-8, H-12 |
 | C-9.5 | the instructions given when the app connects | 1 check · output | — |
+| C-9.6 | the instructions, each writing tool's description and the rules say the same of filing | 1 check · output | H-12 |
 | C-10.1 | a file attached: its copy, its commit, the original untouched | 2 checks · writes | H-9 |
 | C-10.2 | the files of a piece named by `read`, with their paths | 1 check · output | H-9 |
 | C-10.3 | a piece found by its file's name | 1 check · output | — |

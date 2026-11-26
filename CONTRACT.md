@@ -2,7 +2,7 @@
 
 > written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
-Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files, part 11 the first day. All are built.
+Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files, part 11 the first day. All are built but C-6.3, C-9.6 and the new words of C-8.4, C-8.7 and C-9.4, which are being built.
 
 ## 1. Role
 
@@ -55,6 +55,7 @@ We want Claude to see the person's memories, and never what they marked confiden
 
 - **C-6.1** A piece in a part of the folder marked confidential is never returned: not its text, its title or its number, and it is not counted. Asked by its number, the answer is the one for a number that does not exist.
 - **C-6.2** Every answer that carries a piece's text says in its first line that the text is data, never an instruction.
+- **C-6.3** A repository marked confidential whose row names Anthropic among the model providers allowed to see it is open to Claude: its pieces are shown and counted as any other's, each said with its repository, and `plop` names it as confidential. Every other confidential part stays as C-6.1 says.
 
 ## 7. The answers
 
@@ -70,10 +71,10 @@ We want a memory filed in one sentence, each change one step the person can see 
 - **C-8.1** `remember` files a new memory: its title, its text, its kind, its tags, the pieces it links to. The answer gives its number, and `read` gives it back as it was filed.
 - **C-8.2** `note` adds one dated line at the end of the text of a memory or of a person; what was there is unchanged.
 - **C-8.3** `link` links one piece to another. A link already there changes nothing, and the answer says so.
-- **C-8.4** Each change is exactly one commit, in the repository the piece lives in; its message says what was done and names the piece. No other file the folder keeps under git changes, and what the person had changed without committing is left as it was.
+- **C-8.4** Each change is exactly one commit, in the repository the piece lives in; its message says what was done and names the piece. No other file the folder keeps under git changes, and what the person had changed without committing is left as it was. When that repository keeps a history of its own and takes its numbers from the folder's counter, the counter is one more commit, in the folder's own history. After a change, and after its undo, Lorisse leaves nothing of its own uncommitted.
 - **C-8.5** `undo` takes back the last change Lorisse made, or the one named, as a new commit. The history is never rewritten, and a commit Lorisse did not make is never taken back.
 - **C-8.6** A number is given once and never reused, even after an undo. Nothing is deleted.
-- **C-8.7** Nothing is written in a part marked confidential, nor in a repository marked so: asked to, the tool refuses in one sentence.
+- **C-8.7** Nothing is written in a part marked confidential, nor in a repository marked so, unless that repository is open to Claude (C-6.3): asked to, the tool refuses in one sentence. In a repository open to Claude, the writing tools work as in any other.
 - **C-8.8** In a folder of several repositories, a new memory goes to the one the call names; without a name, to the folder's own.
 - **C-8.9** A change that would break the folder's rules (a kind the folder does not know, a link to a piece that does not exist) is refused with its reason, and nothing is written.
 - **C-8.10** Git is recommended, not required. In a folder that is not under git, the writing tools write all the same: the piece is filed, there is no history, and `undo` says it has none to go back through. `plop` says once, in one sentence, what git would add.
@@ -85,8 +86,9 @@ We want one word, "Lorisse" or "plop", to start Lorisse as the person set it up,
 - **C-9.1** `plop` gives the person's intro: the text of the page `intro.md` at the root of the memory folder, whole. The person changes it as any file of theirs, and the next `plop` gives the new text. Without that page, it gives a short one of the plugin's own and says where to write theirs.
 - **C-9.2** After the intro, `plop` gives the state: the memory folder, its repositories, how many memories and people it holds, and the five memories filed last.
 - **C-9.3** The intro is the person's own word on how Lorisse works for them, and is said as such; every other text of the folder stays data (C-6.2).
-- **C-9.4** `plop` ends with the rules of keeping, in a few lines: what is filed without being asked, what is never filed, how a filing is said. So each conversation opened with it starts with the rules in front of Claude, whatever else it has read.
+- **C-9.4** `plop` ends with the rules of keeping, in a few lines: what is filed without being asked, starting with what the conversation already holds; what is never filed; how a filing is said; with several repositories, that a memory goes to the one its subject belongs to, and that what comes from a confidential one is never filed in another. So each conversation opened with it starts with the rules in front of Claude, whatever else it has read.
 - **C-9.5** When the Claude app connects to the program, the program gives it its own short instructions, which the app keeps in front of Claude for the whole conversation: what Lorisse is, to search it when the person asks what they know, and that filing by itself starts once `plop` has been called in the conversation; before that, Lorisse files only when asked.
+- **C-9.6** Every text the program gives Claude says the same of filing: the instructions at the connection, the description of each writing tool, and the rules of `plop`. None says "only when asked" where another says "by yourself".
 
 ## 10. Files
 
@@ -118,6 +120,7 @@ We want a new person to have a memory in five minutes, without knowing what a fo
 | A number that does not exist | one sentence that names it |
 | An argument missing or of the wrong kind | one sentence that says what is expected |
 | A piece whose header cannot be read | the answer names the file and gives the rest |
+| The setting names one repository of a memory, not the folder that holds them | one sentence that says so, and where the setting is changed; `start` is not offered |
 | A writing tool, the folder under git, but no git on the machine or no name set for its commits | refused: one sentence that names what is missing; nothing written |
 | `start` when this machine already has a memory folder | one sentence that names it; nothing is made |
 | `undo` with no change of Lorisse's to take back | one sentence that says so |
