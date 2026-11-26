@@ -54,8 +54,8 @@ fn the_sample_opens_with_its_counts_and_its_check_is_clean() {
     let store = Store::open(&copy.0, Access::Full).unwrap();
     assert_eq!(
         count(&store, Layer::Memory),
-        7,
-        "four memories, the inbox's, the confidential one, the club's"
+        8,
+        "four memories, the inbox's, the confidential one, the club's, the office's"
     );
     let club: Vec<String> = store
         .list(&Filter::default())

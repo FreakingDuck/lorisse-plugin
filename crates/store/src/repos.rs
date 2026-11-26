@@ -78,6 +78,8 @@ pub struct RepoState {
     pub role: Role,
     /// Its pieces are confidential.
     pub confidential: bool,
+    /// Confidential, and open to the model provider the store was opened for: seen and written.
+    pub open: bool,
     /// The identity's alias, when named.
     pub key: Option<String>,
     /// The prefix its memories and tasks are numbered with; `None` for the root's numbering.
@@ -131,6 +133,22 @@ fn alias() -> RepoRow {
         providers: Vec::new(),
         prefix: None,
     }
+}
+
+/// Every confidential row naming `provider` among its `providers` (any case), the
+/// `confidential/` folder never, read as open for this store; the names of the rows opened.
+pub(crate) fn open_rows(config: &mut StoreConfig, provider: &str) -> Vec<String> {
+    let wanted = provider.trim();
+    let mut opened = Vec::new();
+    for row in config.repos.iter_mut() {
+        let named = row.providers.iter().any(|p| p.trim().eq_ignore_ascii_case(wanted));
+        let listed = row.folder != ROOT_FOLDER && row.folder != CONFIDENTIAL;
+        if row.confidential && named && listed && !wanted.is_empty() {
+            row.confidential = false;
+            opened.push(row.name.clone());
+        }
+    }
+    opened
 }
 
 /// The rows numbering their own pieces: each one's folder and prefix.
@@ -223,7 +241,9 @@ pub(crate) fn states(store: &Store) -> Vec<RepoState> {
     rows.into_iter()
         .map(|row| {
             let dir = store.root.join(&row.folder);
+            let open = store.opened.contains(&row.name);
             RepoState {
+                open,
                 here: row.machines.is_empty()
                     || row.machines.iter().any(|m| m.to_lowercase() == this),
                 present: dir.is_dir(),
@@ -231,7 +251,7 @@ pub(crate) fn states(store: &Store) -> Vec<RepoState> {
                 name: row.name,
                 folder: row.folder,
                 role: row.role,
-                confidential: row.confidential,
+                confidential: row.confidential || open,
                 key: row.key,
                 prefix: row.prefix,
             }

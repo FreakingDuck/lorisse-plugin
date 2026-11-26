@@ -5,7 +5,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use lorisse_store::CONFIG_FILE;
+use lorisse_store::{CONFIG_FILE, IDS_FILE};
 
 /// The variable the plugin's setting reaches the program as.
 pub const SETTING: &str = "LORISSE_MEMORY_FOLDER";
@@ -56,12 +56,23 @@ impl Found {
 pub const NO_FOLDER: &str = "Lorisse has no memory folder yet: the tool start makes one ready \
 in a minute, or give one in the plugin's setting \"memory_folder\", or open the session on your memory folder.";
 
-/// The one sentence for a setting that names no memory folder.
+/// Where the person changes the setting, the end of the sentences on a wrong setting.
+const WHERE_SET: &str = "the setting is changed in the Claude app under Customize, Plugins, Lorisse, and a new conversation reads it";
+
+/// The one sentence for a setting that names no memory folder: one repository of a memory
+/// (a `memories` folder or an `ids.json`, no settings), or a folder that is nothing of the kind.
 pub fn not_memory(path: &PathBuf) -> String {
-    format!(
-        "The folder given in the plugin's setting, {}, is not a memory folder: it has no {CONFIG_FILE} at its root.",
-        shown(path)
-    )
+    let one_repository = path.join("memories").is_dir() || path.join(IDS_FILE).is_file();
+    match one_repository {
+        true => format!(
+            "The folder given in the plugin's setting, {}, looks like one repository of a memory, not the folder that holds them all: give the folder that holds {CONFIG_FILE}; {WHERE_SET}.",
+            shown(path)
+        ),
+        false => format!(
+            "The folder given in the plugin's setting, {}, is not a memory folder: it has no {CONFIG_FILE} at its root; {WHERE_SET}.",
+            shown(path)
+        ),
+    }
 }
 
 /// A path as it is said: forward slashes, no trailing separator.

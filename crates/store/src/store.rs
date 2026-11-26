@@ -77,6 +77,8 @@ pub struct Store {
     pub(crate) read_only: bool,
     /// The files of the last walk whose piece could not be read, and ids used twice.
     pub(crate) problems: Vec<Finding>,
+    /// The confidential rows open to the model provider the store was opened for, by name.
+    pub(crate) opened: Vec<String>,
 }
 
 impl Store {
@@ -96,7 +98,7 @@ impl Store {
     /// # Errors
     /// [`StoreError::Config`] for a bad `config.yaml`; [`StoreError::Io`] for a missing folder.
     pub fn open_read(root: &Path, access: Access) -> Result<Store, StoreError> {
-        open_reading(root, access)
+        open_reading(root, access, None)
     }
 
     /// Open a data folder for the plugin's writing calls: indexed in memory as for reading, and
@@ -106,7 +108,28 @@ impl Store {
     /// # Errors
     /// As [`Store::open_read`].
     pub fn open_write(root: &Path, access: Access) -> Result<Store, StoreError> {
-        let mut store = open_reading(root, access)?;
+        let mut store = open_reading(root, access, None)?;
+        store.read_only = false;
+        Ok(store)
+    }
+
+    /// Open for reading as [`Store::open_read`], for a model of `provider`: a confidential row
+    /// naming it among its `providers` (any case) is read as any other row, seen and counted;
+    /// [`RepoState::open`] says which. The `confidential/` folder and every other row stay hidden.
+    ///
+    /// # Errors
+    /// As [`Store::open_read`].
+    pub fn open_read_for(root: &Path, access: Access, provider: &str) -> Result<Store, StoreError> {
+        open_reading(root, access, Some(provider))
+    }
+
+    /// Open for the plugin's writing calls as [`Store::open_write`], for a model of `provider`:
+    /// the rows open to it are written as any other.
+    ///
+    /// # Errors
+    /// As [`Store::open_read`].
+    pub fn open_write_for(root: &Path, access: Access, provider: &str) -> Result<Store, StoreError> {
+        let mut store = open_reading(root, access, Some(provider))?;
         store.read_only = false;
         Ok(store)
     }
@@ -581,17 +604,19 @@ fn open_store(root: &Path, access: Access) -> Result<Store, StoreError> {
         index: Index::default(),
         read_only: false,
         problems: Vec::new(),
+        opened: Vec::new(),
     };
     repos::ignore_rows(&store);
     store.rebuild_index()?;
     Ok(store)
 }
 
-fn open_reading(root: &Path, access: Access) -> Result<Store, StoreError> {
+fn open_reading(root: &Path, access: Access, provider: Option<&str>) -> Result<Store, StoreError> {
     if !root.is_dir() {
         return Err(StoreError::Io(format!("{}: not a folder", root.display())));
     }
-    let config = StoreConfig::load(root)?;
+    let mut config = StoreConfig::load(root)?;
+    let opened = provider.map(|p| repos::open_rows(&mut config, p)).unwrap_or_default();
     let scan = index::scan(root, &config, access)?;
     let mut index = scan.index;
     index::read_high(root, &config, &mut index.max);
@@ -602,6 +627,7 @@ fn open_reading(root: &Path, access: Access) -> Result<Store, StoreError> {
         index,
         read_only: true,
         problems: scan.problems,
+        opened,
     })
 }
 

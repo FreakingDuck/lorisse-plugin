@@ -75,7 +75,7 @@ fn the_reading_opening_sees_what_the_writing_one_sees_and_writes_nothing() {
         layer: Some(Layer::Memory),
         ..Filter::default()
     };
-    assert_eq!(store.list(&filter).len(), 7);
+    assert_eq!(store.list(&filter).len(), 8);
     assert_eq!(store.read(&Ref::new("M-0002")).unwrap().title(), "Boiler serviced in March");
     assert!(!store.find("boiler").is_empty());
     assert!(!store.search("tulips").unwrap().is_empty());

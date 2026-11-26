@@ -278,6 +278,23 @@ fn keep_in(
     write_atomic(path, &(text + "\n"))
 }
 
+/// One `ids.json` raised to `n` for `prefix`, written in the same form as [`keep_high`] writes
+/// it; whether the file changed.
+pub(crate) fn raise_in(path: &Path, prefix: &str, n: u64) -> Result<bool, StoreError> {
+    let mut kept: BTreeMap<String, u64> = fs::read_to_string(path)
+        .ok()
+        .and_then(|text| serde_json::from_str(&text).ok())
+        .unwrap_or_default();
+    let high = kept.entry(prefix.to_string()).or_default();
+    if *high >= n {
+        return Ok(false);
+    }
+    *high = n;
+    let text = serde_json::to_string_pretty(&kept)
+        .map_err(|e| StoreError::Io(format!("{}: {e}", path.display())))?;
+    write_atomic(path, &(text + "\n")).map(|()| true)
+}
+
 /// Write `text` through a temporary file renamed over `path`; parent folders created.
 pub(crate) fn write_atomic(path: &Path, text: &str) -> Result<(), StoreError> {
     if let Some(parent) = path.parent() {

@@ -211,7 +211,7 @@ fn repo_named(store: &Store, name: Option<&str>) -> Result<(Option<String>, Stri
         if name == root {
             return Ok((None, root));
         }
-        let seen = store.repos().into_iter().filter(|r| !r.confidential && r.present);
+        let seen = store.repos().into_iter().filter(|r| (!r.confidential || r.open) && r.present);
         let names: Vec<String> = seen.map(|r| r.name).collect();
         return Err(StoreError::Invalid(format!(
             "no repository is named {name}: the repositories are {}",
@@ -301,9 +301,16 @@ pub(crate) fn remember(store: &mut Store, memory: &NewMemory) -> Result<Written,
     let fields = Fields { title: &title, text, kind: &kind, tags: &tags, links: linked, date: None, source: "chat" };
     let (rel, piece) = new_piece(store, folder.as_deref(), &id, fields)?;
     let home = ready(store, &rel)?;
+    let apart = home.as_ref().and_then(|h| counter_apart(store, h, &id));
+    if let Some((file, other)) = &apart {
+        refuse_dirty(Some(other), file)?;
+    }
     let id_text = id.padded(store.config.id_width);
     let subject = format!("{}({id_text}): {}", Kind::Remember, short(&title));
     let commit = write_and_commit(store, home.as_ref(), &[(rel, Some(piece.render()))], &subject)?;
+    if let Some(apart) = &apart {
+        keep_counter(store, apart, &id);
+    }
     let id = PieceId::parse(&id_text).ok_or_else(|| StoreError::Invalid(format!("{id_text}: not an id")))?;
     Ok(Written {
         id,
@@ -613,6 +620,58 @@ fn write_and_commit(
     }
 }
 
+/// The body line of the commit that keeps the folder's counter: never taken back by an undo.
+const COUNTER_BODY: &str = "job: counter";
+
+/// The `job:` word of that commit, as [`direct::commits`] reads it.
+const COUNTER_JOB: &str = "counter";
+
+/// The counter file of `id`'s numbering, from the root, and its repository, when that is
+/// another history than `home`'s and git keeps the file there; `None` otherwise.
+fn counter_apart(store: &Store, home: &Home, id: &PieceId) -> Option<(String, Home)> {
+    let prefix = id.prefix()?;
+    let rows = repos::numbered_rows(&store.config);
+    let file = match rows.iter().find(|(_, own)| *own == prefix) {
+        Some((folder, _)) => format!("{folder}/{IDS_FILE}"),
+        None => IDS_FILE.to_string(),
+    };
+    let other = repos::home_for_write(store, &file)?;
+    let kept = other.dir != home.dir && !git::is_ignored(&other.dir, &other.inner(&file));
+    kept.then_some((file, other))
+}
+
+/// The counter raised to `id` in its own history, one commit signed as Lorisse's; on a failure
+/// the file is put back as it was, the number still carried by the piece's own file.
+fn keep_counter(store: &Store, (file, other): &(String, Home), id: &PieceId) {
+    let PieceId::Numbered { prefix, n } = id else { return };
+    let path = store.root.join(file);
+    let saved = save([path.clone()]);
+    if !matches!(index::raise_in(&path, prefix, *n), Ok(true)) {
+        restore(&saved);
+        return;
+    }
+    let id_text = id.padded(store.config.id_width);
+    let subject = format!("{}({id_text}): the folder's counter, {id_text} given", Kind::Remember);
+    let inner = vec![other.inner(file)];
+    if !matches!(git::commit(&other.dir, &inner, &[&subject, COUNTER_BODY], Who::Lorisse), Ok(Some(_))) {
+        unstage(other, &inner);
+        restore(&saved);
+    }
+}
+
+/// A counter the undo raised in another history than its own, committed there as Lorisse's;
+/// on a failure it stays written, so the number is still never given again.
+fn keep_counter_after_undo(other: &Home, rel: &str, given: &[String]) {
+    let inner = vec![other.inner(rel)];
+    if !git::dirty(&other.dir, &inner).is_ok_and(|d| !d.is_empty()) {
+        return;
+    }
+    let subject = format!("{}({}): the folder's counter kept after an undo", Kind::Remember, given.join(", "));
+    if git::commit(&other.dir, &inner, &[&subject, COUNTER_BODY], Who::Lorisse).is_err() {
+        unstage(other, &inner);
+    }
+}
+
 /// Whether a repository, or a file in it, is confidential: never written by the plugin.
 fn confidential_in(store: &Store, home: &Home, files: &[String]) -> bool {
     let row = store.config.repos.iter().any(|r| r.name == home.name && r.confidential);
@@ -628,7 +687,9 @@ fn home_of_commit(store: &Store, id: &str) -> Option<(Home, String)> {
 
 /// The commit an undo takes back: the one named, else Lorisse's last still standing.
 fn chosen(store: &Store, change: Option<&str>) -> Result<Option<(Home, String)>, StoreError> {
-    let commits = direct::commits(store, &Since::All)?;
+    let mut commits = direct::commits(store, &Since::All)?;
+    let counters: Vec<String> = commits.iter().filter(|c| c.job == COUNTER_JOB).map(|c| c.id.clone()).collect();
+    commits.retain(|c| c.job != COUNTER_JOB);
     let standing = |c: &&direct::LorisseCommit| !c.undone;
     let Some(text) = change.map(str::trim).filter(|c| !c.is_empty()) else {
         for commit in commits.iter().filter(standing) {
@@ -652,6 +713,11 @@ fn chosen(store: &Store, change: Option<&str>) -> Result<Option<(Home, String)>,
     let (home, full) = home_of_commit(store, text)
         .ok_or_else(|| StoreError::Invalid(format!("no change is named {text} in this memory folder")))?;
     let short: String = full.chars().take(7).collect();
+    if counters.contains(&full) {
+        return Err(StoreError::Invalid(format!(
+            "{short} keeps the folder's counter: a number is given once, so it is never taken back"
+        )));
+    }
     if git::author_mail(&home.dir, &full)? != LORISSE_EMAIL {
         return Err(StoreError::Invalid(format!(
             "{short} is not a change of Lorisse's: undo takes back hers only"
@@ -691,12 +757,23 @@ pub(crate) fn undo(store: &mut Store, change: Option<&str>) -> Result<Option<Und
         .filter(|rel| repos::home_for_write(store, rel).is_some_and(|h| h.dir == home.dir))
         .map(|rel| home.inner(rel))
         .collect();
+    let apart: Vec<(String, Home)> = ids_all
+        .iter()
+        .filter_map(|rel| {
+            let other = repos::home_for_write(store, rel)?;
+            let kept = other.dir != home.dir && !git::is_ignored(&other.dir, &other.inner(rel));
+            kept.then(|| (rel.clone(), other))
+        })
+        .collect();
     let pieces: Vec<String> = files.iter().filter(|f| !here.contains(f)).cloned().collect();
     direct::refuse_later(&home.dir, &full, &pieces)?;
     if let Some(file) = git::dirty(&home.dir, &here)?.first() {
         return Err(StoreError::Invalid(format!(
             "{file} has changes not committed: commit them or drop them first"
         )));
+    }
+    for (rel, other) in &apart {
+        refuse_dirty(Some(other), rel)?;
     }
     let subject = git::run(&home.dir, &["log", "-1", "--format=%s", &full], Who::Folder)?;
     let subject = subject.trim().to_string();
@@ -705,10 +782,13 @@ pub(crate) fn undo(store: &mut Store, change: Option<&str>) -> Result<Option<Und
         &["diff-tree", "--root", "--no-commit-id", "--name-only", "-r", "--diff-filter=A", &full],
         Who::Folder,
     )?;
-    let numbered = added
+    let given: Vec<String> = added
         .lines()
         .filter_map(|f| ids::from_path(&home.outer(f.trim()), &store.config.archive))
-        .any(|id| matches!(id, PieceId::Numbered { .. }));
+        .filter(|id| matches!(id, PieceId::Numbered { .. }))
+        .map(|id| id.padded(store.config.id_width))
+        .collect();
+    let numbered = !given.is_empty();
     let mut paths: Vec<PathBuf> = files.iter().map(|f| home.dir.join(f)).collect();
     paths.extend(ids_all.iter().map(|rel| store.root.join(rel)));
     let saved = save(paths);
@@ -750,6 +830,11 @@ pub(crate) fn undo(store: &mut Store, change: Option<&str>) -> Result<Option<Und
         return Err(back(e, true));
     }
     let revert = git::head(&home.dir)?;
+    if numbered {
+        for (rel, other) in &apart {
+            keep_counter_after_undo(other, rel, &given);
+        }
+    }
     let ids = direct::commits(store, &Since::All)?
         .into_iter()
         .find(|c| c.id == full)

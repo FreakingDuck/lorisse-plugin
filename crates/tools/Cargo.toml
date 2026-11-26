@@ -1,6 +1,6 @@
 [package]
 name = "lorisse"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 description = "Lorisse's plugin program: an MCP server over stdio with five reading tools, where, plop, search, read, links, and seven writing tools, remember, note, link, attach, undo, start, import"
 publish = false

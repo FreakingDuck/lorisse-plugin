@@ -146,7 +146,8 @@ fn c_8_3_the_same_link_twice_changes_nothing_and_says_so() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.4 one commit a change, its message, the person's own uncommitted change left (3 checks)
+// C-8.4 one commit a change, its message, the person's own uncommitted change left; a repository
+// with its own history and the folder's counter (4 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
@@ -194,6 +195,42 @@ fn c_8_4_a_change_the_person_has_not_committed_is_left_as_it_was_and_not_in_the_
     let said = ask_one(copy.path(), "note", r#"{"piece":"M-0004","text":"x"}"#);
     assert!(said.contains("memories/M-0004.md has changes not committed"), "{said}");
     assert_eq!(files_of(copy.path()), before);
+}
+
+#[test]
+fn c_8_4_a_repository_with_its_own_history_and_the_folder_s_counter_leaves_nothing_uncommitted() {
+    let copy = Temp::sample("counter");
+    let config = read_file(copy.path(), "config.yaml");
+    copy.write("config.yaml", &format!("{config}  - {{ name: shed, folder: shed }}\n"));
+    copy.write("shed/notes.txt", "the shed's own history\n");
+    copy.write(".gitignore", "shed/\n");
+    let shed = copy.path().join("shed");
+    make_git(&shed);
+    make_git(copy.path());
+    let clean = |dir: &Path, when: &str| assert_eq!(run_git(dir, &["status", "--porcelain"]), "", "{when}");
+    let args = r#"{"title":"The shed's roof","text":"Tarred in May.","repository":"shed"}"#;
+    let said = ask_one(copy.path(), "remember", args);
+    assert!(said.starts_with("Filed as M-0007 [shed]") && said.contains("one commit of shed"), "{said}");
+    assert_eq!(files_of_head(&shed), ["memories/M-0007.md"]);
+    assert!(log(&shed)[0].contains(" lorisse@local remember(M-0007)"), "{:?}", log(&shed));
+    let root = log(copy.path());
+    assert_eq!(root.len(), 2, "the counter is one more commit at the root: {root:?}");
+    assert!(root[0].contains(" lorisse@local remember(M-0007): the folder's counter"), "{}", root[0]);
+    assert_eq!(files_of_head(copy.path()), ["ids.json"]);
+    assert!(read_file(copy.path(), "ids.json").contains("\"M\": 7"));
+    clean(copy.path(), "after remember, the root");
+    clean(&shed, "after remember, the shed");
+    let counter: String = root[0].chars().take(7).collect();
+    let refused = ask_one(copy.path(), "undo", &format!(r#"{{"change":"{counter}"}}"#));
+    assert!(refused.contains("keeps the folder's counter"), "{refused}");
+    let said = ask_one(copy.path(), "undo", "{}");
+    assert!(said.starts_with("Taken back: \"remember(M-0007): The shed's roof\""), "{said}");
+    assert!(!shed.join("memories/M-0007.md").exists());
+    assert_eq!(log(copy.path()), root, "the counter is not taken back");
+    clean(copy.path(), "after undo, the root");
+    clean(&shed, "after undo, the shed");
+    let again = ask_one(copy.path(), "remember", r#"{"title":"The hedge","text":"Cut in May."}"#);
+    assert!(again.starts_with("Filed as M-0008 [home]"), "a number is given once: {again}");
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -268,7 +305,8 @@ fn c_8_6_a_number_taken_back_is_never_given_again() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.7 a write asked in the confidential part, and in a confidential repository (2 checks)
+// C-8.7 a write asked in the confidential part, and in a confidential repository not open to
+// Claude; a memory filed, noted and taken back in one that is open (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 const CONFIDENTIAL_SAID: &str =
@@ -304,6 +342,47 @@ fn c_8_7_nothing_is_written_in_a_repository_marked_confidential() {
     assert_eq!(note, "No piece has the number M-0040.");
     assert_eq!(files_of(copy.path()), before);
     assert_eq!(log(copy.path()), commits);
+}
+
+#[test]
+fn c_8_7_a_repository_open_to_claude_is_filed_noted_and_taken_back_as_any_other() {
+    let copy = Temp::git_sample("open_write");
+    let commits = log(copy.path()).len();
+    let args = r#"{"title":"The lease ends","text":"The printer's lease ends in June.","repository":"office"}"#;
+    let said = ask_one(copy.path(), "remember", args);
+    assert!(said.starts_with("Filed as O-0002 [office]") && said.contains("one commit of office"), "{said}");
+    assert_eq!(files_of_head(copy.path()), ["office/memories/O-0002.md"]);
+    let noted = ask_one(copy.path(), "note", r#"{"piece":"O-0001","text":"Paid for the spring."}"#);
+    assert!(noted.starts_with("Noted on O-0001 [office]"), "{noted}");
+    assert!(read_file(copy.path(), "office/memories/O-0001.md").ends_with(": Paid for the spring.\n"));
+    let back = ask_one(copy.path(), "undo", "{}");
+    assert!(back.starts_with("Taken back: \"note(O-0001): Paid for the spring.\""), "{back}");
+    let back = ask_one(copy.path(), "undo", "{}");
+    assert!(back.starts_with("Taken back: \"remember(O-0002)") && back.ends_with("The number O-0002 is not given again."), "{back}");
+    assert!(!copy.path().join("office/memories/O-0002.md").exists());
+    assert_eq!(log(copy.path()).len(), commits + 4, "four commits, the history kept");
+    assert!(read_file(copy.path(), "office/ids.json").contains("\"O\": 2"));
+    assert_eq!(run_git(copy.path(), &["status", "--porcelain"]), "");
+}
+
+// ---------------------------------------------------------------------------------------------
+// Older pieces numbered with the folder's letter in a repository with a prefix (1 check)
+// ---------------------------------------------------------------------------------------------
+
+#[test]
+fn an_older_piece_with_the_folder_s_letter_is_read_as_it_is_and_a_new_memory_takes_the_prefix() {
+    let copy = Temp::sample("older_letter");
+    copy.write("office/memories/M-0020.md", &memory("M-0020", "The old desk", "Bought before the office had its letter.", ""));
+    make_git(copy.path());
+    let found = ask_one(copy.path(), "search", r#"{"text":"desk"}"#);
+    assert!(found.contains("M-0020 [office] · The old desk"), "{found}");
+    let read = ask_one(copy.path(), "read", r#"{"piece":"M-0020"}"#);
+    assert!(read.contains("Repository: office") && read.contains("id: M-0020"), "{read}");
+    let args = r#"{"title":"The new desk","text":"Bought in March.","repository":"office"}"#;
+    let said = ask_one(copy.path(), "remember", args);
+    assert!(said.starts_with("Filed as O-0002 [office]"), "{said}");
+    let home = ask_one(copy.path(), "remember", r#"{"title":"The hedge","text":"Cut in May."}"#);
+    assert!(home.starts_with("Filed as M-0007 [home]"), "the office's M-0020 is not the root's: {home}");
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -424,8 +503,8 @@ fn c_9_2_plop_gives_the_folder_its_repositories_the_counts_and_the_five_filed_la
     let state = got.split("\n\n").find(|p| p.starts_with("The memory folder: ")).unwrap();
     let want = [
         format!("The memory folder: {shown}"),
-        "Its repositories: home, club.".to_string(),
-        "It holds 6 memories and 1 person.".to_string(),
+        "Its repositories: home, club, office (confidential).".to_string(),
+        "It holds 7 memories and 1 person.".to_string(),
         DATA_LINE.to_string(),
         "Filed last:".to_string(),
         "- M-0007 [home] · The gutter was cleaned".to_string(),

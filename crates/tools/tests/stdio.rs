@@ -27,7 +27,7 @@ fn initialize_with_a_number_id() {
     assert!(res.get("capabilities").unwrap().get("tools").is_some());
     let info = res.get("serverInfo").unwrap();
     assert_eq!(info.get("name").and_then(Json::as_str), Some("lorisse"));
-    assert_eq!(info.get("version").and_then(Json::as_str), Some("0.4.0"));
+    assert_eq!(info.get("version").and_then(Json::as_str), Some("0.5.0"));
 }
 
 #[test]

@@ -156,6 +156,37 @@ fn a_writing_tool_without_git_or_without_a_name_for_the_commits_names_what_is_mi
 }
 
 #[test]
+fn a_setting_naming_one_repository_of_a_memory_says_so_and_where_the_setting_is_changed() {
+    let one = Temp::empty("one_repository");
+    one.write("memories/C-0001.md", &memory("C-0001", "The club's key", "Behind the bar.", ""));
+    one.write("ids.json", "{\n  \"C\": 1\n}\n");
+    let counter_only = Temp::empty("counter_only");
+    counter_only.write("ids.json", "{\n  \"M\": 3\n}\n");
+    let plain = Temp::empty("plain_folder");
+    plain.write("notes.txt", "a folder of something else");
+    let where_set = "the setting is changed in the Claude app under Customize, Plugins, Lorisse, and a new conversation reads it.";
+    for folder in [&one, &counter_only] {
+        let setting = folder.path().to_string_lossy().into_owned();
+        let shown = setting.replace('\\', "/");
+        let want = format!(
+            "The folder given in the plugin's setting, {shown}, looks like one repository of a memory, not the folder that holds them all: give the folder that holds config.yaml; {where_set}"
+        );
+        let got = ask(&[(SETTING, &setting)], None, &[("where", "{}"), ("search", r#"{"text":"key"}"#), ("plop", "{}")]);
+        assert_eq!(got[0].lines().next(), Some(want.as_str()), "{}", got[0]);
+        assert_eq!(got[1], want);
+        assert_eq!(got[2], want);
+        assert!(got.iter().all(|g| !g.contains("start")), "start is not offered: {got:?}");
+    }
+    let setting = plain.path().to_string_lossy().into_owned();
+    let shown = setting.replace('\\', "/");
+    let got = ask_one(plain.path(), "search", r#"{"text":"key"}"#);
+    assert_eq!(
+        got,
+        format!("The folder given in the plugin's setting, {shown}, is not a memory folder: it has no config.yaml at its root; {where_set}")
+    );
+}
+
+#[test]
 fn start_when_this_machine_already_has_a_memory_folder_names_it_and_makes_nothing() {
     let home = Temp::empty("already_home");
     let copy = Temp::sample("already_setting");

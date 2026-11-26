@@ -232,7 +232,7 @@ fn tool_list() -> Vec<Json> {
         ),
         card(
             "remember",
-            "Files a new memory in the person's memory folder, as one commit, and gives its number. Use it only when the person asks to remember something, or says yes to your offer to file it.",
+            "Files a new memory in the person's memory folder, as one commit, and gives its number. Use it by yourself once plop was called in this conversation, when the person says something worth keeping, searching first; before that, only when the person asks.",
             &[
                 Arg("title", false, "a short title, one line", true),
                 Arg("text", false, "what to remember, in the person's words", true),
@@ -245,7 +245,7 @@ fn tool_list() -> Vec<Json> {
         ),
         card(
             "note",
-            "Adds one dated line at the end of a memory's or a person's text, as one commit; nothing else changes. Use it only when the person asks to add something to a piece.",
+            "Adds one dated line at the end of a memory's or a person's text, as one commit; nothing else changes. Use it by yourself once plop was called in this conversation, when the person says something worth keeping that adds to a piece that exists; before that, only when the person asks.",
             &[
                 Arg("piece", false, "a number such as M-0002, or a person's name", true),
                 Arg("text", false, "the line to add", true),
@@ -254,13 +254,13 @@ fn tool_list() -> Vec<Json> {
         ),
         card(
             "link",
-            "Links one piece of the person's memory to another, as one commit; a link already there changes nothing. Use it only when the person asks to link two pieces.",
+            "Links one piece of the person's memory to another, as one commit; a link already there changes nothing. Use it by yourself once plop was called in this conversation, when the person says something worth keeping that adds to a piece that exists; before that, only when the person asks.",
             &[Arg("from", false, PIECE, true), Arg("to", false, PIECE, true)],
             Does::WritesOnce,
         ),
         card(
             "attach",
-            "Keeps a file of the person's machine with the memory or the person it is about: a copy goes in the memory folder beside that piece, as one commit, and the original stays where it was. Use it when the person gives a document's path or says to keep a file; file the memory first if it does not exist yet.",
+            "Keeps a file of the person's machine with the memory or the person it is about: a copy goes in the memory folder beside that piece, as one commit, and the original stays where it was. Use it by yourself once plop was called in this conversation, when the person gives a document worth keeping with what it is about; before that, only when the person asks. File the memory first if it does not exist yet.",
             &[
                 Arg("piece", false, "a number such as M-0002, or a person's name", true),
                 Arg("path", false, "the full path of the file on this machine", true),

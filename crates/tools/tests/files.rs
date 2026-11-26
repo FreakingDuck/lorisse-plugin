@@ -1,5 +1,5 @@
 //! The root VALIDATION.md's table for the files and the rules of keeping, one test a check:
-//! C-9.4, C-9.5, C-10.1 to C-10.6, and the undo of an attachment. The program is started and
+//! C-9.4 to C-9.6, C-10.1 to C-10.6, and the undo of an attachment. The program is started and
 //! asked over stdin, on temporary copies of the sample; every file attached is one the test
 //! made in a temporary folder of its own.
 
@@ -46,7 +46,8 @@ fn attach_args(piece: &str, path: &Path) -> String {
 const INVOICE: &[u8] = b"%PDF-1.4 an invented invoice for the boiler's service\n";
 
 // ---------------------------------------------------------------------------------------------
-// C-9.4 the rules of keeping at the end of `plop` (1 check)
+// C-9.4 the rules of keeping at the end of `plop`; what they say of the conversation so far and
+// of several repositories (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
@@ -62,6 +63,59 @@ fn c_9_4_plop_ends_with_the_rules_of_keeping_in_a_few_lines() {
     }
     let state_at = got.find("The memory folder: ").unwrap();
     assert!(state_at < got.find("The rules of keeping:").unwrap(), "the rules come last: {got}");
+}
+
+#[test]
+fn c_9_4_the_rules_start_with_the_conversation_so_far_and_say_where_a_memory_goes() {
+    let copy = Temp::sample("keeping_where");
+    let got = ask_one(copy.path(), "plop", "{}");
+    let rules = got.split("\n\n").last().unwrap();
+    let lines: Vec<&str> = rules.lines().collect();
+    assert!(lines[1].starts_with("- Start now: file what this conversation already holds"), "{rules}");
+    assert!(lines[1].contains("searching first"), "{rules}");
+    for said in [
+        "With several repositories, file in the one the subject belongs to, and name it in the line.",
+        "What comes from a confidential repository is never filed in another one.",
+    ] {
+        assert!(lines.iter().any(|l| l.ends_with(said)), "{said}: {rules}");
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// C-9.6 every text the program gives says the same of filing (1 check)
+// ---------------------------------------------------------------------------------------------
+
+#[test]
+fn c_9_6_the_instructions_the_writing_tools_and_the_rules_say_the_same_of_filing() {
+    let init = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}"#;
+    let list = r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#;
+    let got = talk_with(program(&[], None), &[init.to_string(), list.to_string()]);
+    let instructions = got[0].get("result").and_then(|r| r.get("instructions")).and_then(Json::as_str).unwrap();
+    assert!(instructions.contains("Filing by yourself starts once plop has been called in this conversation"), "{instructions}");
+    assert!(instructions.contains("Before that, file only when the person asks."), "{instructions}");
+    let Some(Json::Array(tools)) = got[1].get("result").and_then(|r| r.get("tools")) else {
+        panic!("tools is an array");
+    };
+    let said = |name: &str| {
+        let tool = tools.iter().find(|t| t.get("name").and_then(Json::as_str) == Some(name)).unwrap();
+        tool.get("description").and_then(Json::as_str).unwrap().to_string()
+    };
+    for name in ["remember", "note", "link", "attach"] {
+        let text = said(name);
+        assert!(text.contains("Use it by yourself once plop was called in this conversation"), "{name}: {text}");
+        assert!(text.contains("before that, only when the person asks"), "{name}: {text}");
+    }
+    let copy = Temp::sample("filing_same");
+    let rules = ask_one(copy.path(), "plop", "{}");
+    let rules = rules.split("\n\n").last().unwrap().to_string();
+    assert!(rules.contains("File by yourself"), "{rules}");
+    let mut texts = vec![instructions.to_string(), rules];
+    texts.extend(["remember", "note", "link", "attach", "undo", "start", "import"].map(said));
+    for text in &texts {
+        let low = text.to_lowercase();
+        let only = low.matches("only when").count();
+        assert_eq!(only, low.matches("before that, ").count(), "\"only when\" is said only for before plop: {text}");
+    }
 }
 
 // ---------------------------------------------------------------------------------------------

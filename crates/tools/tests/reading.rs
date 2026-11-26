@@ -34,7 +34,7 @@ fn c_4_1_the_setting_gives_the_folder_whatever_folder_the_program_runs_in() {
     );
     assert!(got[0].contains(&shown(copy.path())), "{}", got[0]);
     assert!(got[0].contains("the plugin's setting"), "{}", got[0]);
-    assert!(got[0].contains("0.4.0"), "{}", got[0]);
+    assert!(got[0].contains("0.5.0"), "{}", got[0]);
     assert!(got[1].contains("M-0001 [home] · The boiler's contract"), "{}", got[1]);
 }
 
@@ -331,6 +331,57 @@ fn c_6_1_a_repository_marked_confidential_does_not_exist_either() {
         assert!(!said.contains("M-0040") || said.starts_with("No piece"), "{said}");
         assert!(!said.contains("work]") && !said.contains("secret plan"), "{said}");
     }
+}
+
+// ---------------------------------------------------------------------------------------------
+// C-6.3 a confidential repository open to Claude (3 checks)
+// ---------------------------------------------------------------------------------------------
+
+#[test]
+fn c_6_3_a_repository_open_to_claude_is_found_and_read_with_its_repository() {
+    let copy = Temp::sample("open_found");
+    let found = ask_one(copy.path(), "search", r#"{"text":"printer"}"#);
+    assert_eq!(found.lines().next(), Some(DATA_LINE), "{found}");
+    assert!(found.contains("O-0001 [office] · The printer's lease"), "{found}");
+    let read = ask_one(copy.path(), "read", r#"{"piece":"o-1"}"#);
+    assert_eq!(read.lines().next(), Some(DATA_LINE), "{read}");
+    assert!(read.contains("Repository: office") && read.contains("The lease is paid each quarter."), "{read}");
+    let links = ask_one(copy.path(), "links", r#"{"piece":"O-0001"}"#);
+    assert!(links.starts_with("O-0001 [office] · The printer's lease"), "{links}");
+}
+
+#[test]
+fn c_6_3_plop_counts_the_open_repository_and_names_it_confidential() {
+    let copy = Temp::sample("open_plop");
+    let got = ask_one(copy.path(), "plop", "{}");
+    let state = got.split("\n\n").find(|p| p.starts_with("The memory folder: ")).unwrap();
+    assert!(state.contains("Its repositories: home, club, office (confidential)."), "{state}");
+    assert!(state.contains("It holds 6 memories and 1 person."), "{state}");
+    assert!(state.contains("- O-0001 [office] · The printer's lease"), "{state}");
+    assert!(!got.contains("M-0006") && !got.contains("surprise"), "the confidential part stays hidden: {got}");
+}
+
+#[test]
+fn c_6_3_a_confidential_repository_without_anthropic_among_its_providers_stays_hidden() {
+    let copy = Temp::sample("open_not");
+    let config = fs::read_to_string(copy.path().join("config.yaml")).unwrap();
+    let gemini = config.replace("providers: [anthropic]", "providers: [gemini]");
+    assert_ne!(gemini, config, "the sample names its providers");
+    fs::write(copy.path().join("config.yaml"), &gemini).unwrap();
+    let calls = [
+        ("search", r#"{"text":"printer"}"#),
+        ("read", r#"{"piece":"O-0001"}"#),
+        ("links", r#"{"piece":"O-0001"}"#),
+        ("plop", "{}"),
+    ];
+    let got = ask(&[(SETTING, &text_of(copy.path()))], None, &calls);
+    assert!(got[0].starts_with("Nothing in the memories"), "{}", got[0]);
+    assert_eq!(got[1], "No piece has the number O-0001.");
+    assert_eq!(got[2], got[1]);
+    assert!(got[3].contains("Its repositories: home, club.") && !got[3].contains("office"), "{}", got[3]);
+    fs::write(copy.path().join("config.yaml"), config.replace("[anthropic]", "[ANTHROPIC]")).unwrap();
+    let any_case = ask_one(copy.path(), "search", r#"{"text":"printer"}"#);
+    assert!(any_case.contains("O-0001 [office]"), "the provider's name in any case: {any_case}");
 }
 
 // ---------------------------------------------------------------------------------------------

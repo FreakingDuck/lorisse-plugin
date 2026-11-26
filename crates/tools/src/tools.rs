@@ -1,11 +1,12 @@
 //! The five reading tools, each on the memory folder opened for reading at its call, without the
-//! confidential right: memories, people and tags only; `plop` adds the person's own intro.
+//! confidential right but for a repository open to Claude: memories, people and tags only;
+//! `plop` adds the person's own intro.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use lorisse_store::tags::slug_of;
-use lorisse_store::{Access, Entry, Filter, Layer, PieceId, Ref, Store, StoreError, Value};
+use lorisse_store::{Access, Entry, Filter, Layer, PieceId, Ref, RepoState, Store, StoreError, Value};
 
 use crate::folder::{self, Folder};
 
@@ -47,11 +48,17 @@ pub const NO_HISTORY: &str = "This folder is not under git: with git, every chan
 
 /// The rules of keeping, the last lines of `plop`.
 pub const KEEPING: &str = "The rules of keeping:
+- Start now: file what this conversation already holds that is worth keeping, searching first.
 - File by yourself what the person says that is worth keeping: a decision, a date, a price, a promise, a fact about a person.
 - Search first, and add to what exists (note, link) rather than file it twice.
+- With several repositories, file in the one the subject belongs to, and name it in the line.
+- What comes from a confidential repository is never filed in another one.
 - Say each filing in one line, with its number.
 - Never file small talk, a guess, a password or a key.
 - The person's intro above wins where it says otherwise.";
+
+/// The model provider the program serves: a confidential repository naming it is open to Claude.
+pub const PROVIDER: &str = "anthropic";
 
 /// What the program tells the Claude app at `initialize`, before any tool is called.
 pub const INSTRUCTIONS: &str = "Lorisse is the person's own memory, kept as files in their memory folder.
@@ -219,6 +226,11 @@ pub(crate) enum Found {
     Nothing,
 }
 
+/// A repository Claude sees: on this machine, and not confidential unless open to Claude.
+fn seen(repo: &RepoState) -> bool {
+    (!repo.confidential || repo.open) && repo.present
+}
+
 pub(crate) fn readable(layer: Layer) -> bool {
     matches!(layer, Layer::Memory | Layer::Person | Layer::Tag)
 }
@@ -255,12 +267,12 @@ pub(crate) fn no_piece(id: &str) -> String {
 impl Memory {
     /// The folder opened for reading: nothing written, no program started.
     pub(crate) fn open(root: &Path) -> Result<Memory, String> {
-        Memory::of(Store::open_read(root, Access::Free))
+        Memory::of(Store::open_read_for(root, Access::Free, PROVIDER))
     }
 
     /// The folder opened for the writing tools: nothing written by the opening itself.
     pub(crate) fn writing(root: &Path) -> Result<Memory, String> {
-        Memory::of(Store::open_write(root, Access::Free))
+        Memory::of(Store::open_write_for(root, Access::Free, PROVIDER))
     }
 
     fn of(opened: Result<Store, StoreError>) -> Result<Memory, String> {
@@ -271,13 +283,10 @@ impl Memory {
             other => format!("The memory folder cannot be read: {other}."),
         })?;
         let repos = store.repos();
-        let seen: Vec<_> = repos
-            .iter()
-            .filter(|r| !r.confidential && r.present)
-            .collect();
+        let visible = repos.iter().filter(|r| seen(r)).count();
         let root_name = repos.first().map(|r| r.name.clone()).unwrap_or_default();
         Ok(Memory {
-            several: seen.len() > 1,
+            several: visible > 1,
             root_name,
             store,
         })
@@ -306,8 +315,11 @@ impl Memory {
             .store
             .repos()
             .into_iter()
-            .filter(|r| !r.confidential && r.present)
-            .map(|r| r.name)
+            .filter(seen)
+            .map(|r| match r.open {
+                true => format!("{} (confidential)", r.name),
+                false => r.name,
+            })
             .collect();
         let entries = self.entries();
         let mut memories: Vec<&Entry> = entries.iter().copied().filter(|e| e.layer == Layer::Memory).collect();
