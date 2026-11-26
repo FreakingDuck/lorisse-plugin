@@ -27,6 +27,7 @@ For the gate and for the assistant; nothing here is yours to read.
 | C-4.2 | a search in titles, tags and bodies | the crate's tests · output | — |
 | C-4.3 | the links both ways | the crate's tests · output | — |
 | C-5.1 | the confidential piece, by read, list, search and count | the crate's tests · output, and one on the sample | — |
+| C-5.2 | a confidential repository whose row names the provider, read and written; one that names another, still unseen | through the plugin's program: `crates/tools/tests`, 4 checks · output and writes | — |
 | C-6.1 | a copy of the sample before and after an opening for reading and its reads | 2 checks · writes | — |
 | C-6.2 | each writing call on an opening for reading | 1 check · output | — |
 

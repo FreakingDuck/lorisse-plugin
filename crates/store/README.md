@@ -31,6 +31,8 @@ crates/store/
 - Lists the inbox and the proposals waiting.
 - Writes: a capture, a proposal and its acceptance, a direct change as one commit with its undo.
 - Opens a folder for the plugin's writing (`Store::open_write`): nothing is written by the opening itself, and four calls each make at most one commit: a memory filed, a note, a link, a change taken back. The file is put back if the commit fails.
+- Opens either of those two for a named model provider (`Store::open_read_for`, `Store::open_write_for`): a confidential repository whose row names that provider among its `providers` is then seen, read and written as any other, and its state says `open`. The plugin opens for `anthropic`.
+- A memory filed in a repository that keeps its own history and counts with the folder's counter makes one more commit, the counter's, in the folder's own history; an undo never takes that one back, since a number is given once.
 - Checks a folder and reports each problem found.
 
 ## The proposal file

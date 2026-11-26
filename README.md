@@ -40,6 +40,7 @@ Lorisse reads a memory folder, files in it, and opens a conversation with your o
 | 4. the guard | your rules, in a file of your folder: what passes alone, what asks, what never happens, for Lorisse's tools and for the Claude app's connectors | built, version 0.2.0 |
 | 5. the files | a document kept with the memory it is about; reading a memory names its files, a search finds a memory by a file's name. The program gives Claude its rules when it connects, and `plop` repeats them. | built, version 0.3.0 |
 | 6. the first day | a new person's folder made ready in one conversation, remembered by the machine, and filled with what another assistant already remembers of them; git recommended, no longer required | built, version 0.4.0 |
+| 7. a first clean version | filing by itself said the same in every text Claude reads, starting with what the conversation already holds; a confidential repository you open to Claude, read and written; nothing left uncommitted; a plain sentence when the setting names the wrong folder | built, version 0.5.0 |
 | 7. the keeper | the skill that holds the rules of filing: what is filed at once, what stays a proposal, what is never done | after |
 
 Tasks, the inbox and "what to do next" come after the memory itself is in place.
@@ -50,9 +51,21 @@ Your folder stays on your machine. Keeping it on GitHub as well is your choice, 
 
 Lorisse reads one folder. Where you are wins: the folder the session is opened on, when it is a memory folder (it holds a `config.yaml` at its root). Anywhere else, the one you gave in the plugin's setting, "Memory folder"; and without a setting, the one this machine remembers from the first day (one line in `.lorisse-folder`, in your home folder). It looks nowhere else. Each machine keeps its own. A memory folder can name several repositories in its config; they read as one memory.
 
+The folder to give is the one that holds `config.yaml`, never one of its repositories. To change it later: in the Claude app, Customize, Plugins, Lorisse. A conversation already open keeps the old setting; a new one reads the new.
+
+A repository can be marked confidential in the config (`confidential: true`): Claude then sees nothing of it. To keep it apart and still work in it with Claude, name Anthropic among the providers its row allows:
+
+```
+repos:
+  - { name: home, folder: . }
+  - { name: office, folder: office, confidential: true, providers: [anthropic], prefix: O }
+```
+
+Its memories are then read and written as the others, numbered on their own (`O-0001`), and never filed in another repository.
+
 ## The tools
 
-What Claude can ask the program. Memories, people and tags are read; a task or a piece still in the inbox is not shown yet, and what you marked confidential never is.
+What Claude can ask the program. Memories, people and tags are read; a task or a piece still in the inbox is not shown yet, and what you marked confidential never is, unless it is a repository you opened to Claude (above).
 
 | Tool | It takes | It gives |
 |---|---|---|
@@ -93,7 +106,16 @@ In short, in Claude Code:
 /plugin install lorisse@lorisse
 ```
 
-Then type "Hello Lorisse, where are you?".
+Then open a new conversation and type "plop". With no memory yet, Lorisse offers to make one; with one, it answers with your folder, its repositories and the memories filed last.
+
+To update, in a terminal:
+
+```
+claude plugin marketplace update lorisse
+claude plugin update lorisse@lorisse
+```
+
+Then close the app and open it again: while it runs, it holds the old program.
 
 The program runs on your own machine. Cowork and Claude Code start it; a plain chat does not. It opens no network connection.
 

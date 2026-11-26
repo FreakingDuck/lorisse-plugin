@@ -36,6 +36,7 @@ We want every read of a folder to go through one place, so a rule on what may be
 We want a part the person marked confidential to stay out of every answer, not only out of a read.
 
 - **C-5.1** An opening without the confidential right does not see a confidential piece: it is not read, not listed, not found by a search and not counted.
+- **C-5.2** An opening made for a named model provider sees a confidential repository whose row names that provider, and reads and writes it as any other; its state still says it is confidential. Every other confidential part stays as C-5.1 says.
 
 ## 6. An opening for reading
 
