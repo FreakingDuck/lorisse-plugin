@@ -5,14 +5,23 @@
 //! memory folder when it is under git, through the store.
 //! Each tool is declared read-only or writing.
 //! Started with the word `guard`, it is the plugin's guard instead: one tool call judged.
+//! Each subject is a folder of its own; what they share is `shared`.
 
+mod drawers;
+mod files;
+// A path named: the old `first_day.rs` and `writing.rs` still sit beside their folders.
+#[path = "first_day/mod.rs"]
 mod first_day;
-mod folder;
 mod json;
-mod tools;
+mod keeping;
+mod opening;
+mod reading;
+mod shared;
+#[path = "writing/mod.rs"]
 mod writing;
 
 use json::Json;
+use reading::folder;
 use std::io::{self, BufRead, Read, Write};
 use std::panic::{self, AssertUnwindSafe};
 
@@ -93,10 +102,10 @@ fn handle(line: &str) -> Option<String> {
                         "serverInfo",
                         Json::obj(vec![
                             ("name", Json::str(NAME)),
-                            ("version", Json::str(tools::VERSION)),
+                            ("version", Json::str(shared::VERSION)),
                         ]),
                     ),
-                    ("instructions", Json::str(tools::INSTRUCTIONS)),
+                    ("instructions", Json::str(opening::INSTRUCTIONS)),
                 ]),
             )
         }
@@ -120,11 +129,11 @@ fn answer(tool: &str, args: Option<&Json>) -> Json {
     let key = if tool == "search" { "text" } else { "piece" };
     let arg = args.and_then(|a| a.get(key)).and_then(Json::as_str);
     let run = AssertUnwindSafe(|| match tool {
-        "where" => tools::where_is(),
-        "plop" => tools::plop(),
+        "where" => reading::where_is(),
+        "plop" => opening::plop(),
         "start" => first_day::start(args),
-        "search" | "read" | "links" => tools::call(tool, arg),
-        _ => writing::call(tool, args),
+        "search" | "read" | "links" => reading::call(tool, arg),
+        _ => shared::write::call(tool, args),
     });
     let (text, is_error) = match panic::catch_unwind(run) {
         Ok(a) => (a.text, a.is_error),

@@ -1,5 +1,5 @@
-//! The root VALIDATION.md's table for the first day, one test a check: C-8.10 and C-11.1 to
-//! C-11.7. The program is started and asked over stdin, without Claude; each run has a home
+//! The VALIDATION.md tables for the first day, one test a check: writing C-4.10 and first_day
+//! C-4.1 to C-4.7. The program is started and asked over stdin, without Claude; each run has a home
 //! folder of its own (LORISSE_HOME) and an empty git configuration of its own, never the
 //! machine's.
 
@@ -79,11 +79,11 @@ fn read_file(dir: &Path, rel: &str) -> String {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.10 a memory filed, a note and an undo in a folder not under git; plop's sentence (3 checks)
+// writing C-4.10 a memory filed, a note and an undo in a folder not under git; plop's sentence (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_8_10_the_writing_tools_write_in_a_folder_not_under_git_and_say_nothing_of_git() {
+fn writing_c_4_10_the_writing_tools_write_in_a_folder_not_under_git_and_say_nothing_of_git() {
     let copy = Temp::sample("plain_writes");
     let mine = Temp::empty("plain_file");
     mine.write("quote.txt", "a quote");
@@ -115,7 +115,7 @@ fn c_8_10_the_writing_tools_write_in_a_folder_not_under_git_and_say_nothing_of_g
 }
 
 #[test]
-fn c_8_10_undo_in_a_folder_not_under_git_says_there_is_no_history_and_how_to_have_one() {
+fn writing_c_4_10_undo_in_a_folder_not_under_git_says_there_is_no_history_and_how_to_have_one() {
     let copy = Temp::sample("plain_undo");
     let setting = copy.path().to_string_lossy().into_owned();
     let said = ask(&[(SETTING, &setting)], None, &[("remember", r#"{"title":"The hedge","text":"Cut in May."}"#)]);
@@ -130,7 +130,7 @@ fn c_8_10_undo_in_a_folder_not_under_git_says_there_is_no_history_and_how_to_hav
 }
 
 #[test]
-fn c_8_10_plop_says_once_what_git_would_add_and_nothing_under_git() {
+fn writing_c_4_10_plop_says_once_what_git_would_add_and_nothing_under_git() {
     let copy = Temp::sample("plain_plop");
     let got = ask_one(copy.path(), "plop", "{}");
     let sentence = "This folder is not under git: with git, every change Lorisse makes would be kept in a history and could be taken back, and it can be added at any time.";
@@ -142,12 +142,12 @@ fn c_8_10_plop_says_once_what_git_would_add_and_nothing_under_git() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-11.1 a folder made in a home of the test's own, in a named place; a place with files refused
+// first_day C-4.1 a folder made in a home of the test's own, in a named place; a place with files refused
 // (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_11_1_start_makes_the_folder_lorisse_in_the_home_folder_with_what_a_memory_needs() {
+fn first_day_c_4_1_start_makes_the_folder_lorisse_in_the_home_folder_with_what_a_memory_needs() {
     let day = Day::new("made_home");
     let said = day.one("start", THREE);
     let folder = day.folder();
@@ -171,7 +171,7 @@ fn c_11_1_start_makes_the_folder_lorisse_in_the_home_folder_with_what_a_memory_n
 }
 
 #[test]
-fn c_11_1_start_makes_the_folder_in_the_place_named_and_takes_an_empty_folder() {
+fn first_day_c_4_1_start_makes_the_folder_in_the_place_named_and_takes_an_empty_folder() {
     let day = Day::new("named");
     let place = day.home.path().join("papers/my memory");
     let said = day.one("start", &place_args(&place));
@@ -186,7 +186,7 @@ fn c_11_1_start_makes_the_folder_in_the_place_named_and_takes_an_empty_folder() 
 }
 
 #[test]
-fn c_11_1_a_place_that_holds_files_is_refused_and_a_memory_folder_there_is_kept_as_it_is() {
+fn first_day_c_4_1_a_place_that_holds_files_is_refused_and_a_memory_folder_there_is_kept_as_it_is() {
     let day = Day::new("refused");
     let theirs = Temp::empty("refused_place");
     theirs.write("notes.txt", "the person's own file");
@@ -207,12 +207,12 @@ fn c_11_1_a_place_that_holds_files_is_refused_and_a_memory_folder_there_is_kept_
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-11.2 under git with one commit when git is there; made all the same with an empty PATH
+// first_day C-4.2 under git with one commit when git is there; made all the same with an empty PATH
 // (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_11_2_with_git_the_folder_is_under_git_with_one_commit_signed_as_the_person() {
+fn first_day_c_4_2_with_git_the_folder_is_under_git_with_one_commit_signed_as_the_person() {
     let day = Day::new("with_git");
     let said = day.one("start", THREE);
     assert!(said.contains("It is under git, on this machine only: its first state is one commit signed as Sam Example"), "{said}");
@@ -229,7 +229,7 @@ fn c_11_2_with_git_the_folder_is_under_git_with_one_commit_signed_as_the_person(
 }
 
 #[test]
-fn c_11_2_without_git_the_folder_is_made_all_the_same_and_one_sentence_says_what_git_adds() {
+fn first_day_c_4_2_without_git_the_folder_is_made_all_the_same_and_one_sentence_says_what_git_adds() {
     let day = Day::new("without_git");
     let said = day.ask(&[("PATH", "")], &[("start", THREE)]).remove(0);
     let folder = day.folder();
@@ -242,11 +242,11 @@ fn c_11_2_without_git_the_folder_is_made_all_the_same_and_one_sentence_says_what
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-11.3 the folder found afterwards with no setting, from another folder (1 check)
+// first_day C-4.3 the folder found afterwards with no setting, from another folder (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_11_3_the_machine_remembers_the_folder_and_finds_it_with_no_setting() {
+fn first_day_c_4_3_the_machine_remembers_the_folder_and_finds_it_with_no_setting() {
     let day = Day::new("remembered");
     let said = day.one("start", THREE);
     let file = day.home.path().join(".lorisse-folder");
@@ -260,11 +260,11 @@ fn c_11_3_the_machine_remembers_the_folder_and_finds_it_with_no_setting() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-11.4 the intro written from the three answers, given back by plop (1 check)
+// first_day C-4.4 the intro written from the three answers, given back by plop (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_11_4_the_intro_is_written_from_the_three_answers_and_plop_gives_it_back() {
+fn first_day_c_4_4_the_intro_is_written_from_the_three_answers_and_plop_gives_it_back() {
     let day = Day::new("intro");
     day.one("start", THREE);
     let intro = read_file(&day.folder(), "intro.md");
@@ -281,7 +281,7 @@ fn c_11_4_the_intro_is_written_from_the_three_answers_and_plop_gives_it_back() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-11.5 the text to copy, whole, in its block (1 check)
+// first_day C-4.5 the text to copy, whole, in its block (1 check)
 // ---------------------------------------------------------------------------------------------
 
 const REQUEST: &str = "I am moving my memory to a new assistant, and I would like to take with me what you know about me.
@@ -294,7 +294,7 @@ Keep my own words where you can, and leave out passwords, keys and anything you 
 Give the whole list in one code block, and nothing else.";
 
 #[test]
-fn c_11_5_start_ends_with_the_text_to_copy_whole_in_one_block() {
+fn first_day_c_4_5_start_ends_with_the_text_to_copy_whole_in_one_block() {
     let day = Day::new("request");
     let said = day.one("start", THREE);
     assert!(said.ends_with(&format!("\n```\n{REQUEST}\n```")), "{said}");
@@ -304,7 +304,7 @@ fn c_11_5_start_ends_with_the_text_to_copy_whole_in_one_block() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-11.6 dated lines filed with dates and categories; the instructions given back; one undo
+// first_day C-4.6 dated lines filed with dates and categories; the instructions given back; one undo
 // (3 checks)
 // ---------------------------------------------------------------------------------------------
 
@@ -316,7 +316,7 @@ fn made(tag: &str) -> Day {
 }
 
 #[test]
-fn c_11_6_each_dated_line_is_a_memory_with_its_date_its_category_and_the_person_s_words() {
+fn first_day_c_4_6_each_dated_line_is_a_memory_with_its_date_its_category_and_the_person_s_words() {
     let day = made("import_filed");
     let said = day.one("import", &import_args(ANSWER));
     assert!(said.starts_with("Imported: 5 memories filed, in one commit of Lorisse ("), "{said}");
@@ -337,7 +337,7 @@ fn c_11_6_each_dated_line_is_a_memory_with_its_date_its_category_and_the_person_
 }
 
 #[test]
-fn c_11_6_the_instructions_are_given_back_never_filed_nor_followed() {
+fn first_day_c_4_6_the_instructions_are_given_back_never_filed_nor_followed() {
     let day = made("import_instructions");
     let said = day.one("import", &import_args(ANSWER));
     assert!(said.contains("Given back, not filed and not followed: 2 lines under Instructions"), "{said}");
@@ -349,7 +349,7 @@ fn c_11_6_the_instructions_are_given_back_never_filed_nor_followed() {
 }
 
 #[test]
-fn c_11_6_the_whole_import_is_one_commit_and_one_undo_takes_it_back() {
+fn first_day_c_4_6_the_whole_import_is_one_commit_and_one_undo_takes_it_back() {
     let day = made("import_undo");
     let folder = day.folder();
     let before = log(&folder).len();
@@ -366,11 +366,11 @@ fn c_11_6_the_whole_import_is_one_commit_and_one_undo_takes_it_back() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-11.7 a line that cannot be read, counted and left out (1 check)
+// first_day C-4.7 a line that cannot be read, counted and left out (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_11_7_a_line_that_cannot_be_read_is_left_out_and_counted_never_guessed() {
+fn first_day_c_4_7_a_line_that_cannot_be_read_is_left_out_and_counted_never_guessed() {
     let day = made("import_unread");
     let text = "Identity\n[2024-13-01] - Moved in the thirteenth month.\nLives somewhere near the sea\n[2020-01-01] - My bank password is hunter2\n[2020-02-02] - Plays the cello.";
     let said = day.one("import", &import_args(text));

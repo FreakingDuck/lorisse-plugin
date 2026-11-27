@@ -1,5 +1,5 @@
-//! The root VALIDATION.md's table for the files and the rules of keeping, one test a check:
-//! C-9.4 to C-9.6, C-10.1 to C-10.6, and the undo of an attachment. The program is started and
+//! The VALIDATION.md tables for the files and the rules of keeping, one test a check:
+//! opening C-4.4 to C-4.6, files C-4.1 to C-4.6, and the undo of an attachment. The program is started and
 //! asked over stdin, on temporary copies of the sample; every file attached is one the test
 //! made in a temporary folder of its own.
 
@@ -46,12 +46,12 @@ fn attach_args(piece: &str, path: &Path) -> String {
 const INVOICE: &[u8] = b"%PDF-1.4 an invented invoice for the boiler's service\n";
 
 // ---------------------------------------------------------------------------------------------
-// C-9.4 the rules of keeping at the end of `plop`; what they say of the conversation so far and
+// opening C-4.4 the rules of keeping at the end of `plop`; what they say of the conversation so far and
 // of several repositories (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_9_4_plop_ends_with_the_rules_of_keeping_in_a_few_lines() {
+fn opening_c_4_4_plop_ends_with_the_rules_of_keeping_in_a_few_lines() {
     let copy = Temp::sample("keeping");
     let got = ask_one(copy.path(), "plop", "{}");
     let rules = got.split("\n\n").last().unwrap();
@@ -66,7 +66,7 @@ fn c_9_4_plop_ends_with_the_rules_of_keeping_in_a_few_lines() {
 }
 
 #[test]
-fn c_9_4_the_rules_start_with_the_conversation_so_far_and_say_where_a_memory_goes() {
+fn opening_c_4_4_the_rules_start_with_the_conversation_so_far_and_say_where_a_memory_goes() {
     let copy = Temp::sample("keeping_where");
     let got = ask_one(copy.path(), "plop", "{}");
     let rules = got.split("\n\n").last().unwrap();
@@ -82,11 +82,11 @@ fn c_9_4_the_rules_start_with_the_conversation_so_far_and_say_where_a_memory_goe
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-9.6 every text the program gives says the same of filing (1 check)
+// opening C-4.6 every text the program gives says the same of filing (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_9_6_the_instructions_the_writing_tools_and_the_rules_say_the_same_of_filing() {
+fn opening_c_4_6_the_instructions_the_writing_tools_and_the_rules_say_the_same_of_filing() {
     let init = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}"#;
     let list = r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#;
     let got = talk_with(program(&[], None), &[init.to_string(), list.to_string()]);
@@ -119,11 +119,11 @@ fn c_9_6_the_instructions_the_writing_tools_and_the_rules_say_the_same_of_filing
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-9.5 the instructions given at `initialize` (1 check)
+// opening C-4.5 the instructions given at `initialize` (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_9_5_initialize_gives_the_instructions_and_names_plop() {
+fn opening_c_4_5_initialize_gives_the_instructions_and_names_plop() {
     let line = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}"#;
     let got = talk_with(program(&[], None), &[line.to_string()]);
     let result = got[0].get("result").unwrap();
@@ -137,11 +137,11 @@ fn c_9_5_initialize_gives_the_instructions_and_names_plop() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-10.1 a file attached: its copy, its commit, the original untouched (2 checks)
+// files C-4.1 a file attached: its copy, its commit, the original untouched (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_10_1_a_file_is_copied_beside_its_piece_in_one_commit_naming_both() {
+fn files_c_4_1_a_file_is_copied_beside_its_piece_in_one_commit_naming_both() {
     let copy = Temp::git_sample("attach_one");
     let mine = Temp::empty("attach_one_src");
     let source = outside(&mine, "invoice-2031.pdf", INVOICE);
@@ -162,7 +162,7 @@ fn c_10_1_a_file_is_copied_beside_its_piece_in_one_commit_naming_both() {
 }
 
 #[test]
-fn c_10_1_the_original_is_untouched_and_a_refusal_or_a_failed_commit_leaves_the_folder_as_it_was() {
+fn files_c_4_1_the_original_is_untouched_and_a_refusal_or_a_failed_commit_leaves_the_folder_as_it_was() {
     let copy = Temp::git_sample("attach_refused");
     let mine = Temp::empty("attach_refused_src");
     let source = outside(&mine, "invoice-2031.pdf", INVOICE);
@@ -196,11 +196,11 @@ fn c_10_1_the_original_is_untouched_and_a_refusal_or_a_failed_commit_leaves_the_
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-10.2 the files of a piece named by `read`, with their paths (1 check)
+// files C-4.2 the files of a piece named by `read`, with their paths (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_10_2_read_names_each_file_with_its_full_path_after_the_header_and_before_the_text() {
+fn files_c_4_2_read_names_each_file_with_its_full_path_after_the_header_and_before_the_text() {
     let copy = Temp::git_sample("read_files");
     let mine = Temp::empty("read_files_src");
     ask_one(copy.path(), "attach", &attach_args("M-0001", &outside(&mine, "invoice-2031.pdf", INVOICE)));
@@ -218,11 +218,11 @@ fn c_10_2_read_names_each_file_with_its_full_path_after_the_header_and_before_th
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-10.3 a piece found by its file's name (1 check)
+// files C-4.3 a piece found by its file's name (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_10_3_search_finds_a_piece_by_a_file_it_holds_and_never_a_confidential_one() {
+fn files_c_4_3_search_finds_a_piece_by_a_file_it_holds_and_never_a_confidential_one() {
     let copy = Temp::sample("search_files");
     let secret = read_file(copy.path(), "confidential/memories/M-0006.md").replacen(
         "---\n",
@@ -241,11 +241,11 @@ fn c_10_3_search_finds_a_piece_by_a_file_it_holds_and_never_a_confidential_one()
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-10.4 a file over the limit (1 check)
+// files C-4.4 a file over the limit (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_10_4_a_file_over_the_limit_is_refused_with_its_size_and_nothing_is_copied() {
+fn files_c_4_4_a_file_over_the_limit_is_refused_with_its_size_and_nothing_is_copied() {
     let copy = Temp::sample("limit");
     let config = read_file(copy.path(), "config.yaml");
     make_git(copy.path());
@@ -264,11 +264,11 @@ fn c_10_4_a_file_over_the_limit_is_refused_with_its_size_and_nothing_is_copied()
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-10.5 a second file of the same name (1 check)
+// files C-4.5 a second file of the same name (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_10_5_a_file_of_the_same_name_takes_a_numbered_name_and_the_first_is_untouched() {
+fn files_c_4_5_a_file_of_the_same_name_takes_a_numbered_name_and_the_first_is_untouched() {
     let copy = Temp::git_sample("same_name");
     let first = Temp::empty("same_name_a");
     let second = Temp::empty("same_name_b");
@@ -282,7 +282,7 @@ fn c_10_5_a_file_of_the_same_name_takes_a_numbered_name_and_the_first_is_untouch
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-10.6 a key file, a secret's name (2 checks)
+// files C-4.6 a key file, a secret's name (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 fn refused_all(tag: &str, files: &[(&str, &str)]) {
@@ -299,12 +299,12 @@ fn refused_all(tag: &str, files: &[(&str, &str)]) {
 }
 
 #[test]
-fn c_10_6_a_key_file_under_ssh_or_a_pem_is_refused_with_the_reason() {
+fn files_c_4_6_a_key_file_under_ssh_or_a_pem_is_refused_with_the_reason() {
     refused_all("keys", &[(".ssh/id_rsa", "under a .ssh folder"), ("certs/Server.PEM", "a .pem file")]);
 }
 
 #[test]
-fn c_10_6_a_secret_s_name_is_refused_with_the_reason() {
+fn files_c_4_6_a_secret_s_name_is_refused_with_the_reason() {
     refused_all(
         "secrets",
         &[(".env", "a .env file"), ("api_TOKEN", "a key or a token"), ("deploy_key.txt", "a key or a token")],

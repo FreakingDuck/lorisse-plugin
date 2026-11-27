@@ -28,6 +28,20 @@ The rest is the workshop:
 | `scripts/verify.ps1` | the gate: every check of the repository in one command |
 | `.github/workflows/build.yml` | builds the program for Windows and for a Mac and puts both in `plugin/server/` |
 
+## Where each thing is
+
+The program's source, `crates/tools/src/`, is one folder a subject, each with its README, CONTRACT and VALIDATION:
+
+- `reading/`: the memory folder found, and the four questions: where, search, read, links
+- `opening/`: the word that starts a conversation: `plop`, the intro, the state, the rules of keeping, the instructions at the connection
+- `writing/`: a memory filed, a note, a link, a change taken back
+- `files/`: a document kept with its memory
+- `keeping/`: the memory kept true, and the journal
+- `drawers/`: a repository made by Lorisse, a piece moved
+- `first_day/`: a new person's folder, and what another assistant remembers
+
+What is common to them, the protocol and what holds whatever the tool, is `crates/tools/` itself, with its own three pages.
+
 ## Where it stands
 
 Lorisse reads a memory folder, files in it, and opens a conversation with your own intro. Your rules say which tool calls run without asking.

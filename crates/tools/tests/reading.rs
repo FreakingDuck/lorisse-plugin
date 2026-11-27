@@ -1,4 +1,4 @@
-//! The root VALIDATION.md's table, one test a check: the program started and asked over stdin,
+//! The VALIDATION.md tables of `reading` and `tools`, one test a check: the program started and asked over stdin,
 //! without Claude, on temporary copies of the sample.
 
 mod common;
@@ -19,11 +19,11 @@ fn shown(path: &Path) -> String {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-4.1 the session's folder when it is a memory folder, else the setting (3 checks)
+// reading C-4.1 the session's folder when it is a memory folder, else the setting (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_4_1_the_setting_gives_the_folder_whatever_folder_the_program_runs_in() {
+fn reading_c_4_1_the_setting_gives_the_folder_whatever_folder_the_program_runs_in() {
     let copy = Temp::sample("setting");
     let elsewhere = Temp::empty("setting_cwd");
     let setting = text_of(copy.path());
@@ -39,7 +39,7 @@ fn c_4_1_the_setting_gives_the_folder_whatever_folder_the_program_runs_in() {
 }
 
 #[test]
-fn c_4_1_without_the_setting_the_session_folder_is_taken() {
+fn reading_c_4_1_without_the_setting_the_session_folder_is_taken() {
     let copy = Temp::sample("session");
     let project = text_of(copy.path());
     let by_project = ask(&[(PROJECT, &project)], None, &[("where", "{}")]);
@@ -54,7 +54,7 @@ fn c_4_1_without_the_setting_the_session_folder_is_taken() {
 }
 
 #[test]
-fn c_4_1_the_session_folder_wins_over_the_setting_when_it_is_a_memory_folder() {
+fn reading_c_4_1_the_session_folder_wins_over_the_setting_when_it_is_a_memory_folder() {
     let given = Temp::sample("both_given");
     let session = Temp::sample("both_session");
     session.write("memories/M-0020.md", &memory("M-0020", "Only in the session's folder", "A lighthouse.", ""));
@@ -71,11 +71,11 @@ fn c_4_1_the_session_folder_wins_over_the_setting_when_it_is_a_memory_folder() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-4.2 no folder: one sentence, nothing created (2 checks)
+// reading C-4.2 no folder: one sentence, nothing created (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_4_2_no_folder_where_says_so_and_every_other_tool_the_same_sentence() {
+fn reading_c_4_2_no_folder_where_says_so_and_every_other_tool_the_same_sentence() {
     let empty = Temp::empty("none");
     let project = text_of(empty.path());
     let got = ask(
@@ -99,7 +99,7 @@ fn c_4_2_no_folder_where_says_so_and_every_other_tool_the_same_sentence() {
 }
 
 #[test]
-fn c_4_2_no_folder_nothing_is_created() {
+fn reading_c_4_2_no_folder_nothing_is_created() {
     let empty = Temp::empty("none_created");
     let not_memory = Temp::empty("not_memory");
     not_memory.write("notes.txt", "a folder of something else");
@@ -119,11 +119,11 @@ fn c_4_2_no_folder_nothing_is_created() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-4.3 a piece changed between two calls (1 check)
+// reading C-4.3 a piece changed between two calls (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_4_3_a_piece_changed_between_two_calls_is_seen_at_the_next() {
+fn reading_c_4_3_a_piece_changed_between_two_calls_is_seen_at_the_next() {
     let copy = Temp::sample("changed");
     let setting = text_of(copy.path());
     let mut live = Live::start(&[(SETTING, &setting)]);
@@ -140,11 +140,11 @@ fn c_4_3_a_piece_changed_between_two_calls_is_seen_at_the_next() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-4.4 a second repository named in the sample's config (2 checks)
+// reading C-4.4 a second repository named in the sample's config (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_4_4_the_club_s_piece_is_found_with_its_repository() {
+fn reading_c_4_4_the_club_s_piece_is_found_with_its_repository() {
     let copy = Temp::sample("club_found");
     let got = ask_one(copy.path(), "search", r#"{"text":"key"}"#);
     assert!(got.contains("C-0001 [club] · The club's key"), "{got}");
@@ -153,7 +153,7 @@ fn c_4_4_the_club_s_piece_is_found_with_its_repository() {
 }
 
 #[test]
-fn c_4_4_read_and_links_say_the_repository() {
+fn reading_c_4_4_read_and_links_say_the_repository() {
     let copy = Temp::sample("club_said");
     let read = ask_one(copy.path(), "read", r#"{"piece":"C-0001"}"#);
     assert!(read.contains("Repository: club"), "{read}");
@@ -163,7 +163,7 @@ fn c_4_4_read_and_links_say_the_repository() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-5.1 the sample before and after every tool (1 check)
+// reading C-5.1 the sample before and after every tool (1 check)
 // ---------------------------------------------------------------------------------------------
 
 fn git(dir: &Path, args: &[&str]) -> String {
@@ -195,7 +195,7 @@ const EVERY_CALL: &[(&str, &str)] = &[
 ];
 
 #[test]
-fn c_5_1_nothing_is_written_after_every_tool_called_many_times() {
+fn reading_c_5_1_nothing_is_written_after_every_tool_called_many_times() {
     let copy = Temp::sample("written");
     git(copy.path(), &["init", "-q"]);
     git(copy.path(), &["-c", "core.autocrlf=false", "add", "-A"]);
@@ -221,11 +221,11 @@ fn c_5_1_nothing_is_written_after_every_tool_called_many_times() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-5.2 no connection, no other program (1 check)
+// tools C-4.1 no connection, no other program (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_5_2_an_empty_path_changes_no_answer_and_the_source_names_no_network() {
+fn tools_c_4_1_an_empty_path_changes_no_answer_and_the_source_names_no_network() {
     let copy = Temp::sample("no_path");
     let setting = text_of(copy.path());
     let with_path = ask(&[(SETTING, &setting)], None, EVERY_CALL);
@@ -263,11 +263,11 @@ fn c_5_2_an_empty_path_changes_no_answer_and_the_source_names_no_network() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-6.1 the confidential piece, by every tool (4 checks)
+// tools C-5.1 the confidential piece, by every tool (4 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_6_1_search_never_finds_nor_counts_the_confidential_piece() {
+fn tools_c_5_1_search_never_finds_nor_counts_the_confidential_piece() {
     let copy = Temp::sample("conf_search");
     for text in ["surprise", "June", "Nobody is to know"] {
         let got = ask_one(copy.path(), "search", &format!(r#"{{"text":"{text}"}}"#));
@@ -283,7 +283,7 @@ fn c_6_1_search_never_finds_nor_counts_the_confidential_piece() {
 }
 
 #[test]
-fn c_6_1_read_of_the_confidential_number_is_the_answer_for_a_number_that_does_not_exist() {
+fn tools_c_5_1_read_of_the_confidential_number_is_the_answer_for_a_number_that_does_not_exist() {
     let copy = Temp::sample("conf_read");
     let hidden = ask_one(copy.path(), "read", r#"{"piece":"M-0006"}"#);
     let absent = ask_one(copy.path(), "read", r#"{"piece":"M-0099"}"#);
@@ -293,7 +293,7 @@ fn c_6_1_read_of_the_confidential_number_is_the_answer_for_a_number_that_does_no
 }
 
 #[test]
-fn c_6_1_links_never_name_the_confidential_piece() {
+fn tools_c_5_1_links_never_name_the_confidential_piece() {
     let copy = Temp::sample("conf_links");
     let path = copy.path().join("memories/M-0002.md");
     let text = fs::read_to_string(&path).unwrap();
@@ -311,7 +311,7 @@ fn c_6_1_links_never_name_the_confidential_piece() {
 }
 
 #[test]
-fn c_6_1_a_repository_marked_confidential_does_not_exist_either() {
+fn tools_c_5_1_a_repository_marked_confidential_does_not_exist_either() {
     let copy = Temp::sample("conf_row");
     let config = fs::read_to_string(copy.path().join("config.yaml")).unwrap();
     let rows = "  - { name: work, folder: work, confidential: true }\n";
@@ -334,11 +334,11 @@ fn c_6_1_a_repository_marked_confidential_does_not_exist_either() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-6.3 a confidential repository open to Claude (3 checks)
+// tools C-5.3 a confidential repository open to Claude (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_6_3_a_repository_open_to_claude_is_found_and_read_with_its_repository() {
+fn tools_c_5_3_a_repository_open_to_claude_is_found_and_read_with_its_repository() {
     let copy = Temp::sample("open_found");
     let found = ask_one(copy.path(), "search", r#"{"text":"printer"}"#);
     assert_eq!(found.lines().next(), Some(DATA_LINE), "{found}");
@@ -351,20 +351,20 @@ fn c_6_3_a_repository_open_to_claude_is_found_and_read_with_its_repository() {
 }
 
 #[test]
-fn c_6_3_plop_counts_the_open_repository_and_names_it_confidential() {
+fn tools_c_5_3_plop_counts_the_open_repository_and_names_it_confidential() {
     let copy = Temp::sample("open_plop");
     let got = ask_one(copy.path(), "plop", "{}");
     let state = got.split("\n\n").find(|p| p.starts_with("The memory folder: ")).unwrap();
     assert!(state.contains("\n- office (confidential, kept apart): The work at the office"), "{state}");
     assert!(state.contains("\n- home: ") && state.contains("\n- club: "), "{state}");
-    // The sample's retired memory, M-0004, is left out of the count (C-12.2).
+    // The sample's retired memory, M-0004, is left out of the count (keeping C-4.2).
     assert!(state.contains("It holds 5 memories and 1 person."), "{state}");
     assert!(state.contains("- O-0001 [office] · The printer's lease"), "{state}");
     assert!(!got.contains("M-0006") && !got.contains("surprise"), "the confidential part stays hidden: {got}");
 }
 
 #[test]
-fn c_6_3_a_confidential_repository_without_anthropic_among_its_providers_stays_hidden() {
+fn tools_c_5_3_a_confidential_repository_without_anthropic_among_its_providers_stays_hidden() {
     let copy = Temp::sample("open_not");
     let config = fs::read_to_string(copy.path().join("config.yaml")).unwrap();
     let gemini = config.replace("providers: [anthropic]", "providers: [gemini]");
@@ -387,11 +387,11 @@ fn c_6_3_a_confidential_repository_without_anthropic_among_its_providers_stays_h
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-6.2 the first line of an answer that carries a text (2 checks)
+// tools C-5.2 the first line of an answer that carries a text (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_6_2_read_says_first_that_the_text_is_data() {
+fn tools_c_5_2_read_says_first_that_the_text_is_data() {
     let copy = Temp::sample("data_read");
     for piece in ["M-0002", "Sam Example", "home", "C-0001"] {
         let got = ask_one(copy.path(), "read", &format!(r#"{{"piece":"{piece}"}}"#));
@@ -400,7 +400,7 @@ fn c_6_2_read_says_first_that_the_text_is_data() {
 }
 
 #[test]
-fn c_6_2_search_says_first_that_the_lines_are_data() {
+fn tools_c_5_2_search_says_first_that_the_lines_are_data() {
     let copy = Temp::sample("data_search");
     let got = ask_one(copy.path(), "search", r#"{"text":"boiler"}"#);
     assert_eq!(got.lines().next(), Some(DATA_LINE), "{got}");
@@ -408,11 +408,11 @@ fn c_6_2_search_says_first_that_the_lines_are_data() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-7.1 a list past its limit (1 check), C-7.2 a text past its limit (1 check)
+// tools C-6.1 a list past its limit (1 check), tools C-6.2 a text past its limit (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_7_1_a_list_past_ten_ends_with_the_count_in_all() {
+fn tools_c_6_1_a_list_past_ten_ends_with_the_count_in_all() {
     let copy = Temp::sample("list_cut");
     for i in 0..12 {
         let id = format!("M-{:04}", 50 + i);
@@ -425,7 +425,7 @@ fn c_7_1_a_list_past_ten_ends_with_the_count_in_all() {
 }
 
 #[test]
-fn c_7_2_a_text_past_6000_characters_ends_with_its_full_length() {
+fn tools_c_6_2_a_text_past_6000_characters_ends_with_its_full_length() {
     let copy = Temp::sample("text_cut");
     let body = "é".repeat(7000);
     copy.write("memories/M-0060.md", &memory("M-0060", "A long text", &body, ""));
