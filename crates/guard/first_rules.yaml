@@ -4,6 +4,6 @@
 # Under each list, a service and its tools. A tool in two lists takes the strictest.
 # A tool of Lorisse's not named in this file passes; name it under ask or never to change that.
 pass:
-  lorisse: [where, plop, search, read, links, remember, note, link, attach, undo, start, import, change, retire, journal]
+  lorisse: [where, plop, search, read, links, remember, note, link, attach, undo, start, import, change, retire, journal, drawer, move]
 ask: {}
 never: {}

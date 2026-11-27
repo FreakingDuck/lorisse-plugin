@@ -7,8 +7,8 @@ categories: [home, garden, admin]
 sources: [phone, chat, agent, console, app]
 person_sections: [What I know, How I handle]
 # Three repositories read as one memory: the root, named home, the club, numbered on its own, and
-# the office, confidential and open to Claude, numbered on its own.
+# the office, confidential and open to Claude, numbered on its own. Each says what it is for.
 repos:
-  - { name: home, folder: . }
-  - { name: club, folder: club, prefix: C }
-  - { name: office, folder: office, role: work, confidential: true, providers: [anthropic], prefix: O }
+  - { name: home, folder: ., about: "The house, the garden and the people who work on them." }
+  - { name: club, folder: club, prefix: C, about: "The sports club: its keys, its meetings, its members." }
+  - { name: office, folder: office, role: work, confidential: true, providers: [anthropic], prefix: O, about: "The work at the office: its equipment and its leases." }

@@ -34,7 +34,7 @@ fn c_4_1_the_setting_gives_the_folder_whatever_folder_the_program_runs_in() {
     );
     assert!(got[0].contains(&shown(copy.path())), "{}", got[0]);
     assert!(got[0].contains("the plugin's setting"), "{}", got[0]);
-    assert!(got[0].contains("0.6.0"), "{}", got[0]);
+    assert!(got[0].contains("0.7.0"), "{}", got[0]);
     assert!(got[1].contains("M-0001 [home] · The boiler's contract"), "{}", got[1]);
 }
 
@@ -355,7 +355,8 @@ fn c_6_3_plop_counts_the_open_repository_and_names_it_confidential() {
     let copy = Temp::sample("open_plop");
     let got = ask_one(copy.path(), "plop", "{}");
     let state = got.split("\n\n").find(|p| p.starts_with("The memory folder: ")).unwrap();
-    assert!(state.contains("Its repositories: home, club, office (confidential)."), "{state}");
+    assert!(state.contains("\n- office (confidential, kept apart): The work at the office"), "{state}");
+    assert!(state.contains("\n- home: ") && state.contains("\n- club: "), "{state}");
     // The sample's retired memory, M-0004, is left out of the count (C-12.2).
     assert!(state.contains("It holds 5 memories and 1 person."), "{state}");
     assert!(state.contains("- O-0001 [office] · The printer's lease"), "{state}");
@@ -379,7 +380,7 @@ fn c_6_3_a_confidential_repository_without_anthropic_among_its_providers_stays_h
     assert!(got[0].starts_with("Nothing in the memories"), "{}", got[0]);
     assert_eq!(got[1], "No piece has the number O-0001.");
     assert_eq!(got[2], got[1]);
-    assert!(got[3].contains("Its repositories: home, club.") && !got[3].contains("office"), "{}", got[3]);
+    assert!(got[3].contains("\n- home: ") && got[3].contains("\n- club: ") && !got[3].contains("office"), "{}", got[3]);
     fs::write(copy.path().join("config.yaml"), config.replace("[anthropic]", "[ANTHROPIC]")).unwrap();
     let any_case = ask_one(copy.path(), "search", r#"{"text":"printer"}"#);
     assert!(any_case.contains("O-0001 [office]"), "the provider's name in any case: {any_case}");

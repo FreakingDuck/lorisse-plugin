@@ -65,6 +65,9 @@ pub struct RepoRow {
     /// The letters its new pieces' ids carry (`A` → `A-0001`), counted in its own `ids.json`; none = the root's numbering.
     #[serde(default)]
     pub prefix: Option<String>,
+    /// One sentence on what the repository is for, in the person's words; absent by default.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub about: Option<String>,
 }
 
 /// A row as this machine sees it.
@@ -84,6 +87,8 @@ pub struct RepoState {
     pub key: Option<String>,
     /// The prefix its memories and tasks are numbered with; `None` for the root's numbering.
     pub prefix: Option<String>,
+    /// What the repository is for, as its row says it; `None` when the row says nothing.
+    pub about: Option<String>,
     /// Listed for this machine: no `machines`, or this machine among them.
     pub here: bool,
     /// Its folder is at the root.
@@ -132,6 +137,7 @@ fn alias() -> RepoRow {
         git_email: None,
         providers: Vec::new(),
         prefix: None,
+        about: None,
     }
 }
 
@@ -254,6 +260,7 @@ pub(crate) fn states(store: &Store) -> Vec<RepoState> {
                 confidential: row.confidential || open,
                 key: row.key,
                 prefix: row.prefix,
+                about: row.about,
             }
         })
         .collect()
@@ -589,6 +596,21 @@ mod tests {
         assert!(err.contains("gemini twice") && err.contains("a:"), "{err}");
         let blank = config("repos:\n  - { name: a, folder: a, providers: [' '] }\n");
         assert!(check_rows(&blank).unwrap_err().contains("blank provider"));
+    }
+
+    #[test]
+    fn a_row_s_about_is_optional_and_kept_when_written_back() {
+        let listed = config("repos:\n  - { name: w, folder: w, prefix: W, about: \"The work, its clients.\" }\n  - { name: f, folder: f }\n");
+        assert!(check_rows(&listed).is_ok());
+        let row = row_at(&listed, "w").unwrap();
+        assert_eq!(row.about.as_deref(), Some("The work, its clients."));
+        assert_eq!(row_at(&listed, "f").unwrap().about, None);
+        let written = serde_yaml_ng::to_string(&row).unwrap();
+        assert!(written.contains("about: The work, its clients."), "{written}");
+        let back: RepoRow = serde_yaml_ng::from_str(&written).unwrap();
+        assert_eq!(back, row);
+        let bare = serde_yaml_ng::to_string(&row_at(&listed, "f").unwrap()).unwrap();
+        assert!(!bare.contains("about"), "absent by default: {bare}");
     }
 
     #[test]

@@ -16,6 +16,7 @@ use crate::config::{StoreConfig, status};
 use crate::diary::{self, Speaker};
 use crate::diff::{self, Diff};
 use crate::direct::{self, Applied, Fined, Flagged, LorisseCommit, Since};
+use crate::drawers::{self, Drawn, Moved};
 use crate::error::StoreError;
 use crate::filing::{self, Attached, Blocked, Dated, Imported, Journaled, NewMemory, Revised, Revision, Undone, Written};
 use crate::flags::Flags;
@@ -222,6 +223,33 @@ impl Store {
     pub fn journal(&mut self, day: Option<&str>, text: &str, repo: Option<&str>) -> Result<Journaled, StoreError> {
         self.writable("journal")?;
         filing::journal(self, day, text, repo)
+    }
+
+    /// Make a repository: its folder, its own counter, its row with `about` added to `config.yaml`,
+    /// every other line left; kept apart (confidential, open to Anthropic) when asked; one commit.
+    ///
+    /// # Errors
+    /// [`StoreError::Invalid`] (a blank name or sentence, a name taken or `confidential`, a file
+    /// Lorisse cannot add a line to, a blocked write); [`StoreError::Git`], the folder as it was.
+    pub fn drawer(&mut self, name: &str, about: &str, apart: bool) -> Result<Drawn, StoreError> {
+        self.writable("drawer")?;
+        drawers::drawer(self, name, about, apart)
+    }
+
+    /// Move memories to the repository named: each keeps its number, text, header, links and
+    /// files, the number still counted where it was given; one commit; one already there is left.
+    ///
+    /// # Errors
+    /// [`StoreError::Unknown`], [`StoreError::Invalid`] (not a memory, out of a confidential row,
+    /// no such repository, two histories), [`StoreError::Confidential`], [`StoreError::Git`].
+    pub fn move_to(&mut self, ids: &[PieceId], repo: &str) -> Result<Moved, StoreError> {
+        self.writable("move_to")?;
+        drawers::move_to(self, ids, repo)
+    }
+
+    /// The name of the repository `name` is taken by, capitals ignored; `None` when it is free.
+    pub fn repo_named(&self, name: &str) -> Option<String> {
+        drawers::taken_name(self, name)
     }
 
     /// Take back Lorisse's last change still standing, or the one named (a commit, or a piece's

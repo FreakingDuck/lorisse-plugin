@@ -43,6 +43,12 @@ Under Instructions, put how I asked you to answer me or to behave; under the fou
 Keep my own words where you can, and leave out passwords, keys and anything you only guess.
 Give the whole list in one code block, and nothing else.";
 
+/// What `start` tells Claude to do next, before the block to copy (C-14.6).
+pub const NEXT: &str = "What to do next, in this conversation: let the person talk about themselves. Ask open questions, a few at a time, never a form: who they are, what fills their days, what they would hate to lose, what must never mix. \
+From what they say, make the repositories by yourself with drawer, one for each part of their life that has a subject of its own (the house, the work, a client, a project), kept apart (apart: true) when they say something must never mix with the rest. \
+File what they said as memories with remember, each in the repository it belongs to. \
+Then say in three lines at most what you made: the folder, the repositories, the memories filed.";
+
 /// The sentence before the block.
 const HAND_OVER: &str = "To bring what another assistant already knows of you, copy the text below whole, give it to that assistant, then paste its answer here after \"Import this:\".";
 
@@ -228,6 +234,8 @@ pub fn start(args: Option<&Json>) -> Answer {
         )),
         Err(said) => lines.push(format!("This machine could not remember it ({said}): give it in the plugin's setting \"memory_folder\".")),
     }
+    lines.push(String::new());
+    lines.push(NEXT.to_string());
     lines.push(String::new());
     lines.push(hand_over());
     Answer::ok(lines.join("\n"))

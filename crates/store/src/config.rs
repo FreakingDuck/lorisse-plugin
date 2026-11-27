@@ -173,7 +173,7 @@ fn load_file(path: &Path) -> Result<StoreConfig, StoreError> {
 }
 
 /// The config of a `config.yaml` text; its `layers` added to the default map.
-fn parse_text(text: &str) -> Result<StoreConfig, StoreError> {
+pub(crate) fn parse_text(text: &str) -> Result<StoreConfig, StoreError> {
     let mut config: StoreConfig = serde_yaml_ng::from_str(text)
         .map_err(|e| StoreError::Config(format!("{CONFIG_FILE}: {e}")))?;
     let mut layers = Layer::default_folders();

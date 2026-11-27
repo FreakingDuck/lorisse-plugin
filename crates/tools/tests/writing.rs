@@ -51,11 +51,11 @@ fn c_5_3_the_reading_tools_are_declared_read_only_and_the_writing_tools_as_writi
         assert_eq!(hint(tool, "openWorldHint"), Some(Json::Bool(false)), "{name}");
         if !reads {
             assert_eq!(hint(tool, "destructiveHint"), Some(Json::Bool(false)), "{name}");
-            let once = ["link", "start", "change", "retire"].contains(&name);
+            let once = ["link", "start", "change", "retire", "drawer", "move"].contains(&name);
             assert_eq!(hint(tool, "idempotentHint"), Some(Json::Bool(once)), "{name}");
         }
     }
-    assert_eq!(tools.len(), 15);
+    assert_eq!(tools.len(), 17);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -503,7 +503,10 @@ fn c_9_2_plop_gives_the_folder_its_repositories_the_counts_and_the_five_filed_la
     let state = got.split("\n\n").find(|p| p.starts_with("The memory folder: ")).unwrap();
     let want = [
         format!("The memory folder: {shown}"),
-        "Its repositories: home, club, office (confidential).".to_string(),
+        "Its repositories, each with what it is for:".to_string(),
+        "- home: The house, the garden and the people who work on them.".to_string(),
+        "- club: The sports club: its keys, its meetings, its members.".to_string(),
+        "- office (confidential, kept apart): The work at the office: its equipment and its leases.".to_string(),
         "It holds 6 memories and 1 person.".to_string(),
         DATA_LINE.to_string(),
         "Filed last:".to_string(),

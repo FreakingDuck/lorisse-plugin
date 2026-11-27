@@ -20,6 +20,7 @@ use crate::check;
 use crate::config::status;
 use crate::diary;
 use crate::direct::{self, Since};
+use crate::drawers;
 use crate::error::StoreError;
 use crate::frontmatter::key;
 use crate::git::{self, LORISSE_EMAIL, Who};
@@ -198,10 +199,10 @@ impl fmt::Display for Blocked {
 // =============================================================================
 
 /// The body line of every commit Lorisse makes through the plugin.
-const BODY: &str = "job: plugin";
+pub(crate) const BODY: &str = "job: plugin";
 
 /// One line: newlines folded to spaces, trimmed.
-fn one_line(text: &str) -> String {
+pub(crate) fn one_line(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
@@ -232,7 +233,7 @@ fn unsigned(home: &Home) -> Option<Blocked> {
 
 /// The repository a write at `rel` commits in, once nothing blocks it; `None` when no git
 /// holds it, the write then made without a commit.
-fn ready(store: &Store, rel: &str) -> Result<Option<Home>, StoreError> {
+pub(crate) fn ready(store: &Store, rel: &str) -> Result<Option<Home>, StoreError> {
     if let Some(said) = blocked(store) {
         return Err(StoreError::Invalid(said.to_string()));
     }
@@ -249,7 +250,7 @@ fn ready(store: &Store, rel: &str) -> Result<Option<Home>, StoreError> {
 }
 
 /// The root row's name.
-fn root_name(store: &Store) -> String {
+pub(crate) fn root_name(store: &Store) -> String {
     store.repos().first().map(|r| r.name.clone()).unwrap_or_default()
 }
 
@@ -289,7 +290,7 @@ fn repo_named(store: &Store, name: Option<&str>) -> Result<(Option<String>, Stri
 }
 
 /// The visible entry a number or a name leads to.
-fn visible<'a>(store: &'a Store, text: &str) -> Result<&'a Entry, StoreError> {
+pub(crate) fn visible<'a>(store: &'a Store, text: &str) -> Result<&'a Entry, StoreError> {
     let link = Ref::new(text);
     if links::is_hidden(&store.index, &link) {
         return Err(StoreError::Unknown(text.trim().to_string()));
@@ -316,7 +317,7 @@ fn repo_of(store: &Store, entry: &Entry) -> String {
 }
 
 /// Refuse a piece whose file has changes the person has not committed; none without git.
-fn refuse_dirty(home: Option<&Home>, rel: &str) -> Result<(), StoreError> {
+pub(crate) fn refuse_dirty(home: Option<&Home>, rel: &str) -> Result<(), StoreError> {
     let Some(home) = home else { return Ok(()) };
     match git::dirty(&home.dir, &[home.inner(rel)])?.is_empty() {
         true => Ok(()),
@@ -791,14 +792,14 @@ fn copy_and_commit(
 }
 
 /// The files as they were before a write: each path and its bytes, `None` when absent.
-type Saved = Vec<(PathBuf, Option<Vec<u8>>)>;
+pub(crate) type Saved = Vec<(PathBuf, Option<Vec<u8>>)>;
 
-fn save(paths: impl IntoIterator<Item = PathBuf>) -> Saved {
+pub(crate) fn save(paths: impl IntoIterator<Item = PathBuf>) -> Saved {
     paths.into_iter().map(|p| { let bytes = fs::read(&p).ok(); (p, bytes) }).collect()
 }
 
 /// Every file put back as it was saved; a failure is silent, the next one is still tried.
-fn restore(saved: &Saved) {
+pub(crate) fn restore(saved: &Saved) {
     for (path, bytes) in saved {
         let _ = match bytes {
             Some(bytes) => fs::write(path, bytes),
@@ -809,20 +810,20 @@ fn restore(saved: &Saved) {
 }
 
 /// The paths unstaged again after a commit that failed; a failure is silent.
-fn unstage(home: &Home, inner: &[String]) {
+pub(crate) fn unstage(home: &Home, inner: &[String]) {
     let mut args = vec!["reset", "-q", "--"];
     args.extend(inner.iter().map(String::as_str));
     let _ = git::run(&home.dir, &args, Who::Folder);
 }
 
-fn failed(e: StoreError) -> StoreError {
+pub(crate) fn failed(e: StoreError) -> StoreError {
     StoreError::Git(format!("the change could not be committed, the folder is as it was: {e}"))
 }
 
 /// Write each change (a text, or `None` for a removal), then one commit by Lorisse of exactly
 /// those paths when git holds them; on any failure every file is put back and unstaged. The
 /// commit's full id, `None` without git.
-fn write_and_commit(
+pub(crate) fn write_and_commit(
     store: &Store,
     home: Option<&Home>,
     changes: &[(String, Option<String>)],
@@ -1020,6 +1021,10 @@ pub(crate) fn undo(store: &mut Store, change: Option<&str>) -> Result<Option<Und
     }
     let subject = git::run(&home.dir, &["log", "-1", "--format=%s", &full], Who::Folder)?;
     let subject = subject.trim().to_string();
+    let drawer = drawers::folder_of_subject(&subject).map(|f| home.outer(&f));
+    if let Some(folder) = &drawer {
+        drawers::refuse_filled(store, folder)?;
+    }
     let added = git::run(
         &home.dir,
         &["diff-tree", "--root", "--no-commit-id", "--name-only", "-r", "--diff-filter=A", &full],
@@ -1073,6 +1078,9 @@ pub(crate) fn undo(store: &mut Store, change: Option<&str>) -> Result<Option<Und
         return Err(back(e, true));
     }
     let revert = git::head(&home.dir)?;
+    if let Some(folder) = &drawer {
+        drawers::remove_if_empty(&store.root.join(folder));
+    }
     if numbered {
         for (rel, other) in &apart {
             keep_counter_after_undo(other, rel, &given);

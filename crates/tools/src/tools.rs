@@ -56,9 +56,11 @@ pub const KEEPING: &str = "The rules of keeping:
 - What no longer holds is retired (retire), never left beside its contrary.
 - What happened or was decided today that is not a lasting fact goes in the journal (journal).
 - With several repositories, file in the one the subject belongs to, and name it in the line.
+- A subject that keeps coming and has no repository of its own gets one (drawer), said in one line.
+- A piece found in the wrong repository is moved (move).
+- Never ask the person where a thing goes: choose the repository yourself.
 - What comes from a confidential repository is never filed in another one.
-- Say each filing in one line, with its number.
-- Never file small talk, a guess, a password or a key.
+- Say each filing in one line, with its number; never file small talk, a guess, a password or a key.
 - The person's intro above wins where it says otherwise.";
 
 /// The model provider the program serves: a confidential repository naming it is open to Claude.
@@ -336,9 +338,15 @@ impl Memory {
             .repos()
             .into_iter()
             .filter(seen)
-            .map(|r| match r.open {
-                true => format!("{} (confidential)", r.name),
-                false => r.name,
+            .map(|r| {
+                let mut said = match r.open {
+                    true => format!("- {} (confidential, kept apart)", r.name),
+                    false => format!("- {}", r.name),
+                };
+                if let Some(about) = r.about.as_deref().map(str::trim).filter(|a| !a.is_empty()) {
+                    said.push_str(&format!(": {about}"));
+                }
+                said
             })
             .collect();
         let entries = self.entries();
@@ -347,13 +355,14 @@ impl Memory {
         let people = entries.iter().filter(|e| e.layer == Layer::Person).count();
         let mut lines = vec![
             format!("The memory folder: {}", folder::shown(&root.to_path_buf())),
-            format!("Its repositories: {}.", repos.join(", ")),
-            format!(
-                "It holds {} and {}.",
-                counted(holding, "memory", "memories"),
-                counted(people, "person", "people")
-            ),
+            "Its repositories, each with what it is for:".to_string(),
         ];
+        lines.extend(repos);
+        lines.push(format!(
+            "It holds {} and {}.",
+            counted(holding, "memory", "memories"),
+            counted(people, "person", "people")
+        ));
         memories.sort_by(|a, b| b.captured.cmp(&a.captured).then(b.id.cmp(&a.id)));
         if memories.is_empty() {
             lines.push("Nothing is filed yet.".to_string());
