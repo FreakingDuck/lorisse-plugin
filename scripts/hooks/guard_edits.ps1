@@ -35,6 +35,11 @@
     is refused, and so is a file in the grant markers' folder. Input that is not JSON, a call
     with no file, an unreadable table or any error of the hook: refused with one line on the
     error stream and exit 2 (a block whatever the rule lists say).
+    A builder's call (C-4.10; Test-BuilderCall of data_folders.ps1: its agent `builder`, or the
+    permission mode `dontAsk`): wherever the guard would ask (an ask row with no marker, a listed
+    script with no marker, an addition under a lock with no marker), it refuses instead, the same
+    reason followed by the builder's sentence. A marker already there (a yes, or grant.ps1's for an
+    ask row, C-5.12) keeps it silent for the builder as for anyone.
 
 .EXAMPLE
     echo '{"session_id":"s1","tool_name":"Edit","tool_input":{"file_path":"C:\repo\CLAUDE.md"}}' |
@@ -250,6 +255,17 @@ function Write-Decision([string]$decision, [string]$reason) {
     }
     Write-Output ($answer | ConvertTo-Json -Compress -Depth 4)
 }
+# C-4.10: where the guard would ask, a builder's call is refused instead, the same reason followed by the
+# builder's sentence (data_folders.ps1). Anyone else is asked as before.
+$IsBuilder = $false
+function Write-Ask([string]$reason) {
+    if ($IsBuilder) {
+        $sentence = if ($BuilderSentence) { $BuilderSentence } else { 'This call is not part of your pass.' }
+        Write-Decision 'deny' ('{0}. {1}' -f $reason.TrimEnd('.'), $sentence)
+        return
+    }
+    Write-Decision 'ask' $reason
+}
 
 try {
     # Claude Code sends UTF-8: read so, whatever the console's code page, so a page's text compares as it is.
@@ -265,6 +281,7 @@ try {
     }
     if (-not $file) { Stop-Refused 'an edit with no file path' }
     $session = if ($call.session_id) { [string]$call.session_id } else { 'nosession' }
+    if (Get-Command Test-BuilderCall -ErrorAction SilentlyContinue) { $IsBuilder = [bool](Test-BuilderCall $call) }
 
     # The forms no row can be compared with.
     if ($file -match '(?i)::\$|:\$DATA' -or ($file.Length -gt 2 -and $file.IndexOf(':', 2) -ge 0)) { Stop-Refused ('{0}: a stream suffix' -f $file) }
@@ -370,7 +387,7 @@ try {
             if ($judged.leaf -and $judged.why -ceq 'ok') {
                 if (-not (Test-Path -LiteralPath $addMarker)) {
                     $what = if ($judged.leaf -eq 'VALIDATION.md') { 'a new row at the end of the run log' } else { 'a new wish under "Wanted, not promised yet"' }
-                    Write-Decision 'ask' ("{0}: status.yaml row {1} is locked; {2} passes as an ask edit; a yes covers such additions to this row for the session" -f $rel, $best.Name, $what)
+                    Write-Ask ("{0}: status.yaml row {1} is locked; {2} passes as an ask edit; a yes covers such additions to this row for the session" -f $rel, $best.Name, $what)
                 }
             }
             elseif ($judged.leaf -eq 'VALIDATION.md') { Write-Decision 'deny' ("{0}. locked: only a new row at the end of the run log passes here ({1})" -f $refusal, $judged.why) }
@@ -385,7 +402,7 @@ try {
             if ($isScript -and -not (Test-Path -LiteralPath $scriptMarker)) {
                 $why += ("{0}: a script the lists let run without asking (an allow rule names it); a yes covers such scripts for the session" -f $full)
             }
-            if ($why.Count) { Write-Decision 'ask' ($why -join '; ') }
+            if ($why.Count) { Write-Ask ($why -join '; ') }
         }
     }
     exit 0
