@@ -55,6 +55,7 @@ We want fewer prompts and no surprise: what passes alone is only what the person
 
 ## 7. Wanted, not promised yet
 
+- The rule asked once, in the conversation: the first time the person asks for something a service nobody ruled yet would do (read the mail, list the files), Lorisse asks in plain words how they want it from now on (ask each time, pass, never) and what it may do there, writes it in the rules file with a tool of its own, and from then on asks only for what goes past it. No service passes by default.
 - What asked is kept, and Lorisse proposes the rule that would have let it pass, as the dev tool does.
 - Rules by repository or by subject.
 - A change of the rules file by a shell command is not seen today: only the app's file tools are.
