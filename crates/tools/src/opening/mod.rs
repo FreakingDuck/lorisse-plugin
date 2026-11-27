@@ -1,6 +1,11 @@
 //! Opening: `plop`, the word that starts a conversation: the person's own intro, else the
-//! plugin's, then the state of the memory, the journal's last day and the rules of keeping;
-//! and the instructions the program gives the Claude app when it connects.
+//! plugin's, then the state of the memory, what the person's rules rule, the journal's last day
+//! and the rules of keeping; the instructions the program gives the Claude app when it
+//! connects; and `rule`, the person's answer written in their rules (`rules.rs`).
+
+mod rules;
+
+pub(crate) use rules::rule;
 
 use std::fs;
 use std::path::Path;
@@ -30,8 +35,7 @@ pub const NO_HISTORY: &str = "This folder is not under git: with git, every chan
 /// The rules of keeping, the last lines of `plop`.
 pub const KEEPING: &str = "The rules of keeping:
 - Start now: file what this conversation already holds that is worth keeping, searching first.
-- File by yourself what the person says that is worth keeping: a decision, a date, a price, a promise, a fact about a person.
-- Search first, and add to what exists (note, link) rather than file it twice.
+- File by yourself what the person says that is worth keeping: a decision, a date, a price, a promise, a fact about a person. Search first, and add to what exists (note, link) rather than file it twice.
 - A fact that changed is changed (change), not filed a second time.
 - What no longer holds is retired (retire), never left beside its contrary.
 - What happened or was decided today that is not a lasting fact goes in the journal (journal).
@@ -41,6 +45,7 @@ pub const KEEPING: &str = "The rules of keeping:
 - Never ask the person where a thing goes: choose the repository yourself.
 - What comes from a confidential repository is never filed in another one.
 - Say each filing in one line, with its number; never file small talk, a guess, a password or a key.
+- The first time the person asks for something a service their rules do not name would do, ask once, in plain words, how they want it from now on (each time, without asking, never) and what you may do there; propose \"without asking\" only for what reads; then call rule with their answer; past that, ask each time.
 - The person's intro above wins where it says otherwise.";
 
 /// What the program tells the Claude app at `initialize`, before any tool is called.
@@ -81,6 +86,8 @@ pub fn plop() -> Answer {
     if !memory.store.is_git() {
         lines.push(NO_HISTORY.to_string());
     }
+    lines.push(String::new());
+    lines.push(rules::ruled(&root));
     lines.push(String::new());
     lines.push(match memory.last_day() {
         Some(day) => format!("The journal was last written on {day}."),

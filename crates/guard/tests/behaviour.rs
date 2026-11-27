@@ -1,8 +1,49 @@
-//! The contract's Behaviour table: a rule nobody has, and any input whatever its shape.
+//! The contract's Behaviour table: `rule` with a list none of the three, `rule` on a file that
+//! cannot be read, no memory folder, a rule nobody has, and any input whatever its shape.
 
 mod common;
 
 use common::*;
+use lorisse_guard::write_rule;
+
+// `rule` with a list that is none of the three: refused in one sentence; nothing written.
+#[test]
+fn rule_with_a_list_none_of_the_three_is_refused_and_nothing_written() {
+    let folder = Folder::with_rules("no_list", README_RULES);
+    let empty = Folder::new("no_list_empty");
+    for list in ["always", "", "pass ask"] {
+        let said = write_rule(folder.path(), "dropbox", &["fetch".to_string()], list).unwrap_err();
+        assert!(said.contains("pass, ask or never") && said.ends_with("nothing was written."), "{said}");
+        assert_eq!(said.matches(". ").count(), 0, "one sentence: {said}");
+        assert!(write_rule(empty.path(), "dropbox", &["fetch".to_string()], list).is_err());
+    }
+    assert_eq!(std::fs::read_to_string(folder.path().join("rules.yaml")).unwrap(), README_RULES);
+    assert!(std::fs::read_dir(empty.path()).unwrap().next().is_none(), "no file made");
+}
+
+// `rule` when the rules file cannot be read: refused with the reason; the file left as it is.
+#[test]
+fn rule_on_a_file_that_cannot_be_read_is_refused_with_the_reason() {
+    for text in ["pass:\n  lorisse: [where\n", "pass:\n  lorisse: [where]\nnevr:\n  gmail: [reply]\n"] {
+        let folder = Folder::with_rules("unreadable", text);
+        let said = write_rule(folder.path(), "gmail", &["reply".to_string()], "never").unwrap_err();
+        assert!(said.starts_with("Your rules file, rules.yaml, cannot be read ("), "{said}");
+        assert!(said.ends_with("it is left as it is, and nothing was written."), "{said}");
+        assert_eq!(std::fs::read_to_string(folder.path().join("rules.yaml")).unwrap(), text);
+    }
+    let folder = Folder::with_rules("one_line", "pass: {dropbox: [fetch]}\n");
+    let said = write_rule(folder.path(), "dropbox", &["move".to_string()], "ask").unwrap_err();
+    assert!(said.contains("is left as it is: its list pass is written on one line"), "{said}");
+}
+
+// No memory folder: the first set holds, and a call of `rule` still asks.
+#[test]
+fn without_a_memory_folder_the_first_set_holds() {
+    assert_eq!(decision(&ask(&lorisse("where"), None)).as_deref(), Some("allow"));
+    assert!(reason(&ask(&lorisse("where"), None)).contains("first set"));
+    assert_eq!(decision(&ask(&lorisse("rule"), None)).as_deref(), Some("ask"));
+    assert_eq!(ask("mcp__claude_ai_Dropbox__fetch", None), None);
+}
 
 // A rule naming a tool or a service nobody has is ignored; the other rules hold.
 #[test]

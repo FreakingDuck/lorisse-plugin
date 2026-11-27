@@ -247,6 +247,17 @@ impl Store {
         drawers::move_to(self, ids, repo)
     }
 
+    /// Write a settings file at the root other than `config.yaml` (the person's rules), its new
+    /// text whole, as one commit by Lorisse that undo takes back; alone when no git holds it.
+    ///
+    /// # Errors
+    /// [`StoreError::Invalid`] (another file, uncommitted changes in it, a blocked write);
+    /// [`StoreError::Git`] when the commit fails, the file then as it was.
+    pub fn write_setting(&mut self, file: &str, text: &str, subject: &str) -> Result<Option<String>, StoreError> {
+        self.writable("write_setting")?;
+        filing::setting(self, file, text, subject)
+    }
+
     /// The name of the repository `name` is taken by, capitals ignored; `None` when it is free.
     pub fn repo_named(&self, name: &str) -> Option<String> {
         drawers::taken_name(self, name)

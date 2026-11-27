@@ -747,6 +747,18 @@ pub(crate) fn journal(store: &mut Store, day: Option<&str>, text: &str, repo: Op
     Ok(Journaled { id, day: date.to_string(), repo, path: rel, made, time, commit })
 }
 
+/// A settings file at the root other than `config.yaml` (the person's rules), its new text
+/// whole, as one commit by Lorisse; written alone when no git holds it.
+pub(crate) fn setting(store: &mut Store, file: &str, text: &str, subject: &str) -> Result<Option<String>, StoreError> {
+    let plain = file.ends_with(".yaml") && !file.contains(['/', '\\']) && !file.starts_with('.');
+    if !plain || file == crate::config::CONFIG_FILE {
+        return Err(StoreError::Invalid(format!("{file} is not a settings file Lorisse writes")));
+    }
+    let home = ready(store, file)?;
+    refuse_dirty(home.as_ref(), file)?;
+    write_and_commit(store, home.as_ref(), &[(file.to_string(), Some(text.to_string()))], &one_line(subject))
+}
+
 /// Copy `source` to `file_rel`, write the piece, then one commit by Lorisse of the two when git
 /// holds them; on any failure both are put back, the copy removed with a folder made for it.
 /// The commit's full id, `None` without git.

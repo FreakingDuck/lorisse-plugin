@@ -1,9 +1,11 @@
 //! Lorisse's guard: before a tool call runs, pass, ask or never, by the person's rules.
 //! Given the text a Claude `PreToolUse` hook receives and the memory folder, it gives the text
 //! the hook prints, or nothing when the call is left to the Claude app.
-//! It writes nothing, opens no connection and starts no program.
+//! Its answer writes nothing, opens no connection and starts no program; `rule` alone writes,
+//! one rule in the person's file, on their yes, and says what the file rules (`rule.rs`).
 
 mod call;
+mod rule;
 mod rules;
 
 use std::path::Path;
@@ -11,9 +13,13 @@ use std::path::Path;
 use serde_json::json;
 
 pub use call::FILE_TOOLS;
-pub use rules::{FIRST_RULES, RULES_FILE};
+pub use rule::{ruled, write_rule, write_rule_with, RuleWritten, Ruling, ServiceRuled};
+pub use rules::{List, FIRST_RULES, RULES_FILE};
 
-use rules::{List, Loaded, Ruled, Source};
+use rules::{Loaded, Ruled, Source};
+
+/// The tool of Lorisse's that writes a rule: a call of it always asks.
+pub const RULE_TOOL: &str = "rule";
 
 /// The hook's answer to one call: the text to print, or `None` to leave the call to the app.
 pub fn answer(received: &str, folder: Option<&Path>) -> Option<String> {
@@ -34,6 +40,11 @@ fn decide(received: &str, folder: Option<&Path>) -> Option<String> {
         };
     }
     let (server, tool) = call.split()?;
+    if rules::service_in(server, "lorisse") && tool.trim().eq_ignore_ascii_case(RULE_TOOL) {
+        return Some(printed("ask", &format!(
+            "You are about to change your own rules ({RULES_FILE}): the rule shown here decides what runs without asking you from now on, so writing it always asks, whatever your rules say."
+        )));
+    }
     match rules::load(folder) {
         Loaded::Unreadable(why) => Some(printed("ask", &format!(
             "Lorisse's rules file, {RULES_FILE}, cannot be read ({why}): every call of a connector or of Lorisse asks until it is mended."

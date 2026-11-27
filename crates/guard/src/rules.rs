@@ -21,6 +21,15 @@ pub enum List {
 }
 
 impl List {
+    /// The three lists, in the order the file writes them.
+    pub const ALL: [List; 3] = [List::Pass, List::Ask, List::Never];
+
+    /// The list a word names, capitals and spaces around ignored; `None` for any other word.
+    pub fn named(word: &str) -> Option<List> {
+        let word = word.trim();
+        List::ALL.into_iter().find(|l| l.name().eq_ignore_ascii_case(word))
+    }
+
     /// The list's name, as the file writes it.
     pub fn name(self) -> &'static str {
         match self {
@@ -42,17 +51,17 @@ pub enum Source {
 
 /// One service and its tools, as written.
 #[derive(Debug, Clone, Default)]
-struct Service {
-    name: String,
-    tools: Vec<String>,
+pub(crate) struct Service {
+    pub(crate) name: String,
+    pub(crate) tools: Vec<String>,
 }
 
 /// The three lists, read.
 #[derive(Debug, Clone, Default)]
 pub struct Rules {
-    pass: Vec<Service>,
-    ask: Vec<Service>,
-    never: Vec<Service>,
+    pub(crate) pass: Vec<Service>,
+    pub(crate) ask: Vec<Service>,
+    pub(crate) never: Vec<Service>,
 }
 
 /// The rule that names a call: its list, its service and its tool as written.
@@ -154,6 +163,15 @@ fn shown(value: &Value) -> String {
 }
 
 impl Rules {
+    /// The services of one list.
+    pub(crate) fn of(&self, list: List) -> &Vec<Service> {
+        match list {
+            List::Pass => &self.pass,
+            List::Ask => &self.ask,
+            List::Never => &self.never,
+        }
+    }
+
     /// The strictest rule naming this tool of this server: never, then ask, then pass.
     pub fn decide(&self, server: &str, tool: &str) -> Option<Ruled> {
         let lists = [
@@ -196,7 +214,7 @@ pub fn ruling(rules: &Rules, source: Source, server: &str, tool: &str) -> Option
 }
 
 /// Spaces and dashes are one with underscores, capitals ignored.
-fn plain(text: &str) -> String {
+pub(crate) fn plain(text: &str) -> String {
     text.trim()
         .chars()
         .map(|c| match c {

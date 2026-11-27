@@ -1,5 +1,5 @@
-//! The writing call, shared by the eleven writing tools: remember, note, link, attach, import,
-//! change, retire, journal, drawer, move, undo; each tool itself is in the folder of its subject.
+//! The writing call, shared by the twelve writing tools: remember, note, link, attach, import,
+//! change, retire, journal, drawer, move, rule, undo; each tool is in the folder of its subject.
 //! Each opens the memory folder for writing at its call, without the confidential right; under
 //! git it checks that git can commit there and makes at most one commit by Lorisse, through the
 //! store; not under git it writes the files alone. A refusal is one sentence and writes nothing.
@@ -11,7 +11,7 @@ use lorisse_store::{Blocked, Layer, NewMemory, PieceId, Revision, StoreError, Wr
 use crate::json::Json;
 use crate::reading::folder;
 use crate::shared::{self, Answer, Found, Memory};
-use crate::{drawers, files, first_day, keeping, writing};
+use crate::{drawers, files, first_day, keeping, opening, writing};
 
 /// What one writing call asks, its arguments read.
 enum Asked {
@@ -25,6 +25,7 @@ enum Asked {
     Journal(String, Option<String>, Option<String>),
     Drawer(String, String, bool),
     Move(Vec<String>, String),
+    Rule(String, Vec<String>, String),
     Undo(Option<String>),
 }
 
@@ -60,6 +61,7 @@ pub fn call(tool: &str, args: Option<&Json>) -> Answer {
         Asked::Journal(text, day, repo) => keeping::journal(&mut memory, &text, day.as_deref(), repo.as_deref()),
         Asked::Drawer(name, about, apart) => drawers::drawer(&mut memory, &name, &about, apart),
         Asked::Move(pieces, repo) => drawers::move_to(&mut memory, &pieces, &repo),
+        Asked::Rule(service, tools, list) => opening::rule(&mut memory, &root, &service, &tools, &list),
         Asked::Undo(_) if !memory.store.is_git() => Answer::ok(writing::NO_UNDO.to_string()),
         Asked::Undo(change) => writing::undo(&mut memory, change.as_deref()),
     }
@@ -97,6 +99,9 @@ pub fn expected(tool: &str) -> &'static str {
         }
         "move" => {
             "move needs \"pieces\": the numbers of the memories to move, such as M-0002, as a list of texts, and \"repository\": the repository to put them in, by name, as a text."
+        }
+        "rule" => {
+            "rule needs \"service\": the service the tools belong to, as a text, \"tools\": each tool as the service names it, as a list of texts, and \"list\": pass, ask or never, as a text."
         }
         _ => "undo takes \"change\", if given: the commit, or the number of the piece, whose change to take back, as a text.",
     }
@@ -208,6 +213,13 @@ fn read_args(tool: &str, args: Option<&Json>) -> Option<Asked> {
                 return None;
             }
             Some(Asked::Move(pieces, needed(args, "repository")?))
+        }
+        "rule" => {
+            let tools = list_arg(args, "tools").ok()?;
+            if tools.is_empty() {
+                return None;
+            }
+            Some(Asked::Rule(needed(args, "service")?, tools, text_arg(args, "list").ok()?.unwrap_or("").to_string()))
         }
         _ => Some(Asked::Undo(text_arg(args, "change").ok()?.map(str::to_string))),
     }

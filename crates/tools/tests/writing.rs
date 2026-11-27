@@ -51,11 +51,11 @@ fn tools_c_4_2_the_reading_tools_are_declared_read_only_and_the_writing_tools_as
         assert_eq!(hint(tool, "openWorldHint"), Some(Json::Bool(false)), "{name}");
         if !reads {
             assert_eq!(hint(tool, "destructiveHint"), Some(Json::Bool(false)), "{name}");
-            let once = ["link", "start", "change", "retire", "drawer", "move"].contains(&name);
+            let once = ["link", "start", "change", "retire", "drawer", "move", "rule"].contains(&name);
             assert_eq!(hint(tool, "idempotentHint"), Some(Json::Bool(once)), "{name}");
         }
     }
-    assert_eq!(tools.len(), 17);
+    assert_eq!(tools.len(), 18);
 }
 
 // ---------------------------------------------------------------------------------------------
