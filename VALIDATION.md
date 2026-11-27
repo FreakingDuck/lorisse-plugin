@@ -88,6 +88,18 @@ The sample is a small memory folder kept in the repository, every word of it inv
   2. Type "Remember, for the office, that the lease ends in June".
      - See: Lorisse says it is filed, with a number that starts with `O-`.
 
+- [ ] **H-14** A memory is corrected, and one that no longer holds is put aside.
+  It proves C-12.1 and C-12.2: your memory stays true without anything being lost.
+  1. Type "The boiler was serviced in April, not in March: correct it".
+     - See: Lorisse says M-0002 is changed.
+  2. Type "The boiler's contract is over: retire it", then "Find boiler".
+     - See: Lorisse says M-0001 is retired; in the list it comes last, said as retired.
+
+- [ ] **H-15** The day is kept.
+  It proves C-13.1 and C-13.2: what happened today is found again by its day.
+  1. Type "Write in the journal that the plumber came this morning", then "Read today's journal".
+     - See: Lorisse says it is written; then today's page, with that line and its time.
+
 ## The first day, on a machine that has no memory yet
 
 - [ ] **H-10** A new person has a memory in one conversation.
@@ -160,6 +172,13 @@ For the gate, which checks that each promise of the contract has one row here, a
 | C-11.5 | the text to copy, whole, in its block | 1 check · output | — |
 | C-11.6 | dated lines filed with their dates and categories; the instructions given back, not filed; one undo for the whole | 3 checks · writes | H-11 |
 | C-11.7 | a line that cannot be read, counted and left out | 1 check · output | — |
+| C-12.1 | a memory's text changed and read back, a title and tags changed with the text left; a person's text; one commit, and the text before back after an undo | 3 checks · writes | H-14 |
+| C-12.2 | a memory retired with its reason: still read, said as retired; last in a search; left out of the count | 3 checks · writes | H-14 |
+| C-12.3 | a memory retired for another: the two linked, the other named | 1 check · writes | — |
+| C-12.4 | the two rules among those `plop` gives | 1 check · output | — |
+| C-13.1 | an entry added to today's page and to a named day, what was there left; one commit and its undo; in a named repository | 3 checks · writes | H-15 |
+| C-13.2 | a day's page read; an entry found by a search, said with its day | 2 checks · output | H-15 |
+| C-13.3 | the last day written, said by `plop` | 1 check · output | — |
 
 ## Run log
 

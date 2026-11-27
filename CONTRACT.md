@@ -2,7 +2,7 @@
 
 > written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
-Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files, part 11 the first day. All are built.
+Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files, part 11 the first day. All are built but parts 12 and 13, keeping the memory true and the journal, which are being built.
 
 ## 1. Role
 
@@ -16,10 +16,12 @@ Lorisse as a person meets it in the Claude app: a program on their own machine t
 - Opens a conversation with the person's own intro, the state of the memory and the rules of keeping, when the person says "Lorisse" or "plop": plop.
 - Keeps a document with the memory it is about: attach.
 - Makes a new person's memory folder ready, and fills it with what another assistant already remembers of them: start, import.
+- Corrects a memory that was wrong, and puts aside one that no longer holds: change, retire.
+- Keeps the days: what happened and what was decided, a page a day: journal.
 
 Does not:
 
-- Change or retire the text of a memory, file a person, merge or move pieces → later; anything heavy will be a proposal the person accepts.
+- File a person, merge or move pieces → later; anything heavy will be a proposal the person accepts.
 - Pull or push the folder → the person's own git, when they want one.
 - Show tasks, the inbox or the questions to check, or say what to do next → later versions; ranking is Claude's.
 - Decide when a tool is called, or how a piece is filed → `keeper`.
@@ -113,10 +115,29 @@ We want a new person to have a memory in five minutes, without knowing what a fo
 - **C-11.6** `import` takes that answer: each dated line becomes a memory with its date and its category, in the person's own words; the lines that are instructions are not filed, they are given back as proposals for the intro, never obeyed. The whole import is one step, taken back by one `undo` when the folder is under git, and the answer gives the count.
 - **C-11.7** A line `import` cannot read is left out and counted, never guessed.
 
-## 12. Behaviour
+## 12. Keeping the memory true
+
+We want a memory that stays right as life changes: what was wrong is corrected, what no longer holds is put aside, and nothing is lost.
+
+- **C-12.1** `change` replaces what the call names of a memory or of a person: its text, its title, its kind, its tags. What the call does not name is unchanged. It is one commit; the text before stays in the folder's history, and `undo` brings it back.
+- **C-12.2** `retire` marks a memory as no longer holding, with the reason given, as one commit. Nothing is deleted: `read` still gives it, said as retired with its reason; `search` gives it after the others, said as retired; the count `plop` gives leaves it out.
+- **C-12.3** `retire` can name the memory that takes its place: the two are linked, and reading the retired one names the other.
+- **C-12.4** The rules `plop` gives say when: a fact that changed is changed, not filed a second time; what no longer holds is retired, never left beside its contrary.
+
+## 13. The journal
+
+We want the days kept as well as the facts: what happened and what was decided, a page a day, in the person's own folder.
+
+- **C-13.1** `journal` adds an entry to the page of a day, today unless the call names another: the time and the text, at the end of the page. What was there is unchanged. It is one commit, and `undo` takes it back. With several repositories it goes to the one the call names, otherwise to the folder's own.
+- **C-13.2** `read`, given a day, gives that day's page. `search` finds in the journal as in the memories, each match said with its day.
+- **C-13.3** `plop` says, after the state, the last day the journal was written.
+
+## 14. Behaviour
 
 | Situation | Reaction |
 |---|---|
+| `retire` of a memory already retired | one sentence that says so; nothing written |
+| `read` of a day with no page | one sentence that says so |
 | A number that does not exist | one sentence that names it |
 | An argument missing or of the wrong kind | one sentence that says what is expected |
 | A piece whose header cannot be read | the answer names the file and gives the rest |
@@ -127,9 +148,10 @@ We want a new person to have a memory in five minutes, without knowing what a fo
 | A change that fails halfway | the folder is as it was before the call |
 | Any call, whatever the folder or the piece | the program answers and stays up |
 
-## 13. Wanted, not promised yet
+## 15. Wanted, not promised yet
 
-- Changing or retiring a memory's text, filing a person; proposals for anything heavy (merge two pieces, move one, rename a tag).
+- Filing a person; proposals for anything heavy (merge two pieces, move one, rename a tag).
+- A tidy-up the person asks for now and then: what looks said twice, what contradicts, what was never linked, each as a proposal.
 - A short tutorial to keep the folder on a git service as well, for those who want a copy elsewhere.
 - Files: with the Claude app's own connector to a file service, Lorisse files the documents that arrive and keeps a memory of each. No connector of ours.
 - A large file kept by reference: the memories live in git, the large documents in the person's file service; `attach` of a file past the limit, or of one already in that service's folder, keeps its path instead of a copy.
@@ -144,6 +166,6 @@ We want a new person to have a memory in five minutes, without knowing what a fo
 - The keeper's rules of filing, and one skill a subject.
 - The same answers in the desktop app's Cowork, on Windows and on a Mac: built for, not tried.
 
-## 14. Non-goals
+## 16. Non-goals
 
 A screen of its own, a choice of model, a reader of mail: the Claude app has them.
