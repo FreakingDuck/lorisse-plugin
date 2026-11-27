@@ -59,6 +59,44 @@ fn c4_2_no_folder_has_the_first_set() {
     assert_eq!(decision(&ask(&lorisse("where"), Some(copied.path()))).as_deref(), Some("allow"));
 }
 
+// C-4.5, output: a tool of Lorisse's the person's file names nowhere passes by the first set.
+#[test]
+fn c4_5_a_lorisse_tool_the_file_does_not_name_passes_by_the_first_set() {
+    let folder = Folder::with_rules("older", "pass:\n  lorisse: [where, search]\n");
+    let here = Some(folder.path());
+    for tool in ["journal", "change", "retire"] {
+        let answer = ask(&lorisse(tool), here);
+        assert_eq!(decision(&answer).as_deref(), Some("allow"), "{tool}");
+        assert!(reason(&answer).contains("first set"), "{}", reason(&answer));
+    }
+    let named = ask(&lorisse("where"), here);
+    assert!(reason(&named).contains("rules.yaml"), "{}", reason(&named));
+    assert_eq!(ask(&lorisse("forget"), here), None, "a name the first set does not hold either");
+}
+
+// C-4.5, output: a tool of Lorisse's the person's file names under ask or never follows the file.
+#[test]
+fn c4_5_a_lorisse_tool_the_file_names_follows_the_file() {
+    let asks = Folder::with_rules("journal_ask", "pass:\n  lorisse: [where, search]\nask:\n  lorisse: [journal]\n");
+    let answer = ask(&lorisse("journal"), Some(asks.path()));
+    assert_eq!(decision(&answer).as_deref(), Some("ask"));
+    assert!(reason(&answer).contains("rules.yaml"), "{}", reason(&answer));
+    let never = Folder::with_rules("journal_never", "pass:\n  lorisse: [where, search, journal]\nnever:\n  lorisse: [journal]\n");
+    let answer = ask(&lorisse("journal"), Some(never.path()));
+    assert_eq!(decision(&answer).as_deref(), Some("deny"), "the strictest inside the file");
+    assert!(reason(&answer).contains("rules.yaml"), "{}", reason(&answer));
+}
+
+// C-4.5, output: a tool of another service the file does not name is left to the app.
+#[test]
+fn c4_5_another_service_s_tool_not_named_is_left_to_the_app() {
+    let folder = Folder::with_rules("other", "pass:\n  lorisse: [where, search]\n  dropbox: [fetch]\n");
+    let here = Some(folder.path());
+    assert_eq!(ask("mcp__claude_ai_Dropbox__delete", here), None);
+    assert_eq!(ask("mcp__claude_ai_Gmail__send_message", here), None);
+    assert_eq!(ask("Bash", here), None);
+}
+
 // C-4.3, output: a tool in two or three lists takes the strictest.
 #[test]
 fn c4_3_a_tool_in_two_lists_takes_the_strictest() {

@@ -179,6 +179,22 @@ impl Rules {
     }
 }
 
+/// The rule of a call and whose it is: the person's file first; a tool it names nowhere is
+/// ruled by the first set, which names Lorisse's own tools only, so any other service's stays
+/// unruled.
+pub fn ruling(rules: &Rules, source: Source, server: &str, tool: &str) -> Option<(Ruled, Source)> {
+    if let Some(ruled) = rules.decide(server, tool) {
+        return Some((ruled, source));
+    }
+    if source == Source::First {
+        return None;
+    }
+    let Loaded::Rules(first, _) = first() else {
+        return None;
+    };
+    first.decide(server, tool).map(|ruled| (ruled, Source::First))
+}
+
 /// Spaces and dashes are one with underscores, capitals ignored.
 fn plain(text: &str) -> String {
     text.trim()

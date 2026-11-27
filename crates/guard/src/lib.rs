@@ -39,8 +39,8 @@ fn decide(received: &str, folder: Option<&Path>) -> Option<String> {
             "Lorisse's rules file, {RULES_FILE}, cannot be read ({why}): every call of a connector or of Lorisse asks until it is mended."
         ))),
         Loaded::Rules(rules, source) => {
-            let ruled = rules.decide(server, tool)?;
-            Some(printed(decision(ruled.list), &reason(&ruled, source)))
+            let (ruled, whose) = rules::ruling(&rules, source, server, tool)?;
+            Some(printed(decision(ruled.list), &reason(&ruled, whose)))
         }
     }
 }

@@ -52,12 +52,15 @@ fn c5_2_nothing_passes_unnamed() {
         "mcp__claude_ai_Gmail__forward",
         "mcp__claude_ai_Dropbox__fetch_more",
         "mcp__claude_ai_Dropboxer__fetch",
-        "mcp__plugin_lorisse_lorisse__where",
         "Bash",
     ] {
         assert_ne!(decision(&ask(call, here)).as_deref(), Some("allow"), "{call}");
     }
     assert_eq!(decision(&ask("mcp__claude_ai_Dropbox__fetch", here)).as_deref(), Some("allow"));
+    // Of Lorisse's own tools, what the first set lets pass (C-4.5): unnamed here, it passes by it.
+    let own = ask("mcp__plugin_lorisse_lorisse__where", here);
+    assert_eq!(decision(&own).as_deref(), Some("allow"));
+    assert!(reason(&own).contains("first set"), "{}", reason(&own));
 }
 
 // C-5.2, output: a rules file that cannot be read makes every call of a service ask, with why.

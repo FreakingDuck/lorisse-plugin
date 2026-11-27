@@ -2,6 +2,7 @@
 # Copy it to the root of your memory folder as rules.yaml and change it there.
 # Three lists: pass (runs without a prompt), ask (the Claude app asks you), never (refused).
 # Under each list, a service and its tools. A tool in two lists takes the strictest.
+# A tool of Lorisse's not named in this file passes; name it under ask or never to change that.
 pass:
   lorisse: [where, plop, search, read, links, remember, note, link, attach, undo, start, import, change, retire, journal]
 ask: {}
