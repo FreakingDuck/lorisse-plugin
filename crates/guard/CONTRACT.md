@@ -33,13 +33,14 @@ We want the person to say once what runs without asking, in a file of theirs tha
 - **C-4.2** A folder without that file is ruled by the plugin's first set: Lorisse's own tools pass, and every other call is left to the Claude app. The first set is a file of the plugin the person can copy into their folder and change.
 - **C-4.3** A tool named in two lists takes the strictest: never, then ask, then pass.
 - **C-4.4** A call no rule names is left to the Claude app, as if there were no guard.
+- **C-4.5** A tool of Lorisse's own that the person's file does not name is ruled by the first set: a tool a new version brings passes without the person having to add it to a file written before. A tool of Lorisse's the person's file names, under any list, follows the person's file.
 
 ## 5. The answer
 
 We want fewer prompts and no surprise: what passes alone is only what the person wrote down.
 
 - **C-5.1** Pass: the call runs without a prompt. Ask: the Claude app asks the person. Never: the call is refused, and the refusal names the rule.
-- **C-5.2** Nothing passes that the rules do not name as pass. A rules file that cannot be read makes every call ask, and the reason says the file cannot be read.
+- **C-5.2** Nothing of another service passes that the rules do not name as pass; of Lorisse's own tools, only what the first set lets pass (C-4.5). A rules file that cannot be read makes every call ask, and the reason says the file cannot be read.
 - **C-5.3** A change of the rules file itself by one of the app's file tools always asks, whatever the rules say.
 - **C-5.4** The guard writes nothing in the memory folder and opens no network connection.
 

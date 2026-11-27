@@ -49,6 +49,7 @@ For the gate and for the assistant; nothing here is yours to read.
 | C-4.2 | a folder without the file: the first set | 2 checks · output | H-1 |
 | C-4.3 | a tool in two lists | 1 check · output | — |
 | C-4.4 | a call no rule names | 1 check · output | — |
+| C-4.5 | a tool of Lorisse's the person's file does not name: passes by the first set; the same tool named under ask, under never: the person's file; a tool of another service not named: left to the app | 3 checks · output | — |
 | C-5.1 | the three answers, the rule named in a refusal | 3 checks · output | H-1, H-2, H-3 |
 | C-5.2 | nothing passes unnamed; a file that cannot be read | 2 checks · output | — |
 | C-5.3 | a file tool writing the rules file | 1 check · output | — |

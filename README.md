@@ -41,6 +41,7 @@ Lorisse reads a memory folder, files in it, and opens a conversation with your o
 | 5. the files | a document kept with the memory it is about; reading a memory names its files, a search finds a memory by a file's name. The program gives Claude its rules when it connects, and `plop` repeats them. | built, version 0.3.0 |
 | 6. the first day | a new person's folder made ready in one conversation, remembered by the machine, and filled with what another assistant already remembers of them; git recommended, no longer required | built, version 0.4.0 |
 | 7. a first clean version | filing by itself said the same in every text Claude reads, starting with what the conversation already holds; a confidential repository you open to Claude, read and written; nothing left uncommitted; a plain sentence when the setting names the wrong folder | built, version 0.5.0 |
+| 8. keeping it true | a memory corrected, one that no longer holds put aside and never deleted, and the journal, a page a day | built, version 0.6.0 |
 | 7. the keeper | the skill that holds the rules of filing: what is filed at once, what stays a proposal, what is never done | after |
 
 Tasks, the inbox and "what to do next" come after the memory itself is in place.
@@ -79,6 +80,9 @@ What Claude can ask the program. Memories, people and tags are read; a task or a
 | `link` | two pieces | the first linked to the second, as one commit; a link already there changes nothing |
 | `attach` | a memory or a person, and the path of a file on your machine | a copy of the file kept beside the piece (`memories/M-0001/invoice.pdf`), as one commit; the original is left where it was. 20 MB at most unless your folder's settings say otherwise (`attach_limit_mb`); never a key or a secret |
 | `undo` | nothing, or the change to take back | Lorisse's last change taken back as a new commit; never a change made by someone else |
+| `change` | a memory or a person, and what to replace: its text, its title, its kind, its tags | the piece corrected, as one commit; what is not named stays; `undo` brings back what it said before |
+| `retire` | a memory, a reason, and the memory that takes its place if there is one | the memory marked retired with its reason, as one commit; nothing is deleted: it is still read, and comes last in a search |
+| `journal` | a text; a day and a repository if wanted | the time and the text added at the end of that day's page (`journal/2026-11-27.md`), today unless a day is named, as one commit. `read` takes a day and gives its page |
 
 | `start` | nothing, or a place, your name, what you want to remember, how you like to be answered | your memory folder made ready (`Lorisse` in your home folder unless you name a place), under git when git is on the machine, with your page of intro; this machine remembers it. It ends with a text to copy for another assistant, to get back what it remembers of you |
 | `import` | that assistant's answer: dated lines under Instructions, Identity, Career, Projects, Preferences | each line filed as a memory with its date, in one step; the instructions given back as proposals for your intro, never followed; the count of what was filed and left out |
