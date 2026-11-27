@@ -23,7 +23,9 @@
       7. the versions                   the marketplace entry names no version, the card one
       8. the scripts                    every .ps1 of the repository is plain ASCII and opens on
                                         a help block (<# with .SYNOPSIS)
-      9. the clauses                    every clause of CONTRACT.md has one row in VALIDATION.md
+      9. the clauses                    in every part, each clause of its CONTRACT.md has one row
+                                        in the VALIDATION.md beside it; no contract past 4 themes
+                                        or 20 clauses, no validation past 12 steps by hand
      10. the sample                     sample/ has no change against git (the index) after the
                                         tests, and no file git does not know
 
@@ -182,16 +184,36 @@ foreach ($f in $ps) {
 }
 if ($off.Count -eq 0) { Write-Check 'ok' 'scripts' ('{0} .ps1 file(s), plain ASCII, each with its help block' -f $ps.Count) } else { Write-Why $off 20; Write-Check 'red' 'scripts' ('{0} finding(s)' -f $off.Count) }
 
-# 9. The clauses: each one row in the validation's table.
-$contract = Get-Content -LiteralPath (Join-Path $repo 'CONTRACT.md') -Encoding UTF8
-$validation = Get-Content -LiteralPath (Join-Path $repo 'VALIDATION.md') -Encoding UTF8
-$clauses = @($contract | ForEach-Object { if ($_ -match '^\s*- \*\*(C-\d+\.\d+)\*\*') { $Matches[1] } })
+# 9. The clauses: in every part (a folder holding a CONTRACT.md), each clause one row in the
+# VALIDATION.md beside it; and a contract a person reads to its end: at most 4 themes and 20
+# clauses, its validation at most 12 steps by hand. Past that the part is cut in two.
+$maxThemes = 4
+$maxClauses = 20
+$maxSteps = 12
+$fixed = @('Role', 'Does and does not', 'Depends on', 'Behaviour', 'Wanted, not promised yet', 'Non-goals')
+$contracts = @(Get-ChildItem -LiteralPath $repo -Recurse -File -Filter 'CONTRACT.md' |
+    Where-Object { $_.FullName.Substring($repo.Length + 1) -notmatch '^(target|docs|\.git|\.claude)[\\/]' })
 $off = @()
-foreach ($c in $clauses) {
-    $rows = @($validation | Where-Object { $_ -match ('^\|\s*{0}\s*\|' -f [regex]::Escape($c)) }).Count
-    if ($rows -ne 1) { $off += ('{0}: {1} row(s)' -f $c, $rows) }
+$total = 0
+foreach ($file in $contracts) {
+    $where = $file.FullName.Substring($repo.Length + 1).Replace('\', '/')
+    $contract = Get-Content -LiteralPath $file.FullName -Encoding UTF8
+    $beside = Join-Path $file.DirectoryName 'VALIDATION.md'
+    if (-not (Test-Path -LiteralPath $beside)) { $off += ('{0}: no VALIDATION.md beside it' -f $where); continue }
+    $validation = Get-Content -LiteralPath $beside -Encoding UTF8
+    $clauses = @($contract | ForEach-Object { if ($_ -match '^\s*- \*\*(C-\d+\.\d+)\*\*') { $Matches[1] } })
+    $total += $clauses.Count
+    foreach ($c in $clauses) {
+        $rows = @($validation | Where-Object { $_ -match ('^\|\s*{0}\s*\|' -f [regex]::Escape($c)) }).Count
+        if ($rows -ne 1) { $off += ('{0}: {1}: {2} row(s)' -f $where, $c, $rows) }
+    }
+    $themes = @($contract | ForEach-Object { if ($_ -match '^## \d+\.\s+(.+?)\s*$') { $Matches[1] } } | Where-Object { $fixed -notcontains $_ })
+    if ($themes.Count -gt $maxThemes) { $off += ('{0}: {1} themes, {2} at most: cut the part in two' -f $where, $themes.Count, $maxThemes) }
+    if ($clauses.Count -gt $maxClauses) { $off += ('{0}: {1} clauses, {2} at most: cut the part in two' -f $where, $clauses.Count, $maxClauses) }
+    $steps = @($validation | Where-Object { $_ -match '^\s*- \[[ xX]\] \*\*H-\d+\*\*' }).Count
+    if ($steps -gt $maxSteps) { $off += ('{0}: {1} steps by hand, {2} at most' -f $where, $steps, $maxSteps) }
 }
-if ($clauses.Count -gt 0 -and $off.Count -eq 0) { Write-Check 'ok' 'clauses' ('{0} clause(s), one row each' -f $clauses.Count) } else { Write-Why $off 20; Write-Check 'red' 'clauses' ('{0} clause(s), {1} off' -f $clauses.Count, $off.Count) }
+if ($total -gt 0 -and $off.Count -eq 0) { Write-Check 'ok' 'clauses' ('{0} clause(s) in {1} contract(s), one row each, none past {2} themes or {3} clauses' -f $total, $contracts.Count, $maxThemes, $maxClauses) } else { Write-Why $off 20; Write-Check 'red' 'clauses' ('{0} clause(s) in {1} contract(s), {2} off' -f $total, $contracts.Count, $off.Count) }
 
 # 10. The sample: as git holds it, after the tests.
 $changed = @(& git -C $repo diff --name-only -- sample 2>$null)
