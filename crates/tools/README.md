@@ -2,7 +2,7 @@
 
 > written by the cut pass 2026-11-28 · reviewed by the owner: not yet
 
-The program the Claude app starts on the person's machine: an MCP server over stdio, one JSON-RPC message a line, that gives Claude seventeen tools and nothing else. Each tool belongs to a subject, one folder under `src/` with its own three pages; this crate holds what is common: the protocol, the list of the tools, the guard mode, and what the subjects share.
+The program the Claude app starts on the person's machine: an MCP server over stdio, one JSON-RPC message a line, that gives Claude eighteen tools and nothing else. Each tool belongs to a subject, one folder under `src/` with its own three pages; this crate holds what is common: the protocol, the list of the tools, the guard mode, and what the subjects share.
 What it promises: `CONTRACT.md`. How that is checked: `VALIDATION.md`.
 
 ## The words
@@ -14,7 +14,7 @@ What it promises: `CONTRACT.md`. How that is checked: `VALIDATION.md`.
 
 ```text
 crates/tools/
-├── Cargo.toml        the program `lorisse`, version 0.7.0; the store and the guard, nothing else
+├── Cargo.toml        the program `lorisse`, version 0.8.0; the store and the guard, nothing else
 ├── src/
 │   ├── main.rs       the protocol, the list of the tools with their declarations, the guard mode
 │   ├── json.rs       a small JSON value, parser and writer, the standard library only

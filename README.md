@@ -57,6 +57,7 @@ Lorisse reads a memory folder, files in it, and opens a conversation with your o
 | 7. a first clean version | filing by itself said the same in every text Claude reads, starting with what the conversation already holds; a confidential repository you open to Claude, read and written; nothing left uncommitted; a plain sentence when the setting names the wrong folder | built, version 0.5.0 |
 | 8. keeping it true | a memory corrected, one that no longer holds put aside and never deleted, and the journal, a page a day | built, version 0.6.0 |
 | 9. the drawers | Lorisse sorts by itself: a repository made for a subject that has none, a piece moved when it sits in the wrong one, and a first day where you talk about yourself and it makes the drawers | built, version 0.7.0 |
+| 10. the rule asked once | the first time you ask for a new kind of thing (read the mail, list the files), Lorisse asks how you want it from now on and writes your answer in your rules file; the Claude app always asks you before a rule is written, so Lorisse cannot give itself a right | built, version 0.8.0, not released; not yet seen working in a clean try with Claude |
 | 7. the keeper | the skill that holds the rules of filing: what is filed at once, what stays a proposal, what is never done | after |
 
 Tasks, the inbox and "what to do next" come after the memory itself is in place.
@@ -99,6 +100,7 @@ What Claude can ask the program. Memories, people and tags are read; a task or a
 | `retire` | a memory, a reason, and the memory that takes its place if there is one | the memory marked retired with its reason, as one commit; nothing is deleted: it is still read, and comes last in a search |
 | `drawer` | a name and one sentence on what it is for; `apart` if it must never mix with the rest | a new repository of your memory folder, which Lorisse calls a drawer: its folder, its own numbers (`G-0001`), its line in `config.yaml` with every line of yours left as it was, as one commit. Lorisse makes one by itself when a subject keeps coming and has no place |
 | `move` | one memory or several, and the repository to put them in | each moved with its number, its text, its links and its files, as one commit; nothing is ever taken out of a confidential repository |
+| `rule` | a service, its tools, and `pass`, `ask` or `never` | one rule written in your `rules.yaml`, every other line left as it was, as one commit; the Claude app asks you each time before it runs, whatever your rules say |
 | `journal` | a text; a day and a repository if wanted | the time and the text added at the end of that day's page (`journal/2026-11-27.md`), today unless a day is named, as one commit. `read` takes a day and gives its page |
 
 | `start` | nothing, or a place, your name, what you want to remember, how you like to be answered | your memory folder made ready (`Lorisse` in your home folder unless you name a place), under git when git is on the machine, with your page of intro; this machine remembers it. It ends with a text to copy for another assistant, to get back what it remembers of you |
