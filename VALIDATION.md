@@ -8,11 +8,6 @@ Human file; format: `docs/contract_spec.md`.
 |---|---|---|
 | never by you | Reading, writing and the open are built and green in the gate. Claude, run once without a person on the sample (`scripts/try_plugin.ps1`), opened Lorisse, filed a memory, found it, took it back and found nothing: two commits in the sample's history, and no tool had been allowed beforehand. A second run attached a file to a memory in one commit and read it back with the file's path. A third, in an empty folder with a home made for the try, found no memory, made one under git, imported two dated lines in one commit and gave the instruction back without following it. A fourth, on 0.5.0: after "plop" and one sentence said in passing, it filed the memory by itself and said its number; a fifth found the memory of the confidential repository opened to Claude, and added a dated line to it there, in one commit. A sixth, on 0.6.0, corrected a memory, retired another with its reason, and wrote the day's journal by itself, then read the page back. A seventh, on 0.7.0, made a drawer by itself for a new line of work, filed its first client there and moved two memories to another drawer; an eighth, in an empty folder, heard a person talk about herself and made two drawers, one kept apart, with five memories in the right ones. H-5 walked by you on 2026-11-25 as far as "where". | Your walk of H-1 to H-9 and H-12 to H-16; H-10 and H-11 on a machine that has no memory yet; once the new version is on GitHub and updated in your Claude app. |
 
-This part is validated two ways:
-
-- **By the gate**: every tool is asked directly, without Claude, on the sample folder, and the sample is compared before and after. Promise by promise, it is in the table at the end.
-- **By hand**: the steps below, in the Claude panel of VS Code, on a copy of the sample: what only a person can see, Claude asking Lorisse by itself and saying what it answers.
-
 The sample is a small memory folder kept in the repository, every word of it invented: four memories, one person, two tags, one memory in a part marked confidential, a second repository named `club` with one memory, a third named `office`, confidential and open to Claude, with one memory, and a few tasks and a raw piece kept for the later steps. With several repositories, each piece is said with its own: `M-0001 [home]`. Its dates are far behind or far ahead, so the walk reads the same any day.
 
 ## Before you start
@@ -24,174 +19,79 @@ The sample is a small memory folder kept in the repository, every word of it inv
 3. In VS Code, choose File, Open Folder, and open `target/walk-sample`; then open the Claude panel.
    - See: `walk-sample` in the window's title, and an empty conversation.
 
-## In the Claude panel, on the sample
+## The walks, one a part
 
-- [ ] **H-1** Lorisse finds the folder the session is opened on.
-  It proves C-4.1: without it, Lorisse would answer from no folder, or from the wrong one.
-  1. Type "Lorisse, where are you?".
-     - See: a path that ends in `walk-sample`, and the words "the folder this session is opened on".
+Each part's steps are in its own page, numbered from H-1 there; the steps of before are in brackets, as the table above names them.
 
-- [ ] **H-2** A memory is found, read, and followed to what it links to.
-  It proves C-6.2 as far as a person sees it, and that the three questions work through Claude: a memory is of use only if it comes back when asked.
-  1. Type "Find boiler".
-     - See: "The boiler's contract", "Boiler serviced in March", and the person Sam Example.
-  2. Type "Read M-0002 and say what it links to".
-     - See: the text of "Boiler serviced in March", and its link to "The boiler's contract".
+- `tools`: `crates/tools/VALIDATION.md` (H-2, H-3, H-13 of before)
+- `reading`: `crates/tools/src/reading/VALIDATION.md` (H-1, H-4, H-5)
+- `opening`: `crates/tools/src/opening/VALIDATION.md` (H-8, H-12)
+- `writing`: `crates/tools/src/writing/VALIDATION.md` (H-6, H-7)
+- `files`: `crates/tools/src/files/VALIDATION.md` (H-9)
+- `keeping`: `crates/tools/src/keeping/VALIDATION.md` (H-14, H-15)
+- `drawers`: `crates/tools/src/drawers/VALIDATION.md` (H-16)
+- `first_day`: `crates/tools/src/first_day/VALIDATION.md` (H-10, H-11)
 
-- [ ] **H-3** A confidential piece does not exist for Claude.
-  It proves C-6.1: what you marked confidential never reaches the conversation.
-  1. Type "Read M-0006".
-     - See: Lorisse says no piece has the number M-0006.
+## Where each clause went
 
-- [ ] **H-4** After these questions, the folder is as it was.
-  It proves C-5.1: a question never changes your folder.
-  1. In the terminal, run `git -C target/walk-sample status`.
-     - See: `nothing to commit, working tree clean`.
+For the assistant and for the history: the id each clause had in this contract, the part that holds it now, and its new id there. It is the only place the old ids stay.
 
-## Writing, on the sample
-
-- [ ] **H-6** A memory is filed in one sentence, as one step of the folder's history.
-  It proves C-8.1 and C-8.4: what you ask Lorisse to remember is in a file of yours, and you can see when it got there.
-  1. Type "Remember that the gutter was cleaned in October".
-     - See: Lorisse says it is filed, and gives its number.
-  2. In the terminal, run `git -C target/walk-sample log --oneline -1`.
-     - See: one line that names that number.
-
-- [ ] **H-7** The last change is taken back.
-  It proves C-8.5: a memory filed by mistake costs you one sentence.
-  1. Type "Undo that".
-     - See: Lorisse says the change is taken back.
-  2. Type "Find gutter".
-     - See: Lorisse answers that nothing matches.
-
-- [ ] **H-8** One word opens Lorisse with your own intro.
-  It proves C-9.1 and C-9.2: you set Lorisse up once, in a page of yours, and every conversation starts from it.
-  1. Type "plop".
-     - See: the sample's intro, then the folder, its three repositories, the memories filed last, and the rules of keeping.
-
-- [ ] **H-9** A file is kept with the memory it belongs to.
-  It proves C-10.1 and C-10.2: a document is found again from what it is about.
-  1. Type "Attach the file README.md of the lorisse-plugin repository to the boiler's contract".
-     - See: Lorisse says the file is attached to M-0001.
-  2. Type "Read M-0001".
-     - See: the memory, and the file `README.md` named with its path in the sample.
-
-- [ ] **H-12** After "plop", Lorisse files by itself.
-  It proves C-9.4 and C-9.6: you never dictate what to keep.
-  1. In a new conversation, type "plop", then "By the way, the chimney sweep comes on the 3rd of March".
-     - See: an answer that ends with one line saying it is filed, with its number.
-
-- [ ] **H-13** A confidential repository you opened to Claude is read and written.
-  It proves C-6.3 and C-8.7: your work memory serves you in a work conversation, and stays in its own repository.
-  1. Type "Find printer".
-     - See: "The printer's lease", said with its repository, `office`.
-  2. Type "Remember, for the office, that the lease ends in June".
-     - See: Lorisse says it is filed, with a number that starts with `O-`.
-
-- [ ] **H-14** A memory is corrected, and one that no longer holds is put aside.
-  It proves C-12.1 and C-12.2: your memory stays true without anything being lost.
-  1. Type "The boiler was serviced in April, not in March: correct it".
-     - See: Lorisse says M-0002 is changed.
-  2. Type "The boiler's contract is over: retire it", then "Find boiler".
-     - See: Lorisse says M-0001 is retired; in the list it comes last, said as retired.
-
-- [ ] **H-15** The day is kept.
-  It proves C-13.1 and C-13.2: what happened today is found again by its day.
-  1. Type "Write in the journal that the plumber came this morning", then "Read today's journal".
-     - See: Lorisse says it is written; then today's page, with that line and its time.
-
-- [ ] **H-16** Lorisse sorts by itself, and what is in the wrong drawer is moved.
-  It proves C-14.1 and C-14.3: you talk, and never have to say where a thing goes.
-  1. Type "plop", then "I am starting to take clients for garden design. The first one is the house on the hill, her budget is 4000".
-     - See: Lorisse says it made a drawer for that work, and that the client is filed in it.
-  2. Type "The boiler has nothing to do with the house: put it with the garden work".
-     - See: Lorisse says which memory moved, with the same number as before.
-
-## The first day, on a machine that has no memory yet
-
-- [ ] **H-10** A new person has a memory in one conversation.
-  It proves C-11.1, C-11.3 and C-11.4: nothing to know about folders or git to begin.
-  1. Type "plop".
-     - See: Lorisse says there is no memory yet and offers to make one.
-  2. Answer yes, then tell it about yourself as it asks: your name, what fills your days, what must never mix.
-     - See: Lorisse says the folder is ready, where it is, and which drawers it made from what you said.
-  3. Open a new conversation and type "plop".
-     - See: your intro, with the three answers you gave.
-
-- [ ] **H-11** The first day does not start empty.
-  It proves C-11.6: what another assistant already knows of you comes with you.
-  1. Paste three dated lines of your own after "Import this:".
-     - See: Lorisse says three memories are filed, with their dates.
-
-## On your own folder
-
-- [ ] **H-5** Lorisse answers from the folder you gave in the plugin's setting.
-  It proves C-4.1: from a session opened on a code project, your folder is still found.
-  1. In the Claude app, install or update Lorisse. A small window asks to save the plugin's settings: type your folder under "Memory folder" and choose Save.
-     - See: the window closes, and Lorisse is listed with its version.
-  2. Open a session on a folder that is not your memory, and type "Lorisse, where are you?".
-     - See: your memory folder, the words "the plugin's setting", and the version you installed.
-
-## For the gate: one row a promise
-
-For the gate, which checks that each promise of the contract has one row here, and for the assistant; nothing here is yours to read.
-
-| Clause | What is checked | Automated | By hand |
-|---|---|---|---|
-| C-4.1 | the session's folder when it is a memory folder, else the setting | 3 checks · input (the setting, the session's folder, both) | H-1, H-5 |
-| C-4.2 | no folder: one sentence, nothing created | 2 checks · output | — |
-| C-4.3 | a piece changed between two calls | 1 check · input | — |
-| C-4.4 | a second repository named in the sample's config | 2 checks · output (its piece found, its repository said) | — |
-| C-5.1 | the sample before and after every tool | 1 check · writes | H-4 |
-| C-5.2 | no connection, no other program | 1 check · the program's dependencies | — |
-| C-5.3 | each tool's declaration: reads only, or writes | 1 check · output | — |
-| C-6.1 | the confidential piece, by every tool | 4 checks · output | H-3 |
-| C-6.2 | the first line of an answer that carries a text | 2 checks · output | H-2 |
-| C-6.3 | a confidential repository open to Claude: its piece found and read with its repository, counted and named confidential by `plop`; one without Anthropic among its providers still hidden | 3 checks · output | H-13 |
-| C-7.1 | a list past its limit | 1 check · output | — |
-| C-7.2 | a text past its limit | 1 check · output | — |
-| C-8.1 | a memory filed, then read back | 2 checks · writes | H-6 |
-| C-8.2 | a note on a memory and on a person | 2 checks · writes | — |
-| C-8.3 | a link, and the same link twice | 2 checks · writes | — |
-| C-8.4 | one commit a change, its message, the person's own uncommitted change left; a repository with its own history and the folder's counter: nothing uncommitted after a change and after its undo | 4 checks · writes | H-6 |
-| C-8.5 | the last change taken back, a named one, a commit that is not Lorisse's | 3 checks · writes | H-7 |
-| C-8.6 | the number after an undo | 1 check · writes | — |
-| C-8.7 | a write asked in the confidential part, and in a confidential repository not open to Claude; a memory filed, noted and taken back in one that is open | 3 checks · writes | H-13 |
-| C-8.8 | a memory filed in the named repository, and without a name | 2 checks · writes | — |
-| C-8.9 | an unknown kind, a link to no piece | 2 checks · output | — |
-| C-8.10 | a memory filed, a note and an undo asked in a folder that is not under git; the one sentence of `plop` | 3 checks · writes | — |
-| C-9.1 | the intro page given whole, changed between two calls, absent | 3 checks · output | H-8 |
-| C-9.2 | the state after the intro: the folder, the repositories, the counts, the five last | 1 check · output | H-8 |
-| C-9.3 | the intro said as the person's word, a memory's text as data | 1 check · output | — |
-| C-9.4 | the rules of keeping at the end of `plop`; what they say of the conversation so far and of several repositories | 2 checks · output | H-8, H-12 |
-| C-9.5 | the instructions given when the app connects | 1 check · output | — |
-| C-9.6 | the instructions, each writing tool's description and the rules say the same of filing | 1 check · output | H-12 |
-| C-10.1 | a file attached: its copy, its commit, the original untouched | 2 checks · writes | H-9 |
-| C-10.2 | the files of a piece named by `read`, with their paths | 1 check · output | H-9 |
-| C-10.3 | a piece found by its file's name | 1 check · output | — |
-| C-10.4 | a file over the limit | 1 check · output | — |
-| C-10.5 | a second file of the same name | 1 check · writes | — |
-| C-10.6 | a key file, a secret's name | 2 checks · output | — |
-| C-11.1 | a folder made in a home folder of the test's own, in a named place; a place that holds files refused | 3 checks · writes | H-10 |
-| C-11.2 | under git with one commit when git is there; made all the same with an empty PATH, with the sentence | 2 checks · writes | — |
-| C-11.3 | the folder found afterwards with no setting, from another folder | 1 check · input | H-10 |
-| C-11.4 | the intro written from the three answers, given back by `plop` | 1 check · output | H-10 |
-| C-11.5 | the text to copy, whole, in its block | 1 check · output | — |
-| C-11.6 | dated lines filed with their dates and categories; the instructions given back, not filed; one undo for the whole | 3 checks · writes | H-11 |
-| C-11.7 | a line that cannot be read, counted and left out | 1 check · output | — |
-| C-12.1 | a memory's text changed and read back, a title and tags changed with the text left; a person's text; one commit, and the text before back after an undo | 3 checks · writes | H-14 |
-| C-12.2 | a memory retired with its reason: still read, said as retired; last in a search; left out of the count | 3 checks · writes | H-14 |
-| C-12.3 | a memory retired for another: the two linked, the other named | 1 check · writes | — |
-| C-12.4 | the two rules among those `plop` gives | 1 check · output | — |
-| C-13.1 | an entry added to today's page and to a named day, what was there left; one commit and its undo; in a named repository | 3 checks · writes | H-15 |
-| C-13.2 | a day's page read; an entry found by a search, said with its day | 2 checks · output | H-15 |
-| C-13.3 | the last day written, said by `plop` | 1 check · output | — |
-| C-14.1 | a repository made: its folder, its numbering, its line in the settings with the lines there left as they were; one commit and its undo; a memory filed in it at once | 3 checks · writes | H-16 |
-| C-14.2 | each repository said with what it is for by `plop` | 1 check · output | H-16 |
-| C-14.3 | a memory moved, several at once: the number, the text, the links and the files kept, a link to it still followed; one commit and its undo | 3 checks · writes | H-16 |
-| C-14.4 | a repository made confidential and open to Claude, read and written; a move out of a confidential one refused | 2 checks · writes | — |
-| C-14.5 | the three rules among those `plop` gives | 1 check · output | — |
-| C-14.6 | what `start` tells Claude to ask and to do | 1 check · output | H-10 |
+| Clause of before | Part | New id |
+|---|---|---|
+| C-4.1 | reading | C-4.1 |
+| C-4.2 | reading | C-4.2 |
+| C-4.3 | reading | C-4.3 |
+| C-4.4 | reading | C-4.4 |
+| C-5.1 | reading | C-5.1 |
+| C-5.2 | tools | C-4.1 |
+| C-5.3 | tools | C-4.2 |
+| C-6.1 | tools | C-5.1 |
+| C-6.2 | tools | C-5.2 |
+| C-6.3 | tools | C-5.3 |
+| C-7.1 | tools | C-6.1 |
+| C-7.2 | tools | C-6.2 |
+| C-8.1 | writing | C-4.1 |
+| C-8.2 | writing | C-4.2 |
+| C-8.3 | writing | C-4.3 |
+| C-8.4 | writing | C-4.4 |
+| C-8.5 | writing | C-4.5 |
+| C-8.6 | writing | C-4.6 |
+| C-8.7 | writing | C-4.7 |
+| C-8.8 | writing | C-4.8 |
+| C-8.9 | writing | C-4.9 |
+| C-8.10 | writing | C-4.10 |
+| C-9.1 | opening | C-4.1 |
+| C-9.2 | opening | C-4.2 |
+| C-9.3 | opening | C-4.3 |
+| C-9.4 | opening | C-4.4 |
+| C-9.5 | opening | C-4.5 |
+| C-9.6 | opening | C-4.6 |
+| C-10.1 | files | C-4.1 |
+| C-10.2 | files | C-4.2 |
+| C-10.3 | files | C-4.3 |
+| C-10.4 | files | C-4.4 |
+| C-10.5 | files | C-4.5 |
+| C-10.6 | files | C-4.6 |
+| C-11.1 | first_day | C-4.1 |
+| C-11.2 | first_day | C-4.2 |
+| C-11.3 | first_day | C-4.3 |
+| C-11.4 | first_day | C-4.4 |
+| C-11.5 | first_day | C-4.5 |
+| C-11.6 | first_day | C-4.6 |
+| C-11.7 | first_day | C-4.7 |
+| C-12.1 | keeping | C-4.1 |
+| C-12.2 | keeping | C-4.2 |
+| C-12.3 | keeping | C-4.3 |
+| C-12.4 | opening | C-5.1 |
+| C-13.1 | keeping | C-5.1 |
+| C-13.2 | keeping | C-5.2 |
+| C-13.3 | keeping | C-5.3 |
+| C-14.1 | drawers | C-4.1 |
+| C-14.2 | opening | C-6.1 |
+| C-14.3 | drawers | C-4.2 |
+| C-14.4 | drawers | C-4.3 |
+| C-14.5 | opening | C-6.2 |
+| C-14.6 | first_day | C-5.1 |
 
 ## Run log
 

@@ -1,5 +1,5 @@
-//! The root VALIDATION.md's table for the writing step, one test a check: C-5.3, C-8.1 to C-8.9
-//! and C-9.1 to C-9.3; the files are `files.rs`. The program is started and asked over stdin, without Claude, on
+//! The VALIDATION.md tables, one test a check: tools C-4.2, writing C-4.1 to C-4.9
+//! and opening C-4.1 to C-4.3; the files are `files.rs`. The program is started and asked over stdin, without Claude, on
 //! temporary copies of the sample made git folders, a name and an address set in each copy only.
 
 mod common;
@@ -33,11 +33,11 @@ fn subject_of_head(dir: &Path) -> String {
 const GUTTER: &str = r#"{"title":"The gutter was cleaned","text":"The gutter was cleaned in October.","kind":"fact","tags":["home"],"links":["M-0001"]}"#;
 
 // ---------------------------------------------------------------------------------------------
-// C-5.3 each tool's declaration: reads only, or writes (1 check)
+// tools C-4.2 each tool's declaration: reads only, or writes (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_5_3_the_reading_tools_are_declared_read_only_and_the_writing_tools_as_writing() {
+fn tools_c_4_2_the_reading_tools_are_declared_read_only_and_the_writing_tools_as_writing() {
     let line = r#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#.to_string();
     let got = talk_with(program(&[], None), &[line]);
     let Some(Json::Array(tools)) = got[0].get("result").and_then(|r| r.get("tools")) else {
@@ -59,11 +59,11 @@ fn c_5_3_the_reading_tools_are_declared_read_only_and_the_writing_tools_as_writi
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.1 a memory filed, then read back (2 checks)
+// writing C-4.1 a memory filed, then read back (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_8_1_remember_gives_the_number_and_read_gives_the_memory_back_as_filed() {
+fn writing_c_4_1_remember_gives_the_number_and_read_gives_the_memory_back_as_filed() {
     let copy = Temp::git_sample("remember_read");
     let said = ask_one(copy.path(), "remember", GUTTER);
     assert!(said.starts_with("Filed as M-0007 [home]:"), "{said}");
@@ -82,7 +82,7 @@ fn c_8_1_remember_gives_the_number_and_read_gives_the_memory_back_as_filed() {
 }
 
 #[test]
-fn c_8_1_a_memory_without_a_kind_takes_the_folder_s_first_and_a_person_is_linked_by_name() {
+fn writing_c_4_1_a_memory_without_a_kind_takes_the_folder_s_first_and_a_person_is_linked_by_name() {
     let copy = Temp::git_sample("remember_default");
     let args = r#"{"title":"Sam fixed the tap","text":"Sam fixed the kitchen tap.","links":["Sam Example"]}"#;
     let said = ask_one(copy.path(), "remember", args);
@@ -95,11 +95,11 @@ fn c_8_1_a_memory_without_a_kind_takes_the_folder_s_first_and_a_person_is_linked
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.2 a note on a memory and on a person (2 checks)
+// writing C-4.2 a note on a memory and on a person (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_8_2_a_note_on_a_memory_is_one_dated_line_at_the_end_and_nothing_else() {
+fn writing_c_4_2_a_note_on_a_memory_is_one_dated_line_at_the_end_and_nothing_else() {
     let copy = Temp::git_sample("note_memory");
     let before = read_file(copy.path(), "memories/M-0002.md");
     let said = ask_one(copy.path(), "note", r#"{"piece":"M-0002","text":"The next service is due in March."}"#);
@@ -110,7 +110,7 @@ fn c_8_2_a_note_on_a_memory_is_one_dated_line_at_the_end_and_nothing_else() {
 }
 
 #[test]
-fn c_8_2_a_note_on_a_person_by_name_is_one_dated_line_at_the_end_and_nothing_else() {
+fn writing_c_4_2_a_note_on_a_person_by_name_is_one_dated_line_at_the_end_and_nothing_else() {
     let copy = Temp::git_sample("note_person");
     let before = read_file(copy.path(), "people/sam-example.md");
     let said = ask_one(copy.path(), "note", r#"{"piece":"Sam Example","text":"Prefers a text message."}"#);
@@ -121,11 +121,11 @@ fn c_8_2_a_note_on_a_person_by_name_is_one_dated_line_at_the_end_and_nothing_els
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.3 a link, and the same link twice (2 checks)
+// writing C-4.3 a link, and the same link twice (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_8_3_a_link_is_added_and_seen_both_ways() {
+fn writing_c_4_3_a_link_is_added_and_seen_both_ways() {
     let copy = Temp::git_sample("link_once");
     let said = ask_one(copy.path(), "link", r#"{"from":"M-0003","to":"m-1"}"#);
     assert!(said.starts_with("Linked: M-0003 [home] now links to M-0001 [home]"), "{said}");
@@ -135,7 +135,7 @@ fn c_8_3_a_link_is_added_and_seen_both_ways() {
 }
 
 #[test]
-fn c_8_3_the_same_link_twice_changes_nothing_and_says_so() {
+fn writing_c_4_3_the_same_link_twice_changes_nothing_and_says_so() {
     let copy = Temp::git_sample("link_twice");
     let before = files_of(copy.path());
     let commits = log(copy.path());
@@ -146,12 +146,12 @@ fn c_8_3_the_same_link_twice_changes_nothing_and_says_so() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.4 one commit a change, its message, the person's own uncommitted change left; a repository
+// writing C-4.4 one commit a change, its message, the person's own uncommitted change left; a repository
 // with its own history and the folder's counter (4 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_8_4_each_change_is_exactly_one_commit_of_lorisse_s_holding_its_piece_alone() {
+fn writing_c_4_4_each_change_is_exactly_one_commit_of_lorisse_s_holding_its_piece_alone() {
     let copy = Temp::git_sample("one_commit");
     let calls = [
         ("remember", GUTTER, "memories/M-0007.md"),
@@ -170,7 +170,7 @@ fn c_8_4_each_change_is_exactly_one_commit_of_lorisse_s_holding_its_piece_alone(
 }
 
 #[test]
-fn c_8_4_the_message_says_what_was_done_and_names_the_piece() {
+fn writing_c_4_4_the_message_says_what_was_done_and_names_the_piece() {
     let copy = Temp::git_sample("message");
     ask_one(copy.path(), "remember", GUTTER);
     assert_eq!(subject_of_head(copy.path()), "remember(M-0007): The gutter was cleaned");
@@ -181,7 +181,7 @@ fn c_8_4_the_message_says_what_was_done_and_names_the_piece() {
 }
 
 #[test]
-fn c_8_4_a_change_the_person_has_not_committed_is_left_as_it_was_and_not_in_the_commit() {
+fn writing_c_4_4_a_change_the_person_has_not_committed_is_left_as_it_was_and_not_in_the_commit() {
     let copy = Temp::git_sample("theirs");
     let mine = format!("{}A line of the person's own.\n", read_file(copy.path(), "memories/M-0004.md"));
     copy.write("memories/M-0004.md", &mine);
@@ -198,7 +198,7 @@ fn c_8_4_a_change_the_person_has_not_committed_is_left_as_it_was_and_not_in_the_
 }
 
 #[test]
-fn c_8_4_a_repository_with_its_own_history_and_the_folder_s_counter_leaves_nothing_uncommitted() {
+fn writing_c_4_4_a_repository_with_its_own_history_and_the_folder_s_counter_leaves_nothing_uncommitted() {
     let copy = Temp::sample("counter");
     let config = read_file(copy.path(), "config.yaml");
     copy.write("config.yaml", &format!("{config}  - {{ name: shed, folder: shed }}\n"));
@@ -234,11 +234,11 @@ fn c_8_4_a_repository_with_its_own_history_and_the_folder_s_counter_leaves_nothi
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.5 the last change taken back, a named one, a commit that is not Lorisse's (3 checks)
+// writing C-4.5 the last change taken back, a named one, a commit that is not Lorisse's (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_8_5_undo_takes_back_the_last_change_as_a_new_commit_and_keeps_the_history() {
+fn writing_c_4_5_undo_takes_back_the_last_change_as_a_new_commit_and_keeps_the_history() {
     let copy = Temp::git_sample("undo_last");
     ask_one(copy.path(), "remember", GUTTER);
     let filed = log(copy.path());
@@ -255,7 +255,7 @@ fn c_8_5_undo_takes_back_the_last_change_as_a_new_commit_and_keeps_the_history()
 }
 
 #[test]
-fn c_8_5_undo_takes_back_the_change_named_by_its_commit_or_its_piece() {
+fn writing_c_4_5_undo_takes_back_the_change_named_by_its_commit_or_its_piece() {
     let copy = Temp::git_sample("undo_named");
     let before = read_file(copy.path(), "memories/M-0002.md");
     ask_one(copy.path(), "note", r#"{"piece":"M-0002","text":"Checked."}"#);
@@ -271,7 +271,7 @@ fn c_8_5_undo_takes_back_the_change_named_by_its_commit_or_its_piece() {
 }
 
 #[test]
-fn c_8_5_a_commit_lorisse_did_not_make_is_never_taken_back() {
+fn writing_c_4_5_a_commit_lorisse_did_not_make_is_never_taken_back() {
     let copy = Temp::git_sample("undo_theirs");
     ask_one(copy.path(), "note", r#"{"piece":"M-0002","text":"Checked."}"#);
     let path = copy.path().join("memories/M-0003.md");
@@ -289,11 +289,11 @@ fn c_8_5_a_commit_lorisse_did_not_make_is_never_taken_back() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.6 the number after an undo (1 check)
+// writing C-4.6 the number after an undo (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_8_6_a_number_taken_back_is_never_given_again() {
+fn writing_c_4_6_a_number_taken_back_is_never_given_again() {
     let copy = Temp::git_sample("number");
     assert!(ask_one(copy.path(), "remember", GUTTER).starts_with("Filed as M-0007"));
     let said = ask_one(copy.path(), "undo", "{}");
@@ -305,7 +305,7 @@ fn c_8_6_a_number_taken_back_is_never_given_again() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.7 a write asked in the confidential part, and in a confidential repository not open to
+// writing C-4.7 a write asked in the confidential part, and in a confidential repository not open to
 // Claude; a memory filed, noted and taken back in one that is open (3 checks)
 // ---------------------------------------------------------------------------------------------
 
@@ -313,7 +313,7 @@ const CONFIDENTIAL_SAID: &str =
     "Lorisse writes nothing in a confidential part of the memory folder: nothing was written.";
 
 #[test]
-fn c_8_7_nothing_is_written_in_the_confidential_part() {
+fn writing_c_4_7_nothing_is_written_in_the_confidential_part() {
     let copy = Temp::git_sample("conf_part");
     let before = files_of(copy.path());
     let commits = log(copy.path());
@@ -328,7 +328,7 @@ fn c_8_7_nothing_is_written_in_the_confidential_part() {
 }
 
 #[test]
-fn c_8_7_nothing_is_written_in_a_repository_marked_confidential() {
+fn writing_c_4_7_nothing_is_written_in_a_repository_marked_confidential() {
     let copy = Temp::sample("conf_row");
     let config = read_file(copy.path(), "config.yaml");
     copy.write("config.yaml", &format!("{config}  - {{ name: work, folder: work, confidential: true }}\n"));
@@ -345,7 +345,7 @@ fn c_8_7_nothing_is_written_in_a_repository_marked_confidential() {
 }
 
 #[test]
-fn c_8_7_a_repository_open_to_claude_is_filed_noted_and_taken_back_as_any_other() {
+fn writing_c_4_7_a_repository_open_to_claude_is_filed_noted_and_taken_back_as_any_other() {
     let copy = Temp::git_sample("open_write");
     let commits = log(copy.path()).len();
     let args = r#"{"title":"The lease ends","text":"The printer's lease ends in June.","repository":"office"}"#;
@@ -386,11 +386,11 @@ fn an_older_piece_with_the_folder_s_letter_is_read_as_it_is_and_a_new_memory_tak
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.8 a memory filed in the named repository, and without a name (2 checks)
+// writing C-4.8 a memory filed in the named repository, and without a name (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_8_8_a_memory_goes_to_the_repository_the_call_names() {
+fn writing_c_4_8_a_memory_goes_to_the_repository_the_call_names() {
     let copy = Temp::sample("club_named");
     copy.write(".gitignore", "club/\n");
     make_git(&copy.path().join("club"));
@@ -411,7 +411,7 @@ fn c_8_8_a_memory_goes_to_the_repository_the_call_names() {
 }
 
 #[test]
-fn c_8_8_without_a_name_a_memory_goes_to_the_folder_s_own_repository() {
+fn writing_c_4_8_without_a_name_a_memory_goes_to_the_folder_s_own_repository() {
     let copy = Temp::git_sample("club_unnamed");
     let said = ask_one(copy.path(), "remember", r#"{"title":"The hedge","text":"Cut in May."}"#);
     assert!(said.starts_with("Filed as M-0007 [home]") && said.contains("one commit of home"), "{said}");
@@ -419,11 +419,11 @@ fn c_8_8_without_a_name_a_memory_goes_to_the_folder_s_own_repository() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-8.9 an unknown kind, a link to no piece (2 checks)
+// writing C-4.9 an unknown kind, a link to no piece (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_8_9_an_unknown_kind_is_refused_with_its_reason_and_nothing_is_written() {
+fn writing_c_4_9_an_unknown_kind_is_refused_with_its_reason_and_nothing_is_written() {
     let copy = Temp::git_sample("kind");
     let before = files_of(copy.path());
     let commits = log(copy.path());
@@ -437,7 +437,7 @@ fn c_8_9_an_unknown_kind_is_refused_with_its_reason_and_nothing_is_written() {
 }
 
 #[test]
-fn c_8_9_a_link_to_a_piece_that_does_not_exist_is_refused_and_nothing_is_written() {
+fn writing_c_4_9_a_link_to_a_piece_that_does_not_exist_is_refused_and_nothing_is_written() {
     let copy = Temp::git_sample("dangling");
     let before = files_of(copy.path());
     let commits = log(copy.path());
@@ -451,11 +451,11 @@ fn c_8_9_a_link_to_a_piece_that_does_not_exist_is_refused_and_nothing_is_written
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-9.1 the intro page given whole, changed between two calls, absent (3 checks)
+// opening C-4.1 the intro page given whole, changed between two calls, absent (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_9_1_plop_gives_the_intro_page_whole() {
+fn opening_c_4_1_plop_gives_the_intro_page_whole() {
     let copy = Temp::sample("intro_whole");
     let intro = read_file(copy.path(), "intro.md");
     let got = ask_one(copy.path(), "plop", "{}");
@@ -467,7 +467,7 @@ fn c_9_1_plop_gives_the_intro_page_whole() {
 }
 
 #[test]
-fn c_9_1_the_intro_changed_between_two_calls_is_the_new_text() {
+fn opening_c_4_1_the_intro_changed_between_two_calls_is_the_new_text() {
     let copy = Temp::sample("intro_changed");
     let setting = copy.path().to_string_lossy().into_owned();
     let mut live = Live::start(&[(SETTING, &setting)]);
@@ -479,7 +479,7 @@ fn c_9_1_the_intro_changed_between_two_calls_is_the_new_text() {
 }
 
 #[test]
-fn c_9_1_without_the_page_plop_gives_the_plugin_s_own_and_where_to_write_theirs() {
+fn opening_c_4_1_without_the_page_plop_gives_the_plugin_s_own_and_where_to_write_theirs() {
     let copy = Temp::sample("intro_absent");
     fs::remove_file(copy.path().join("intro.md")).unwrap();
     let got = ask_one(copy.path(), "plop", "{}");
@@ -491,11 +491,11 @@ fn c_9_1_without_the_page_plop_gives_the_plugin_s_own_and_where_to_write_theirs(
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-9.2 the state after the intro (1 check)
+// opening C-4.2 the state after the intro (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_9_2_plop_gives_the_folder_its_repositories_the_counts_and_the_five_filed_last() {
+fn opening_c_4_2_plop_gives_the_folder_its_repositories_the_counts_and_the_five_filed_last() {
     let copy = Temp::git_sample("state");
     ask_one(copy.path(), "remember", GUTTER);
     let got = ask_one(copy.path(), "plop", "{}");
@@ -521,11 +521,11 @@ fn c_9_2_plop_gives_the_folder_its_repositories_the_counts_and_the_five_filed_la
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-9.3 the intro said as the person's word, a memory's text as data (1 check)
+// opening C-4.3 the intro said as the person's word, a memory's text as data (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_9_3_the_intro_is_said_as_the_person_s_word_and_the_rest_as_data() {
+fn opening_c_4_3_the_intro_is_said_as_the_person_s_word_and_the_rest_as_data() {
     let copy = Temp::sample("intro_word");
     let got = ask_one(copy.path(), "plop", "{}");
     let lines: Vec<&str> = got.lines().collect();

@@ -1,5 +1,5 @@
-//! The root VALIDATION.md's table for keeping the memory true and the journal, one test a check:
-//! C-12.1 to C-12.4 and C-13.1 to C-13.3. The program is started and asked over stdin, without
+//! The VALIDATION.md tables for keeping the memory true and the journal, one test a check:
+//! keeping C-4.1 to C-4.3, opening C-5.1 and keeping C-5.1 to C-5.3. The program is started and asked over stdin, without
 //! Claude, on temporary copies of the sample, made git folders when a check reads the history.
 
 mod common;
@@ -55,12 +55,12 @@ fn counts(folder: &Path) -> String {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-12.1 a memory's text changed and read back, a title and tags changed with the text left; a
+// keeping C-4.1 a memory's text changed and read back, a title and tags changed with the text left; a
 // person's text; one commit, and the text before back after an undo (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_12_1_a_memory_s_text_is_changed_and_read_back_the_rest_as_it_was() {
+fn keeping_c_4_1_a_memory_s_text_is_changed_and_read_back_the_rest_as_it_was() {
     let copy = Temp::git_sample("change_text");
     let before = read_file(copy.path(), "memories/M-0002.md");
     let args = r#"{"piece":"m-2","text":"The boiler was serviced in April, not in March."}"#;
@@ -75,7 +75,7 @@ fn c_12_1_a_memory_s_text_is_changed_and_read_back_the_rest_as_it_was() {
 }
 
 #[test]
-fn c_12_1_a_title_and_tags_are_changed_and_the_text_is_left() {
+fn keeping_c_4_1_a_title_and_tags_are_changed_and_the_text_is_left() {
     let copy = Temp::git_sample("change_title");
     let before = read_file(copy.path(), "memories/M-0001.md");
     let args = r#"{"piece":"M-0001","title":"The boiler's service contract","tags":["home","admin"]}"#;
@@ -90,7 +90,7 @@ fn c_12_1_a_title_and_tags_are_changed_and_the_text_is_left() {
 }
 
 #[test]
-fn c_12_1_a_person_s_text_is_one_commit_and_undo_brings_the_text_before_back() {
+fn keeping_c_4_1_a_person_s_text_is_one_commit_and_undo_brings_the_text_before_back() {
     let copy = Temp::git_sample("change_person");
     let before = read_file(copy.path(), "people/sam-example.md");
     let commits = log(copy.path()).len();
@@ -110,12 +110,12 @@ fn c_12_1_a_person_s_text_is_one_commit_and_undo_brings_the_text_before_back() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-12.2 a memory retired with its reason: still read, said as retired; last in a search; left
+// keeping C-4.2 a memory retired with its reason: still read, said as retired; last in a search; left
 // out of the count (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_12_2_a_retired_memory_is_still_read_said_as_retired_with_its_reason() {
+fn keeping_c_4_2_a_retired_memory_is_still_read_said_as_retired_with_its_reason() {
     let copy = Temp::git_sample("retire_read");
     let args = r#"{"piece":"M-0001","reason":"The contract ended in May."}"#;
     let said = ask_one(copy.path(), "retire", args);
@@ -134,7 +134,7 @@ fn c_12_2_a_retired_memory_is_still_read_said_as_retired_with_its_reason() {
 }
 
 #[test]
-fn c_12_2_a_retired_memory_comes_last_in_a_search_said_as_retired() {
+fn keeping_c_4_2_a_retired_memory_comes_last_in_a_search_said_as_retired() {
     let copy = Temp::git_sample("retire_search");
     ask_one(copy.path(), "retire", r#"{"piece":"M-0001","reason":"The contract ended."}"#);
     let found = ask_one(copy.path(), "search", r#"{"text":"boiler"}"#);
@@ -146,7 +146,7 @@ fn c_12_2_a_retired_memory_comes_last_in_a_search_said_as_retired() {
 }
 
 #[test]
-fn c_12_2_the_count_plop_gives_leaves_the_retired_out() {
+fn keeping_c_4_2_the_count_plop_gives_leaves_the_retired_out() {
     let copy = Temp::git_sample("retire_count");
     assert_eq!(counts(copy.path()), "It holds 5 memories and 1 person.", "the sample's M-0004 is retired");
     ask_one(copy.path(), "retire", r#"{"piece":"M-0003","reason":"The garden stays a lawn."}"#);
@@ -155,11 +155,11 @@ fn c_12_2_the_count_plop_gives_leaves_the_retired_out() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-12.3 a memory retired for another: the two linked, the other named (1 check)
+// keeping C-4.3 a memory retired for another: the two linked, the other named (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_12_3_a_memory_retired_for_another_is_linked_to_it_and_names_it() {
+fn keeping_c_4_3_a_memory_retired_for_another_is_linked_to_it_and_names_it() {
     let copy = Temp::git_sample("retire_for");
     let filed = ask_one(copy.path(), "remember", r#"{"title":"The new boiler contract","text":"Signed with another firm."}"#);
     assert!(filed.starts_with("Filed as M-0007 [home]"), "{filed}");
@@ -176,11 +176,11 @@ fn c_12_3_a_memory_retired_for_another_is_linked_to_it_and_names_it() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-12.4 the two rules among those `plop` gives (1 check)
+// opening C-5.1 the two rules among those `plop` gives (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_12_4_the_rules_of_plop_say_a_fact_is_changed_and_what_no_longer_holds_is_retired() {
+fn opening_c_5_1_the_rules_of_plop_say_a_fact_is_changed_and_what_no_longer_holds_is_retired() {
     let copy = Temp::sample("keeping_rules");
     let got = ask_one(copy.path(), "plop", "{}");
     let rules = got.split("\n\n").last().unwrap();
@@ -194,12 +194,12 @@ fn c_12_4_the_rules_of_plop_say_a_fact_is_changed_and_what_no_longer_holds_is_re
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-13.1 an entry added to today's page and to a named day, what was there left; one commit and
+// keeping C-5.1 an entry added to today's page and to a named day, what was there left; one commit and
 // its undo; in a named repository (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_13_1_an_entry_goes_at_the_end_of_today_s_page_and_of_a_named_day_what_was_there_left() {
+fn keeping_c_5_1_an_entry_goes_at_the_end_of_today_s_page_and_of_a_named_day_what_was_there_left() {
     let copy = Temp::git_sample("journal_pages");
     let said = ask_one(copy.path(), "journal", r#"{"text":"The plumber came this morning."}"#);
     assert!(said.starts_with("Written in the journal of ") && said.contains("the page made for it"), "{said}");
@@ -218,7 +218,7 @@ fn c_13_1_an_entry_goes_at_the_end_of_today_s_page_and_of_a_named_day_what_was_t
 }
 
 #[test]
-fn c_13_1_an_entry_is_one_commit_and_undo_takes_it_back() {
+fn keeping_c_5_1_an_entry_is_one_commit_and_undo_takes_it_back() {
     let copy = Temp::git_sample("journal_undo");
     let commits = log(copy.path()).len();
     let said = ask_one(copy.path(), "journal", r#"{"text":"The roof was checked.","day":"2031-03-03"}"#);
@@ -236,7 +236,7 @@ fn c_13_1_an_entry_is_one_commit_and_undo_takes_it_back() {
 }
 
 #[test]
-fn c_13_1_an_entry_goes_to_the_repository_the_call_names() {
+fn keeping_c_5_1_an_entry_goes_to_the_repository_the_call_names() {
     let copy = Temp::git_sample("journal_club");
     let args = r#"{"text":"The club's lock was oiled.","day":"2031-03-04","repository":"club"}"#;
     let said = ask_one(copy.path(), "journal", args);
@@ -250,11 +250,11 @@ fn c_13_1_an_entry_goes_to_the_repository_the_call_names() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-13.2 a day's page read; an entry found by a search, said with its day (2 checks)
+// keeping C-5.2 a day's page read; an entry found by a search, said with its day (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_13_2_read_given_a_day_gives_its_page_and_a_confidential_page_stays_unseen() {
+fn keeping_c_5_2_read_given_a_day_gives_its_page_and_a_confidential_page_stays_unseen() {
     let copy = Temp::sample("journal_read");
     copy.write("confidential/journal/2019-06-01.md", "---\ndate: 2019-06-01\nkind: diary\n---\n- 10:00 A surprise is planned.\n");
     for asked in ["2019-05-14", "journal/2019-05-14"] {
@@ -270,7 +270,7 @@ fn c_13_2_read_given_a_day_gives_its_page_and_a_confidential_page_stays_unseen()
 }
 
 #[test]
-fn c_13_2_search_finds_in_the_journal_each_match_said_with_its_day() {
+fn keeping_c_5_2_search_finds_in_the_journal_each_match_said_with_its_day() {
     let copy = Temp::sample("journal_search");
     copy.write("confidential/journal/2019-06-01.md", "---\ndate: 2019-06-01\nkind: diary\n---\n- 10:00 The shed surprise.\n");
     let found = ask_one(copy.path(), "search", r#"{"text":"window cleaner"}"#);
@@ -282,11 +282,11 @@ fn c_13_2_search_finds_in_the_journal_each_match_said_with_its_day() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-13.3 the last day written, said by `plop` (1 check)
+// keeping C-5.3 the last day written, said by `plop` (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_13_3_plop_says_after_the_state_the_last_day_the_journal_was_written() {
+fn keeping_c_5_3_plop_says_after_the_state_the_last_day_the_journal_was_written() {
     let copy = Temp::git_sample("journal_plop");
     let got = ask_one(copy.path(), "plop", "{}");
     let said = "The journal was last written on 2019-05-14.";

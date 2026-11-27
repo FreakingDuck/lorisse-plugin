@@ -1,4 +1,5 @@
-//! The root VALIDATION.md's table for the drawers, one test a check: C-14.1 to C-14.6, the two
+//! The VALIDATION.md tables for the drawers, one test a check: drawers C-4.1 to C-4.3, opening
+//! C-6.1 and C-6.2, first_day C-5.1, the two
 //! Behaviour rows of `drawer` and `move`, and the person's settings kept line by line. The
 //! program is started and asked over stdin, without Claude, on temporary copies of the sample,
 //! made git folders when a check reads the history; `start` runs with a home of its own.
@@ -44,12 +45,12 @@ const GARDEN: &str = r#"{"name":"Garden work","about":"The garden design clients
 const GARDEN_LINE: &str = "  - { name: Garden work, folder: garden-work, prefix: G, about: \"The garden design clients, their plans and their budgets.\" }";
 
 // ---------------------------------------------------------------------------------------------
-// C-14.1 a repository made: its folder, its numbering, its line in the settings with the lines
+// drawers C-4.1 a repository made: its folder, its numbering, its line in the settings with the lines
 // there left as they were; one commit and its undo; a memory filed in it at once (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_14_1_a_drawer_is_made_its_folder_its_numbering_and_its_line_the_lines_there_left() {
+fn drawers_c_4_1_a_drawer_is_made_its_folder_its_numbering_and_its_line_the_lines_there_left() {
     let copy = Temp::git_sample("drawer_made");
     let before = read_file(copy.path(), "config.yaml");
     let commits = log(copy.path()).len();
@@ -69,7 +70,7 @@ fn c_14_1_a_drawer_is_made_its_folder_its_numbering_and_its_line_the_lines_there
 }
 
 #[test]
-fn c_14_1_undo_takes_a_drawer_back_and_refuses_once_something_is_filed_in_it() {
+fn drawers_c_4_1_undo_takes_a_drawer_back_and_refuses_once_something_is_filed_in_it() {
     let copy = Temp::git_sample("drawer_undo");
     let before = files_of(copy.path());
     ask_one(copy.path(), "drawer", GARDEN);
@@ -90,7 +91,7 @@ fn c_14_1_undo_takes_a_drawer_back_and_refuses_once_something_is_filed_in_it() {
 }
 
 #[test]
-fn c_14_1_a_memory_is_filed_in_a_new_drawer_at_the_next_call_and_without_git_it_is_made_all_the_same() {
+fn drawers_c_4_1_a_memory_is_filed_in_a_new_drawer_at_the_next_call_and_without_git_it_is_made_all_the_same() {
     let copy = Temp::git_sample("drawer_at_once");
     let setting = copy.path().to_string_lossy().into_owned();
     let mut live = Live::start(&[(SETTING, &setting)]);
@@ -110,11 +111,11 @@ fn c_14_1_a_memory_is_filed_in_a_new_drawer_at_the_next_call_and_without_git_it_
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-14.2 each repository said with what it is for by `plop` (1 check)
+// opening C-6.1 each repository said with what it is for by `plop` (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_14_2_plop_says_each_repository_one_a_line_with_what_it_is_for() {
+fn opening_c_6_1_plop_says_each_repository_one_a_line_with_what_it_is_for() {
     let copy = Temp::git_sample("drawer_plop");
     let config = read_file(copy.path(), "config.yaml");
     let bare = config.replace(", about: \"The sports club: its keys, its meetings, its members.\"", "");
@@ -136,12 +137,12 @@ fn c_14_2_plop_says_each_repository_one_a_line_with_what_it_is_for() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-14.3 a memory moved, several at once: the number, the text, the links and the files kept, a
+// drawers C-4.2 a memory moved, several at once: the number, the text, the links and the files kept, a
 // link to it still followed; one commit and its undo (3 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_14_3_a_memory_moves_with_its_number_its_text_its_header_and_its_files() {
+fn drawers_c_4_2_a_memory_moves_with_its_number_its_text_its_header_and_its_files() {
     let copy = Temp::git_sample("move_one");
     let mine = Temp::empty("move_one_src");
     let source = mine.path().join("invoice-2031.pdf");
@@ -166,7 +167,7 @@ fn c_14_3_a_memory_moves_with_its_number_its_text_its_header_and_its_files() {
 }
 
 #[test]
-fn c_14_3_several_move_in_one_commit_and_a_link_to_one_still_leads_to_it() {
+fn drawers_c_4_2_several_move_in_one_commit_and_a_link_to_one_still_leads_to_it() {
     let copy = Temp::git_sample("move_several");
     let commits = log(copy.path()).len();
     let said = ask_one(copy.path(), "move", r#"{"pieces":["M-0001","M-0003"],"repository":"club"}"#);
@@ -185,7 +186,7 @@ fn c_14_3_several_move_in_one_commit_and_a_link_to_one_still_leads_to_it() {
 }
 
 #[test]
-fn c_14_3_undo_puts_them_back_and_a_moved_number_is_never_given_again() {
+fn drawers_c_4_2_undo_puts_them_back_and_a_moved_number_is_never_given_again() {
     let copy = Temp::git_sample("move_undo");
     let before = files_of(copy.path());
     ask_one(copy.path(), "move", r#"{"pieces":"M-0002, M-0003","repository":"club"}"#);
@@ -203,12 +204,12 @@ fn c_14_3_undo_puts_them_back_and_a_moved_number_is_never_given_again() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-14.4 a repository made confidential and open to Claude, read and written; a move out of a
+// drawers C-4.3 a repository made confidential and open to Claude, read and written; a move out of a
 // confidential one refused (2 checks)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_14_4_a_drawer_kept_apart_is_confidential_open_to_claude_read_and_written() {
+fn drawers_c_4_3_a_drawer_kept_apart_is_confidential_open_to_claude_read_and_written() {
     let copy = Temp::git_sample("drawer_apart");
     let said = ask_one(copy.path(), "drawer", r#"{"name":"Health","about":"The doctors and the treatments.","apart":true}"#);
     assert!(said.starts_with("Made the repository Health, kept apart: confidential and open to Claude"), "{said}");
@@ -223,7 +224,7 @@ fn c_14_4_a_drawer_kept_apart_is_confidential_open_to_claude_read_and_written() 
 }
 
 #[test]
-fn c_14_4_a_piece_goes_into_a_confidential_repository_and_never_out_of_one() {
+fn drawers_c_4_3_a_piece_goes_into_a_confidential_repository_and_never_out_of_one() {
     let copy = Temp::git_sample("move_apart");
     let into = ask_one(copy.path(), "move", r#"{"pieces":["M-0003"],"repository":"office"}"#);
     assert!(into.starts_with("Moved M-0003 to office"), "{into}");
@@ -241,11 +242,11 @@ fn c_14_4_a_piece_goes_into_a_confidential_repository_and_never_out_of_one() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-14.5 the three rules among those `plop` gives (1 check)
+// opening C-6.2 the three rules among those `plop` gives (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_14_5_the_rules_of_plop_say_when_a_drawer_is_made_a_piece_moved_and_never_to_ask() {
+fn opening_c_6_2_the_rules_of_plop_say_when_a_drawer_is_made_a_piece_moved_and_never_to_ask() {
     let copy = Temp::sample("drawer_rules");
     let got = ask_one(copy.path(), "plop", "{}");
     let rules = got.split("\n\n").last().unwrap();
@@ -260,11 +261,11 @@ fn c_14_5_the_rules_of_plop_say_when_a_drawer_is_made_a_piece_moved_and_never_to
 }
 
 // ---------------------------------------------------------------------------------------------
-// C-14.6 what `start` tells Claude to ask and to do (1 check)
+// first_day C-5.1 what `start` tells Claude to ask and to do (1 check)
 // ---------------------------------------------------------------------------------------------
 
 #[test]
-fn c_14_6_start_tells_claude_to_let_the_person_talk_and_to_make_the_drawers_by_itself() {
+fn first_day_c_5_1_start_tells_claude_to_let_the_person_talk_and_to_make_the_drawers_by_itself() {
     let home = Temp::empty("drawer_start_home");
     let global = Temp::empty("drawer_start_git");
     global.write("gitconfig", "");
