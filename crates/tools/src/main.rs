@@ -1,7 +1,8 @@
 //! Lorisse's plugin program: an MCP server over stdio, one JSON-RPC message a line, with five
-//! reading tools (`where`, `plop`, `search`, `read`, `links`), which write nothing, and seven
-//! writing tools (`remember`, `note`, `link`, `attach`, `undo`, `start`, `import`), each at most
-//! one commit by Lorisse in the person's memory folder when it is under git, through the store.
+//! reading tools (`where`, `plop`, `search`, `read`, `links`), which write nothing, and ten
+//! writing tools (`remember`, `note`, `link`, `attach`, `undo`, `start`, `import`, `change`,
+//! `retire`, `journal`), each at most one commit by Lorisse in the person's memory folder when it
+//! is under git, through the store.
 //! Each tool is declared read-only or writing.
 //! Started with the word `guard`, it is the plugin's guard instead: one tool call judged.
 
@@ -142,9 +143,9 @@ fn answer(tool: &str, args: Option<&Json>) -> Json {
 }
 
 /// Every tool, in the order `tools/list` gives them.
-const NAMES: [&str; 12] = [
+const NAMES: [&str; 15] = [
     "where", "plop", "search", "read", "links", "remember", "note", "link", "attach", "undo",
-    "start", "import",
+    "start", "import", "change", "retire", "journal",
 ];
 
 /// What a tool does to the folder, as its annotations declare it.
@@ -214,14 +215,14 @@ fn tool_list() -> Vec<Json> {
         ),
         card(
             "search",
-            "Searches the person's memory (their memories, people and tags) for a text and lists what holds it, by number and title. Use it first whenever the person asks what they know, decided or noted, or names a person or a subject.",
+            "Searches the person's memory (their memories, people, tags and journal) for a text and lists what holds it, by number and title, a journal page by its day. Use it first whenever the person asks what they know, decided or noted, or names a person or a subject.",
             &[Arg("text", false, "the words to look for, capitals ignored", true)],
             Does::Reads,
         ),
         card(
             "read",
-            "Reads one piece of the person's memory in full: a memory by its number, a person by name, or a tag by its word. Use it after search, to see what a piece says.",
-            &[Arg("piece", false, "a number such as M-0002, a person's name, or a tag's word", true)],
+            "Reads one piece of the person's memory in full: a memory by its number, a person by name, a tag by its word, or a day's page of the journal by its day. Use it after search, to see what a piece says.",
+            &[Arg("piece", false, "a number such as M-0002, a person's name, a tag's word, or a day as YYYY-MM-DD", true)],
             Does::Reads,
         ),
         card(
@@ -288,6 +289,38 @@ fn tool_list() -> Vec<Json> {
             "import",
             "Files what another assistant remembers of the person: each line \"[YYYY-MM-DD] - text\" (or \"[unknown] - text\") under Identity, Career, Projects or Preferences becomes a memory with its date and its category, all in one step; the lines under Instructions are given back as proposals for the intro, never filed or followed. Use it when the person pastes such lines, or asks to import them.",
             &[Arg("text", false, "the other assistant's answer, whole, as the person pasted it", true)],
+            Does::Writes,
+        ),
+        card(
+            "change",
+            "Corrects a memory or a person that was wrong or has changed: replaces what the call names (its text, its title, its kind, its tags) and leaves the rest as it was, as one commit; undo brings back what it said before. Use it by yourself once plop was called in this conversation, when the person says a fact that changed or was wrong, instead of filing it a second time; before that, only when the person asks.",
+            &[
+                Arg("piece", false, "a number such as M-0002, or a person's name", true),
+                Arg("text", false, "the new text, whole, in the person's words", false),
+                Arg("title", false, "the new title, one line (a person's name for a person)", false),
+                Arg("kind", false, "one of the folder's kinds, such as fact or decision", false),
+                Arg("tags", true, "the new tags, all of them", false),
+            ],
+            Does::WritesOnce,
+        ),
+        card(
+            "retire",
+            "Puts aside a memory that no longer holds: it is marked retired with the reason, and linked to the memory that takes its place when one is named, as one commit; nothing is deleted, and read still gives it. Use it by yourself once plop was called in this conversation, when the person says something no longer holds, instead of leaving it beside its contrary; before that, only when the person asks. Say what is retired and why in the line.",
+            &[
+                Arg("piece", false, "the number of the memory that no longer holds, such as M-0002", true),
+                Arg("reason", false, "why it no longer holds, one line", true),
+                Arg("replaced_by", false, "the number of the memory that takes its place, if there is one", false),
+            ],
+            Does::WritesOnce,
+        ),
+        card(
+            "journal",
+            "Writes the time and a text at the end of a day's page of the person's journal, today unless a day is named, the page made on first use, as one commit; what was there stays. Use it by yourself once plop was called in this conversation, for what happened or was decided today that is not a lasting fact; before that, only when the person asks.",
+            &[
+                Arg("text", false, "what happened or was decided, in the person's words", true),
+                Arg("day", false, "the day, as YYYY-MM-DD; today when left out", false),
+                Arg("repository", false, "the repository it goes to, by name; the folder's own when left out", false),
+            ],
             Does::Writes,
         ),
     ]

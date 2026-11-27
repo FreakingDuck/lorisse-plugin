@@ -3,6 +3,6 @@
 # Three lists: pass (runs without a prompt), ask (the Claude app asks you), never (refused).
 # Under each list, a service and its tools. A tool in two lists takes the strictest.
 pass:
-  lorisse: [where, plop, search, read, links, remember, note, link, attach, undo, start, import]
+  lorisse: [where, plop, search, read, links, remember, note, link, attach, undo, start, import, change, retire, journal]
 ask: {}
 never: {}

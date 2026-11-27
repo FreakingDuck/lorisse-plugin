@@ -17,7 +17,7 @@ use crate::diary::{self, Speaker};
 use crate::diff::{self, Diff};
 use crate::direct::{self, Applied, Fined, Flagged, LorisseCommit, Since};
 use crate::error::StoreError;
-use crate::filing::{self, Attached, Blocked, Dated, Imported, NewMemory, Undone, Written};
+use crate::filing::{self, Attached, Blocked, Dated, Imported, Journaled, NewMemory, Revised, Revision, Undone, Written};
 use crate::flags::Flags;
 use crate::git;
 use crate::ids::PieceId;
@@ -189,6 +189,39 @@ impl Store {
     pub fn import(&mut self, lines: &[Dated]) -> Result<Imported, StoreError> {
         self.writable("import")?;
         filing::import(self, lines)
+    }
+
+    /// Replace what the revision names of a memory or a person, the rest left as it was, as one
+    /// commit; nothing written when the piece already says it.
+    ///
+    /// # Errors
+    /// As [`Store::note`]; [`StoreError::Invalid`] for a revision naming nothing, an empty text
+    /// or title, or a kind the folder does not know.
+    pub fn change(&mut self, id: &PieceId, revision: &Revision) -> Result<Revised, StoreError> {
+        self.writable("change")?;
+        filing::change(self, id, revision)
+    }
+
+    /// Mark a memory retired with its reason (`retired_why`), the memory taking its place linked
+    /// and named (`retired_by`), as one commit; a memory retired already writes nothing.
+    ///
+    /// # Errors
+    /// As [`Store::note`]; [`StoreError::Invalid`] for a blank reason, a piece that is not a
+    /// memory, or a taker that is the same piece, not a memory or retired itself.
+    pub fn retire(&mut self, id: &PieceId, reason: &str, by: Option<&PieceId>) -> Result<Written, StoreError> {
+        self.writable("retire")?;
+        filing::retire(self, id, reason, by)
+    }
+
+    /// Add a timed line at the end of a day's journal page (`YYYY-MM-DD`, today when `None`),
+    /// the page made on first use, in the repository named or the folder's own, as one commit.
+    ///
+    /// # Errors
+    /// [`StoreError::Invalid`] for a blank text, a day that is not one, a page that cannot be
+    /// read; as [`Store::remember`] for the repository.
+    pub fn journal(&mut self, day: Option<&str>, text: &str, repo: Option<&str>) -> Result<Journaled, StoreError> {
+        self.writable("journal")?;
+        filing::journal(self, day, text, repo)
     }
 
     /// Take back Lorisse's last change still standing, or the one named (a commit, or a piece's

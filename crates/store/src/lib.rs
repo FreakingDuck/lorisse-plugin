@@ -46,7 +46,7 @@ pub use diary::Speaker;
 pub use diff::{Change, Diff};
 pub use direct::{Applied, CommitState, DirectWrite, Fined, Flagged, LorisseCommit, Since};
 pub use error::StoreError;
-pub use filing::{Attached, Blocked, Dated, Imported, NewMemory, Undone, Written};
+pub use filing::{Attached, Blocked, Dated, Imported, Journaled, NewMemory, Revised, Revision, Undone, Written};
 pub use flags::Flags;
 pub use frontmatter::key;
 pub use ids::PieceId;

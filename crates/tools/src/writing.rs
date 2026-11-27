@@ -1,11 +1,11 @@
-//! The six writing tools: remember, note, link, attach, import, undo. Each opens the memory
-//! folder for writing at its call, without the confidential right; under git it checks that git
-//! can commit there and makes at most one commit by Lorisse, through the store; not under git it
-//! writes the files alone. A refusal is one sentence and writes nothing.
+//! The nine writing tools: remember, note, link, attach, import, change, retire, journal, undo.
+//! Each opens the memory folder for writing at its call, without the confidential right; under
+//! git it checks that git can commit there and makes at most one commit by Lorisse, through the
+//! store; not under git it writes the files alone. A refusal is one sentence and writes nothing.
 
 use std::path::Path;
 
-use lorisse_store::{Blocked, Layer, NewMemory, PieceId, StoreError, Written};
+use lorisse_store::{Blocked, Layer, NewMemory, PieceId, Revision, StoreError, Written};
 
 use crate::first_day;
 use crate::folder;
@@ -19,8 +19,14 @@ enum Asked {
     Link(String, String),
     Attach(String, String),
     Import(String),
+    Change(String, Revision),
+    Retire(String, String, Option<String>),
+    Journal(String, Option<String>, Option<String>),
     Undo(Option<String>),
 }
+
+/// What `change` says when the call names nothing to change.
+pub const NOTHING_NAMED: &str = "change needs at least one of \"text\", \"title\", \"kind\" or \"tags\", the parts to replace: nothing was written.";
 
 /// What `undo` says in a folder not under git.
 pub const NO_UNDO: &str = "This memory folder keeps no history, it is not under git, so there is no change to go back through: to have one, install git and run \"git init\" in the folder, then make a first commit; nothing was done.";
@@ -34,6 +40,11 @@ pub fn call(tool: &str, args: Option<&Json>) -> Answer {
     let Some(asked) = read_args(tool, args) else {
         return Answer::error(expected(tool).to_string());
     };
+    if let Asked::Change(_, revision) = &asked {
+        if revision.is_empty() {
+            return Answer::error(NOTHING_NAMED.to_string());
+        }
+    }
     let mut memory = match Memory::writing(&root) {
         Ok(memory) => memory,
         Err(said) => return Answer::error(said),
@@ -47,6 +58,9 @@ pub fn call(tool: &str, args: Option<&Json>) -> Answer {
         Asked::Link(from, to) => link(&mut memory, &from, &to),
         Asked::Attach(piece, path) => attach(&mut memory, &root, &piece, &path),
         Asked::Import(text) => first_day::import(&mut memory, &text),
+        Asked::Change(piece, revision) => change(&mut memory, &piece, &revision),
+        Asked::Retire(piece, reason, by) => retire(&mut memory, &piece, &reason, by.as_deref()),
+        Asked::Journal(text, day, repo) => journal(&mut memory, &text, day.as_deref(), repo.as_deref()),
         Asked::Undo(_) if !memory.store.is_git() => Answer::ok(NO_UNDO.to_string()),
         Asked::Undo(change) => undo(&mut memory, change.as_deref()),
     }
@@ -69,6 +83,15 @@ pub fn expected(tool: &str) -> &'static str {
         }
         "import" => {
             "import needs \"text\": the lines another assistant gave, \"[YYYY-MM-DD] - text\" under their headings, as a text."
+        }
+        "change" => {
+            "change needs \"piece\": a number such as M-0002 or a person's name, as a text; then any of \"text\", \"title\", \"kind\" as a text, and \"tags\" as a list of texts."
+        }
+        "retire" => {
+            "retire needs \"piece\": a memory's number such as M-0002, and \"reason\": why it no longer holds, each as a text; \"replaced_by\", if given, the number of the memory that takes its place, as a text."
+        }
+        "journal" => {
+            "journal needs \"text\": what happened or was decided, as a text; \"day\", if given, as YYYY-MM-DD, and \"repository\", if given, as a text."
         }
         _ => "undo takes \"change\", if given: the commit, or the number of the piece, whose change to take back, as a text.",
     }
@@ -131,6 +154,34 @@ fn read_args(tool: &str, args: Option<&Json>) -> Option<Asked> {
         "link" => Some(Asked::Link(needed(args, "from")?, needed(args, "to")?)),
         "attach" => Some(Asked::Attach(needed(args, "piece")?, needed(args, "path")?)),
         "import" => Some(Asked::Import(needed(args, "text")?)),
+        "change" => {
+            let tags = match args.and_then(|a| a.get("tags")) {
+                None | Some(Json::Null) => None,
+                Some(_) => Some(list_arg(args, "tags").ok()?),
+            };
+            let text = match args.and_then(|a| a.get("text")) {
+                None | Some(Json::Null) => None,
+                Some(Json::Str(s)) => Some(s.to_string()),
+                Some(_) => return None,
+            };
+            let revision = Revision {
+                text,
+                title: text_arg(args, "title").ok()?.map(str::to_string),
+                kind: text_arg(args, "kind").ok()?.map(str::to_string),
+                tags,
+            };
+            Some(Asked::Change(needed(args, "piece")?, revision))
+        }
+        "retire" => Some(Asked::Retire(
+            needed(args, "piece")?,
+            needed(args, "reason")?,
+            text_arg(args, "replaced_by").ok()?.map(str::to_string),
+        )),
+        "journal" => Some(Asked::Journal(
+            needed(args, "text")?,
+            text_arg(args, "day").ok()?.map(str::to_string),
+            text_arg(args, "repository").ok()?.map(str::to_string),
+        )),
         _ => Some(Asked::Undo(text_arg(args, "change").ok()?.map(str::to_string))),
     }
 }
@@ -284,6 +335,116 @@ fn attach(memory: &mut Memory, root: &Path, piece: &str, path: &str) -> Answer {
             "Nothing was copied: {}.",
             reason.trim_end_matches('.')
         )),
+        Err(e) => refused(e),
+    }
+}
+
+/// The parts of a piece a change names, in words: `its text and its tags`.
+fn parts(fields: &[String]) -> String {
+    let said: Vec<String> = fields.iter().map(|f| format!("its {f}")).collect();
+    match said.split_last() {
+        Some((last, [])) => last.clone(),
+        Some((last, rest)) => format!("{} and {last}", rest.join(", ")),
+        None => String::new(),
+    }
+}
+
+fn change(memory: &mut Memory, piece: &str, revision: &Revision) -> Answer {
+    let what = "a change goes on a memory or a person";
+    let id = match piece_of(memory, piece, &[Layer::Memory, Layer::Person], what) {
+        Ok(id) => id,
+        Err(answer) => return answer,
+    };
+    match memory.store.change(&id, revision) {
+        Ok(done) if done.fields.is_empty() => Answer::ok(format!(
+            "{} already says that: nothing changed, and nothing was written.",
+            memory.label_of(&done.id, &done.repo)
+        )),
+        Ok(done) => {
+            let label = memory.label_of(&done.id, &done.repo);
+            let changed = parts(&done.fields);
+            Answer::ok(match &done.commit {
+                Some(commit) => format!(
+                    "Changed {label}: {changed}, the rest as it was, in one commit of {} ({}); undo brings back what it said before.",
+                    done.repo,
+                    short(commit)
+                ),
+                None => format!("Changed {label}: {changed}, the rest as it was."),
+            })
+        }
+        Err(e) => refused(e),
+    }
+}
+
+fn retire(memory: &mut Memory, piece: &str, reason: &str, by: Option<&str>) -> Answer {
+    let id = match piece_of(memory, piece, &[Layer::Memory], "only a memory is retired") {
+        Ok(id) => id,
+        Err(answer) => return answer,
+    };
+    let taker = match by {
+        Some(by) => match piece_of(memory, by, &[Layer::Memory], "only a memory takes the place of another") {
+            Ok(taker) => Some(taker),
+            Err(answer) => return answer,
+        },
+        None => None,
+    };
+    let title = memory.entry(&id).map(|e| e.title).unwrap_or_default();
+    match memory.store.retire(&id, reason, taker.as_ref()) {
+        Ok(written) if !written.changed => Answer::ok(format!(
+            "{} is retired already: nothing was written.",
+            memory.label_of(&written.id, &written.repo)
+        )),
+        Ok(written) => {
+            let label = memory.label_of(&written.id, &written.repo);
+            let mut said = format!("Retired {label}, \"{title}\": {}", reason.trim().trim_end_matches('.'));
+            if let Some(taker) = &taker {
+                let taker = match memory.entry(taker) {
+                    Some(entry) => memory.label(&entry),
+                    None => taker.to_string(),
+                };
+                said.push_str(&format!("; {taker} takes its place, and the two are linked"));
+            }
+            said.push_str(". Nothing is deleted: read still gives it, said as retired");
+            match &written.commit {
+                Some(commit) => said.push_str(&format!(
+                    "; in one commit of {} ({}), and undo takes it back.",
+                    written.repo,
+                    short(commit)
+                )),
+                None => said.push('.'),
+            }
+            Answer::ok(said)
+        }
+        Err(e) => refused(e),
+    }
+}
+
+fn journal(memory: &mut Memory, text: &str, day: Option<&str>, repo: Option<&str>) -> Answer {
+    if first_day::looks_secret(text) {
+        return Answer::error(
+            "Nothing was written: the text has a secret's shape (a password, a key or a card number), and Lorisse never keeps one.".to_string(),
+        );
+    }
+    if let Some(day) = day.filter(|d| !first_day::is_date(d)) {
+        return Answer::error(format!("Nothing was written: {day} is not a day; journal takes \"day\" as YYYY-MM-DD."));
+    }
+    match memory.store.journal(day, text, repo) {
+        Ok(done) => {
+            let page = match memory.several {
+                true => format!("the journal of {} [{}]", done.day, done.repo),
+                false => format!("the journal of {}", done.day),
+            };
+            let made = if done.made { ", the page made for it" } else { "" };
+            Answer::ok(match &done.commit {
+                Some(commit) => format!(
+                    "Written in {page} at {}, one line at the end of the page{made}, in one commit of {} ({}); undo takes it back.",
+                    done.time,
+                    done.repo,
+                    short(commit)
+                ),
+                None => format!("Written in {page} at {}, one line at the end of the page{made}.", done.time),
+            })
+        }
         Err(e) => refused(e),
     }
 }

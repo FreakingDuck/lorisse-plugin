@@ -1,13 +1,14 @@
 //! The five reading tools, each on the memory folder opened for reading at its call, without the
-//! confidential right but for a repository open to Claude: memories, people and tags only;
-//! `plop` adds the person's own intro.
+//! confidential right but for a repository open to Claude: memories, people, tags and the
+//! journal's pages only; `plop` adds the person's own intro.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use lorisse_store::tags::slug_of;
-use lorisse_store::{Access, Entry, Filter, Layer, PieceId, Ref, RepoState, Store, StoreError, Value};
+use lorisse_store::{key, Access, Entry, Filter, Layer, Piece, PieceId, Ref, RepoState, Store, StoreError, Value};
 
+use crate::first_day;
 use crate::folder::{self, Folder};
 
 /// The version `where` gives.
@@ -51,6 +52,9 @@ pub const KEEPING: &str = "The rules of keeping:
 - Start now: file what this conversation already holds that is worth keeping, searching first.
 - File by yourself what the person says that is worth keeping: a decision, a date, a price, a promise, a fact about a person.
 - Search first, and add to what exists (note, link) rather than file it twice.
+- A fact that changed is changed (change), not filed a second time.
+- What no longer holds is retired (retire), never left beside its contrary.
+- What happened or was decided today that is not a lasting fact goes in the journal (journal).
 - With several repositories, file in the one the subject belongs to, and name it in the line.
 - What comes from a confidential repository is never filed in another one.
 - Say each filing in one line, with its number.
@@ -148,6 +152,11 @@ pub fn plop() -> Answer {
         lines.push(NO_HISTORY.to_string());
     }
     lines.push(String::new());
+    lines.push(match memory.last_day() {
+        Some(day) => format!("The journal was last written on {day}."),
+        None => "The journal has no page yet.".to_string(),
+    });
+    lines.push(String::new());
     lines.push(KEEPING.to_string());
     Answer::ok(lines.join("\n"))
 }
@@ -173,7 +182,10 @@ pub fn call(tool: &str, arg: Option<&str>) -> Answer {
     };
     match tool {
         "search" => memory.search(arg),
-        "read" => memory.read(arg),
+        "read" => match memory.day_named(arg) {
+            Some(day) => memory.day(&day),
+            None => memory.read(arg),
+        },
         _ => memory.links(arg),
     }
 }
@@ -196,7 +208,7 @@ pub fn expected(tool: &str) -> &'static str {
     match tool {
         "search" => "search needs \"text\": the words to look for, as a text.",
         "read" => {
-            "read needs \"piece\": a number such as M-0002, a person's name or a tag's word, as a text."
+            "read needs \"piece\": a number such as M-0002, a person's name, a tag's word or a day of the journal as YYYY-MM-DD, as a text."
         }
         _ => "links needs \"piece\": a number such as M-0002, or a person's or a tag's name, as a text.",
     }
@@ -237,6 +249,14 @@ pub(crate) fn readable(layer: Layer) -> bool {
 
 fn retired(entry: &Entry) -> bool {
     entry.status.as_deref() == Some("retired")
+}
+
+/// A journal page's day, its file's name; `None` for any other piece.
+fn day_of(entry: &Entry) -> Option<String> {
+    match (&entry.layer, &entry.id) {
+        (Layer::Diary, PieceId::Named { stem, .. }) => Some(stem.clone()),
+        _ => None,
+    }
 }
 
 /// A count with its word, one or many.
@@ -323,13 +343,14 @@ impl Memory {
             .collect();
         let entries = self.entries();
         let mut memories: Vec<&Entry> = entries.iter().copied().filter(|e| e.layer == Layer::Memory).collect();
+        let holding = memories.iter().filter(|e| !retired(e)).count();
         let people = entries.iter().filter(|e| e.layer == Layer::Person).count();
         let mut lines = vec![
             format!("The memory folder: {}", folder::shown(&root.to_path_buf())),
             format!("Its repositories: {}.", repos.join(", ")),
             format!(
                 "It holds {} and {}.",
-                counted(memories.len(), "memory", "memories"),
+                counted(holding, "memory", "memories"),
                 counted(people, "person", "people")
             ),
         ];
@@ -348,6 +369,58 @@ impl Memory {
             lines.push(said);
         }
         lines
+    }
+
+    /// The journal's pages Claude sees, each with its day.
+    fn pages(&self) -> Vec<(&Entry, String)> {
+        let entries = self.entries().into_iter();
+        entries.filter_map(|e| day_of(e).map(|d| (e, d))).collect()
+    }
+
+    /// The last day the journal was written, by its pages' days.
+    fn last_day(&self) -> Option<String> {
+        self.pages().into_iter().map(|(_, d)| d).max()
+    }
+
+    /// The day a `read` names: `YYYY-MM-DD`, or the page's own name `journal/YYYY-MM-DD`.
+    fn day_named(&self, text: &str) -> Option<String> {
+        let folder = self.store.config().folder_of(Layer::Diary).unwrap_or("journal");
+        let day = text.strip_prefix(&format!("{folder}/")).unwrap_or(text);
+        first_day::is_date(day).then(|| day.to_string())
+    }
+
+    /// `read` of a day: its pages, each said with its repository when several are seen.
+    fn day(&self, day: &str) -> Answer {
+        let pages: Vec<&Entry> = self.pages().into_iter().filter(|(_, d)| d == day).map(|(e, _)| e).collect();
+        if pages.is_empty() {
+            return Answer::ok(format!("The journal has no page for {day}."));
+        }
+        let mut lines = vec![DATA_LINE.to_string()];
+        for entry in pages {
+            let Ok(text) = fs::read_to_string(self.store.root().join(&entry.path)) else {
+                continue;
+            };
+            let Ok(piece) = Piece::parse(&entry.path, &text) else {
+                continue;
+            };
+            lines.push(self.page_name(entry, day));
+            let body = piece.body();
+            let (shown, was_cut) = cut(body, TEXT_LIMIT);
+            lines.push(shown.trim_end().to_string());
+            if was_cut {
+                let length = body.chars().count();
+                lines.push(format!("[The text is cut here: {TEXT_LIMIT} of its {length} characters are shown.]"));
+            }
+        }
+        Answer::ok(lines.join("\n"))
+    }
+
+    /// A journal page as every answer says it: `the journal of <day>`, with its repository.
+    fn page_name(&self, entry: &Entry, day: &str) -> String {
+        match self.several {
+            true => format!("The journal of {day} [{}]", entry.repo.as_deref().unwrap_or(&self.root_name)),
+            false => format!("The journal of {day}"),
+        }
     }
 
     fn entry_at(&self, path: &Path) -> Option<Entry> {
@@ -457,11 +530,16 @@ impl Memory {
             let Some(entry) = self.entry(&hit.id) else {
                 continue;
             };
-            if readable(entry.layer) {
+            if readable(entry.layer) || day_of(&entry).is_some() {
                 found.push((entry, hit.line, hit.file));
             }
         }
-        found.sort_by_key(|(e, _, _)| retired(e));
+        // The pieces that hold first, then the journal's days, then what is retired.
+        found.sort_by_key(|(e, _, _)| match (retired(e), day_of(e).is_some()) {
+            (true, _) => 2,
+            (false, true) => 1,
+            (false, false) => 0,
+        });
         let total = found.len();
         let broken = self.broken();
         let mut lines = Vec::new();
@@ -473,7 +551,10 @@ impl Memory {
             lines.push(DATA_LINE.to_string());
         }
         for (entry, line, file) in found.iter().take(LIMIT) {
-            let mut said = format!("{} · {}", self.label(entry), entry.title);
+            let mut said = match day_of(entry) {
+                Some(day) => self.page_name(entry, &day),
+                None => format!("{} · {}", self.label(entry), entry.title),
+            };
             if retired(entry) {
                 said.push_str(" (retired)");
             }
@@ -487,6 +568,7 @@ impl Memory {
                     let name = file.as_deref().unwrap_or_default();
                     said.push_str(&format!(" · holds the file {name}"));
                 }
+                None if day_of(entry).is_some() => said.push_str(" · in its day"),
                 None if entry.title.to_lowercase().contains(&text.to_lowercase()) => {
                     said.push_str(" · in its title");
                 }
@@ -537,6 +619,9 @@ impl Memory {
             title.push_str(" (retired)");
         }
         lines.push(title);
+        if retired(&entry) {
+            lines.extend(self.retired_lines(&piece));
+        }
         if self.several {
             let repo = entry.repo.as_deref().unwrap_or(&self.root_name);
             lines.push(format!("Repository: {repo}"));
@@ -560,6 +645,19 @@ impl Memory {
             ));
         }
         Answer::ok(lines.join("\n"))
+    }
+
+    /// What `read` says of a retired memory: why, and the memory that takes its place.
+    fn retired_lines(&self, piece: &Piece) -> Vec<String> {
+        let mut lines = Vec::new();
+        if let Some(why) = piece.get(key::RETIRED_WHY).and_then(Value::as_str) {
+            lines.push(format!("Retired, it no longer holds: {why}"));
+        }
+        let taker = piece.get(key::RETIRED_BY).and_then(Value::as_str).map(|t| Ref::new(t));
+        if let Some(said) = taker.and_then(|t| self.leads_to(&t)) {
+            lines.push(format!("Its place is taken by {said}"));
+        }
+        lines
     }
 
     fn links(&self, text: &str) -> Answer {

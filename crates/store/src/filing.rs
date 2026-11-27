@@ -1,21 +1,24 @@
-//! Filing — the plugin's writing calls: a memory filed, a note, a link, each one commit by
-//! Lorisse in the repository holding the piece, and the undo of one of her changes.
+//! Filing — the plugin's writing calls: a memory filed, a note, a link, a change, a retire, a
+//! journal line, each one commit by Lorisse in the repository holding the piece, and the undo of
+//! one of her changes.
 //!
 //! Each call checks first (git, the folder's identity, the folder's rules), then writes, then
 //! commits; a commit that fails puts every file back as it was. The undo of a filed memory keeps
 //! its number in `ids.json`, in the same commit, so the number is never given again.
-//! Flow: `Store::open_write` → `remember` / `note` / `link` / `attach` → files → one commit; `undo`.
+//! Flow: `Store::open_write` → `remember` / `note` / `link` / `attach` / `change` / `retire` /
+//! `journal` → files → one commit; `undo`.
 
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use chrono::Local;
+use chrono::{Local, NaiveDate};
 use serde_yaml_ng::Value;
 
 use crate::attach::{self, Attachment};
 use crate::check;
 use crate::config::status;
+use crate::diary;
 use crate::direct::{self, Since};
 use crate::error::StoreError;
 use crate::frontmatter::key;
@@ -23,7 +26,7 @@ use crate::git::{self, LORISSE_EMAIL, Who};
 use crate::ids::{self, PieceId};
 use crate::index::{self, Entry, IDS_FILE, io_error, write_atomic};
 use crate::inbox::{DATE_FORMAT, TIME_FORMAT};
-use crate::layer::{CONFIDENTIAL, Layer};
+use crate::layer::{self, CONFIDENTIAL, Layer};
 use crate::links::{self, Ref};
 use crate::piece::Piece;
 use crate::repos::{self, Home, ROOT_FOLDER};
@@ -111,6 +114,59 @@ pub struct Attached {
     /// The copy, relative to the memory folder, forward slashes.
     pub path: String,
     /// Lorisse's commit, its full id; `None` when no git holds the piece.
+    pub commit: Option<String>,
+}
+
+/// What a change replaces in a memory or a person; a field left `None` stays as it is.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Revision {
+    /// The new text, whole.
+    pub text: Option<String>,
+    /// The new title; a person's name.
+    pub title: Option<String>,
+    /// The new kind, one of the folder's.
+    pub kind: Option<String>,
+    /// The new tags, all of them; an empty list leaves none.
+    pub tags: Option<Vec<String>>,
+}
+
+impl Revision {
+    /// Whether the revision names nothing to change.
+    pub fn is_empty(&self) -> bool {
+        self.text.is_none() && self.title.is_none() && self.kind.is_none() && self.tags.is_none()
+    }
+}
+
+/// What a change did.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Revised {
+    /// The piece changed.
+    pub id: PieceId,
+    /// The repository holding it, by its row's name.
+    pub repo: String,
+    /// The fields that changed (`text`, `title`, `name`, `kind`, `tags`); empty when the piece
+    /// already said what was given, nothing then written.
+    pub fields: Vec<String>,
+    /// Lorisse's commit, its full id; `None` when nothing changed or no git holds the piece.
+    pub commit: Option<String>,
+}
+
+/// What a journal line did.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Journaled {
+    /// The day's page, `journal/<YYYY-MM-DD>`.
+    pub id: PieceId,
+    /// The day, `YYYY-MM-DD`.
+    pub day: String,
+    /// The repository holding the page, by its row's name.
+    pub repo: String,
+    /// The page, relative to the memory folder, forward slashes.
+    pub path: String,
+    /// Whether the page was made by this line.
+    pub made: bool,
+    /// The time the line carries, `HH:MM`.
+    pub time: String,
+    /// Lorisse's commit, its full id; `None` when no git holds the page.
     pub commit: Option<String>,
 }
 
@@ -501,6 +557,193 @@ pub(crate) fn attach(store: &mut Store, id: &PieceId, source: &Path) -> Result<A
         path: file_rel,
         commit,
     })
+}
+
+/// A text as a piece's body: its lines as given, trimmed at both ends, one newline at the end.
+fn body_of(text: &str, nl: &str) -> String {
+    let lines: Vec<&str> = text.trim().lines().map(str::trim_end).collect();
+    format!("{}{nl}", lines.join(nl))
+}
+
+pub(crate) fn change(store: &mut Store, id: &PieceId, revision: &Revision) -> Result<Revised, StoreError> {
+    if revision.is_empty() {
+        return Err(StoreError::Invalid("a change names a text, a title, a kind or tags".into()));
+    }
+    let what = "a change goes on a memory or a person";
+    let entry = entry_of(store, id, &[Layer::Memory, Layer::Person], what)?.clone();
+    let rel = entry.path_text();
+    let path = store.root.join(&rel);
+    let before = fs::read_to_string(&path).map_err(|e| io_error(&path, e))?;
+    let nl = if before.contains("\r\n") { "\r\n" } else { "\n" };
+    let mut piece = Piece::parse(&entry.path, &before)?;
+    let mut fields: Vec<String> = Vec::new();
+    if let Some(text) = &revision.text {
+        if text.trim().is_empty() {
+            return Err(StoreError::Invalid("a text is never made empty: retire the memory instead".into()));
+        }
+        let body = body_of(text, nl);
+        if piece.body() != body {
+            piece.set_body(body);
+            fields.push("text".into());
+        }
+    }
+    if let Some(title) = &revision.title {
+        let title = one_line(title);
+        if title.is_empty() {
+            return Err(StoreError::Invalid("a title is never made empty".into()));
+        }
+        let (name, word) = match entry.layer {
+            Layer::Person => (key::NAME, "name"),
+            _ => (key::TITLE, "title"),
+        };
+        if piece.text(name) != Some(title.as_str()) {
+            piece.set(name, Value::from(title));
+            fields.push(word.into());
+        }
+    }
+    if let Some(kind) = &revision.kind {
+        let kind = kind.trim();
+        let kinds = &store.config.kinds;
+        if !kinds.iter().any(|k| k == kind) {
+            return Err(StoreError::Invalid(format!(
+                "the kind {kind} is not one this memory folder knows ({})",
+                kinds.join(", ")
+            )));
+        }
+        if piece.kind() != Some(kind) {
+            piece.set(key::KIND, Value::from(kind));
+            fields.push("kind".into());
+        }
+    }
+    if let Some(tags) = &revision.tags {
+        let tags: Vec<String> = tags.iter().map(|t| one_line(t)).filter(|t| !t.is_empty()).collect();
+        if piece.tags() != tags || piece.get(key::TAGS).is_none() {
+            piece.set(key::TAGS, Value::Sequence(tags.iter().map(|t| Value::from(t.as_str())).collect()));
+            fields.push("tags".into());
+        }
+    }
+    let unchanged = Revised { id: entry.id.clone(), repo: repo_of(store, &entry), fields: Vec::new(), commit: None };
+    if fields.is_empty() {
+        return Ok(unchanged);
+    }
+    piece.set(key::UPDATED, Value::from(Local::now().format(DATE_FORMAT).to_string()));
+    let outside = check::outside_lists(entry.layer, &piece, &store.config);
+    if !outside.is_empty() {
+        return Err(StoreError::Invalid(outside.join("; ")));
+    }
+    let home = ready(store, &rel)?;
+    refuse_dirty(home.as_ref(), &rel)?;
+    let subject = format!("{}({}): {} changed", Kind::Edit, entry.id, fields.join(", "));
+    let commit = write_and_commit(store, home.as_ref(), &[(rel, Some(piece.render()))], &subject)?;
+    Ok(Revised { fields, commit, ..unchanged })
+}
+
+pub(crate) fn retire(store: &mut Store, id: &PieceId, reason: &str, by: Option<&PieceId>) -> Result<Written, StoreError> {
+    let reason = one_line(reason);
+    if reason.is_empty() {
+        return Err(StoreError::Invalid("a retire needs its reason".into()));
+    }
+    let entry = entry_of(store, id, &[Layer::Memory], "only a memory is retired")?.clone();
+    let unchanged = Written { id: entry.id.clone(), repo: repo_of(store, &entry), changed: false, commit: None };
+    if entry.status.as_deref() == Some(status::RETIRED) {
+        return Ok(unchanged);
+    }
+    let taker = match by {
+        Some(by) => {
+            let taker = visible(store, &by.to_string())?.clone();
+            if taker.id == entry.id {
+                return Err(StoreError::Invalid(format!("{} cannot take its own place", entry.id)));
+            }
+            if taker.layer != Layer::Memory || taker.status.as_deref() == Some(status::RETIRED) {
+                return Err(StoreError::Invalid(format!(
+                    "{} cannot take the place of {}: a memory that holds takes the place of one that no longer does",
+                    taker.id, entry.id
+                )));
+            }
+            Some(taker)
+        }
+        None => None,
+    };
+    let rel = entry.path_text();
+    let path = store.root.join(&rel);
+    let before = fs::read_to_string(&path).map_err(|e| io_error(&path, e))?;
+    let mut piece = Piece::parse(&entry.path, &before)?;
+    piece.set(key::STATUS, Value::from(status::RETIRED));
+    piece.set(key::UPDATED, Value::from(Local::now().format(DATE_FORMAT).to_string()));
+    piece.set(key::RETIRED_WHY, Value::from(reason.as_str()));
+    let mut subject = format!("{}({}): {}", Kind::Retire, entry.id, short(&reason));
+    if let Some(taker) = &taker {
+        let archive = &store.config.archive;
+        let mut list: Vec<Value> = piece.links().iter().map(|l| Value::from(l.as_str())).collect();
+        if !entry.links.iter().any(|l| links::names(l, taker, archive)) {
+            list.push(Value::from(taker.id.to_string()));
+        }
+        piece.set(key::LINKS, Value::Sequence(list));
+        piece.set(key::RETIRED_BY, Value::from(taker.id.to_string()));
+        subject = format!("{subject}; {} takes its place", taker.id);
+    }
+    let outside = check::outside_lists(Layer::Memory, &piece, &store.config);
+    if !outside.is_empty() {
+        return Err(StoreError::Invalid(outside.join("; ")));
+    }
+    let home = ready(store, &rel)?;
+    refuse_dirty(home.as_ref(), &rel)?;
+    let commit = write_and_commit(store, home.as_ref(), &[(rel, Some(piece.render()))], &subject)?;
+    Ok(Written { changed: true, commit, ..unchanged })
+}
+
+pub(crate) fn journal(store: &mut Store, day: Option<&str>, text: &str, repo: Option<&str>) -> Result<Journaled, StoreError> {
+    if text.trim().is_empty() {
+        return Err(StoreError::Invalid("a journal line needs a text".into()));
+    }
+    let now = Local::now();
+    let date = match day.map(str::trim).filter(|d| !d.is_empty()) {
+        Some(day) => NaiveDate::parse_from_str(day, DATE_FORMAT)
+            .ok()
+            .filter(|d| d.format(DATE_FORMAT).to_string() == day)
+            .ok_or_else(|| StoreError::Invalid(format!("{day} is not a day written YYYY-MM-DD")))?,
+        None => now.date_naive(),
+    };
+    let (folder, repo) = repo_named(store, repo)?;
+    let days = store
+        .config
+        .folder_of(Layer::Diary)
+        .ok_or_else(|| StoreError::Config("no folder holds the journal".into()))?
+        .to_string();
+    let rel = match &folder {
+        Some(f) => format!("{f}/{days}/{date}.md"),
+        None => format!("{days}/{date}.md"),
+    };
+    let id = PieceId::Named { folder: days, stem: date.to_string() };
+    let held = store.index.entries.iter().find(|e| e.path_text() == rel).cloned();
+    let (mut piece, made) = match held {
+        Some(entry) => {
+            let path = store.root.join(&rel);
+            let text = fs::read_to_string(&path).map_err(|e| io_error(&path, e))?;
+            (Piece::parse(&entry.path, &text)?, false)
+        }
+        None if store.root.join(&rel).exists() => {
+            return Err(StoreError::Invalid(format!("{rel} is there but its header cannot be read")));
+        }
+        None => {
+            let mut piece = Piece::empty(PathBuf::from(&rel));
+            piece.set(key::DATE, Value::from(date.to_string()));
+            if let Some(kind) = layer::default_kind(Layer::Diary) {
+                piece.set(key::KIND, Value::from(kind));
+            }
+            (piece, true)
+        }
+    };
+    let time = now.format(diary::LINE_TIME).to_string();
+    piece.set_body(diary::appended(piece.body(), &diary::timed_line(&time, text)));
+    piece.set(key::UPDATED, Value::from(now.format(DATE_FORMAT).to_string()));
+    let home = ready(store, &rel)?;
+    if !made {
+        refuse_dirty(home.as_ref(), &rel)?;
+    }
+    let subject = format!("{}({id}): {}", Kind::Note, short(text));
+    let commit = write_and_commit(store, home.as_ref(), &[(rel.clone(), Some(piece.render()))], &subject)?;
+    Ok(Journaled { id, day: date.to_string(), repo, path: rel, made, time, commit })
 }
 
 /// Copy `source` to `file_rel`, write the piece, then one commit by Lorisse of the two when git

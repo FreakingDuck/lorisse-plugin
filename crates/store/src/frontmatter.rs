@@ -100,6 +100,8 @@ pub mod key {
     pub const RESOLUTIONS: &str = "resolutions";
     /// The résumé a retired piece sits behind.
     pub const RETIRED_BY: &str = "retired_by";
+    /// Why a memory was retired, one line, as the call gave it.
+    pub const RETIRED_WHY: &str = "retired_why";
     /// A stored conversation's thread: `<screen>/<stem>`, the one piece it updates.
     pub const THREAD: &str = "thread";
     /// The models a stored conversation heard from.

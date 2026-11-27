@@ -51,11 +51,11 @@ fn c_5_3_the_reading_tools_are_declared_read_only_and_the_writing_tools_as_writi
         assert_eq!(hint(tool, "openWorldHint"), Some(Json::Bool(false)), "{name}");
         if !reads {
             assert_eq!(hint(tool, "destructiveHint"), Some(Json::Bool(false)), "{name}");
-            let once = name == "link" || name == "start";
+            let once = ["link", "start", "change", "retire"].contains(&name);
             assert_eq!(hint(tool, "idempotentHint"), Some(Json::Bool(once)), "{name}");
         }
     }
-    assert_eq!(tools.len(), 12);
+    assert_eq!(tools.len(), 15);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -504,7 +504,7 @@ fn c_9_2_plop_gives_the_folder_its_repositories_the_counts_and_the_five_filed_la
     let want = [
         format!("The memory folder: {shown}"),
         "Its repositories: home, club, office (confidential).".to_string(),
-        "It holds 7 memories and 1 person.".to_string(),
+        "It holds 6 memories and 1 person.".to_string(),
         DATA_LINE.to_string(),
         "Filed last:".to_string(),
         "- M-0007 [home] · The gutter was cleaned".to_string(),

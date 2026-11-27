@@ -57,7 +57,7 @@ fn c_9_4_plop_ends_with_the_rules_of_keeping_in_a_few_lines() {
     let rules = got.split("\n\n").last().unwrap();
     let lines: Vec<&str> = rules.lines().collect();
     assert_eq!(lines[0], "The rules of keeping:", "{got}");
-    assert!(lines.len() < 10, "{rules}");
+    assert!(lines.len() < 13, "{rules}");
     for said in ["by yourself", "Search first", "one line, with its number", "small talk", "a password or a key", "intro above wins"] {
         assert!(rules.contains(said), "{said}: {rules}");
     }
@@ -100,7 +100,7 @@ fn c_9_6_the_instructions_the_writing_tools_and_the_rules_say_the_same_of_filing
         let tool = tools.iter().find(|t| t.get("name").and_then(Json::as_str) == Some(name)).unwrap();
         tool.get("description").and_then(Json::as_str).unwrap().to_string()
     };
-    for name in ["remember", "note", "link", "attach"] {
+    for name in ["remember", "note", "link", "attach", "change", "retire", "journal"] {
         let text = said(name);
         assert!(text.contains("Use it by yourself once plop was called in this conversation"), "{name}: {text}");
         assert!(text.contains("before that, only when the person asks"), "{name}: {text}");
@@ -110,7 +110,7 @@ fn c_9_6_the_instructions_the_writing_tools_and_the_rules_say_the_same_of_filing
     let rules = rules.split("\n\n").last().unwrap().to_string();
     assert!(rules.contains("File by yourself"), "{rules}");
     let mut texts = vec![instructions.to_string(), rules];
-    texts.extend(["remember", "note", "link", "attach", "undo", "start", "import"].map(said));
+    texts.extend(["remember", "note", "link", "attach", "undo", "start", "import", "change", "retire", "journal"].map(said));
     for text in &texts {
         let low = text.to_lowercase();
         let only = low.matches("only when").count();

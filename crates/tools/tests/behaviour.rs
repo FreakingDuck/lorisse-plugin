@@ -255,6 +255,53 @@ fn a_change_that_fails_halfway_leaves_the_folder_as_it_was() {
 }
 
 #[test]
+fn retire_of_a_memory_already_retired_is_one_sentence_and_writes_nothing() {
+    let copy = Temp::git_sample("retired_already");
+    let before = files_of(copy.path());
+    let commits = log(copy.path());
+    let said = ask_one(copy.path(), "retire", r#"{"piece":"M-0004","reason":"Replaced long ago."}"#);
+    assert_eq!(said, "M-0004 [home] is retired already: nothing was written.");
+    assert_eq!(files_of(copy.path()), before);
+    assert_eq!(log(copy.path()), commits);
+}
+
+#[test]
+fn read_of_a_day_with_no_page_is_one_sentence() {
+    let copy = Temp::sample("no_page");
+    let said = ask_one(copy.path(), "read", r#"{"piece":"2019-05-15"}"#);
+    assert_eq!(said, "The journal has no page for 2019-05-15.");
+}
+
+#[test]
+fn a_change_or_a_journal_line_that_cannot_be_written_is_refused_in_one_sentence() {
+    let copy = Temp::git_sample("keeping_refused");
+    let before = files_of(copy.path());
+    let commits = log(copy.path());
+    let calls = [
+        ("change", r#"{"piece":"M-0002"}"#),
+        ("change", r#"{"piece":"M-0002","kind":"rumour"}"#),
+        ("change", r#"{"piece":"M-0099","text":"x"}"#),
+        ("change", r#"{"piece":"M-0006","text":"x"}"#),
+        ("retire", r#"{"piece":"M-0006","reason":"x"}"#),
+        ("retire", r#"{"piece":"Sam Example","reason":"x"}"#),
+        ("journal", r#"{"text":"The alarm password is 4471."}"#),
+        ("journal", r#"{"text":"x","day":"2019-02-30"}"#),
+    ];
+    let setting = copy.path().to_string_lossy().into_owned();
+    let said = ask(&[(SETTING, &setting)], None, &calls);
+    assert_eq!(said[0], "change needs at least one of \"text\", \"title\", \"kind\" or \"tags\", the parts to replace: nothing was written.");
+    assert_eq!(said[1], "Nothing was written: the kind rumour is not one this memory folder knows (fact, decision, preference, idea, need).");
+    assert_eq!(said[2], "No piece has the number M-0099.");
+    assert_eq!(said[3], "No piece has the number M-0006.");
+    assert_eq!(said[4], "No piece has the number M-0006.");
+    assert_eq!(said[5], "people/sam-example is a person: only a memory is retired; nothing was written.");
+    assert!(said[6].starts_with("Nothing was written: the text has a secret's shape"), "{}", said[6]);
+    assert!(said[7].starts_with("Nothing was written: 2019-02-30 is not a day"), "{}", said[7]);
+    assert_eq!(files_of(copy.path()), before);
+    assert_eq!(log(copy.path()), commits);
+}
+
+#[test]
 fn the_program_stays_up_whatever_comes() {
     let copy = Temp::sample("up");
     let setting = copy.path().to_string_lossy().into_owned();

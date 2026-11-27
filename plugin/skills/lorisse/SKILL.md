@@ -15,6 +15,10 @@ Lorisse is the person's own memory, kept as files in their folder. You keep it f
 - With several repositories, file in the one the subject belongs to (`repository` of `remember`), and name it in that line.
 - What comes from a confidential repository stays in it: never file it in another one.
 
+**Keeping it true.** When a fact that is filed has changed or was wrong, `change` that memory (its text, title, kind or tags) instead of filing it a second time. When something filed no longer holds, `retire` it with the reason, naming the memory that takes its place if there is one, and say in one line what is retired and why. Never delete, and never leave a memory beside its contrary.
+
+**The journal.** What happened or was decided today that is not a lasting fact goes in the journal with `journal`, one entry for each; say it in one line after. `read` with a day (`YYYY-MM-DD`) gives that day's page.
+
 **Files.** When the person gives a document's path or says to keep a file, `attach` it to the memory it is about; if that memory does not exist yet, file it first, then attach.
 When a piece holds a file the question is about, open the file at the path `read` gave, with your own reader.
 Never attach a key or a secret; say in one line what was attached and to which number.

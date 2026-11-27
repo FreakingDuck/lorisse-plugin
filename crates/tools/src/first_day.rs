@@ -279,7 +279,7 @@ fn heading(line: &str) -> Option<Under> {
 }
 
 /// Whether `text` is a day `YYYY-MM-DD` that exists.
-fn is_date(text: &str) -> bool {
+pub(crate) fn is_date(text: &str) -> bool {
     let bytes = text.as_bytes();
     if bytes.len() != 10 || bytes[4] != b'-' || bytes[7] != b'-' {
         return false;
@@ -310,7 +310,7 @@ fn dated(line: &str) -> Option<(Option<String>, String)> {
 }
 
 /// Whether a text has a secret's shape: a password or a key named, a long key, a card number.
-fn looks_secret(text: &str) -> bool {
+pub(crate) fn looks_secret(text: &str) -> bool {
     let lower = text.to_lowercase();
     let words = ["password", "passwd", "passcode", "api key", "api_key", "secret key", "private key", "access token", "-----begin"];
     if words.iter().any(|w| lower.contains(w)) {

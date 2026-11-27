@@ -99,10 +99,10 @@ never:
   gmail:   [send_message, reply, forward]
 ";
 
-/// Lorisse's twelve tools.
-pub const LORISSE_TOOLS: [&str; 12] = [
+/// Lorisse's fifteen tools.
+pub const LORISSE_TOOLS: [&str; 15] = [
     "where", "plop", "search", "read", "links", "remember", "note", "link", "attach", "undo",
-    "start", "import",
+    "start", "import", "change", "retire", "journal",
 ];
 
 /// A tool of this plugin, by its full name.

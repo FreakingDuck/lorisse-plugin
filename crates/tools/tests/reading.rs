@@ -34,7 +34,7 @@ fn c_4_1_the_setting_gives_the_folder_whatever_folder_the_program_runs_in() {
     );
     assert!(got[0].contains(&shown(copy.path())), "{}", got[0]);
     assert!(got[0].contains("the plugin's setting"), "{}", got[0]);
-    assert!(got[0].contains("0.5.0"), "{}", got[0]);
+    assert!(got[0].contains("0.6.0"), "{}", got[0]);
     assert!(got[1].contains("M-0001 [home] · The boiler's contract"), "{}", got[1]);
 }
 
@@ -356,7 +356,8 @@ fn c_6_3_plop_counts_the_open_repository_and_names_it_confidential() {
     let got = ask_one(copy.path(), "plop", "{}");
     let state = got.split("\n\n").find(|p| p.starts_with("The memory folder: ")).unwrap();
     assert!(state.contains("Its repositories: home, club, office (confidential)."), "{state}");
-    assert!(state.contains("It holds 6 memories and 1 person."), "{state}");
+    // The sample's retired memory, M-0004, is left out of the count (C-12.2).
+    assert!(state.contains("It holds 5 memories and 1 person."), "{state}");
     assert!(state.contains("- O-0001 [office] · The printer's lease"), "{state}");
     assert!(!got.contains("M-0006") && !got.contains("surprise"), "the confidential part stays hidden: {got}");
 }

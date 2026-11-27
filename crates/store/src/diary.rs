@@ -52,7 +52,7 @@ impl Speaker {
 // =============================================================================
 
 /// The format of a note's time.
-const LINE_TIME: &str = "%H:%M";
+pub(crate) const LINE_TIME: &str = "%H:%M";
 
 fn word_of(speaker: Speaker) -> &'static str {
     match speaker {
@@ -130,7 +130,7 @@ fn day_piece(
 }
 
 /// `- HH:MM first line`, the other non-blank lines indented under it.
-fn timed_line(time: &str, text: &str) -> String {
+pub(crate) fn timed_line(time: &str, text: &str) -> String {
     let mut lines = text.lines().map(str::trim).filter(|l| !l.is_empty());
     let mut out = format!("- {time} {}", lines.next().unwrap_or(""));
     for line in lines {
@@ -140,7 +140,7 @@ fn timed_line(time: &str, text: &str) -> String {
 }
 
 /// The body with the line at its end, a blank line before it after prose.
-fn appended(body: &str, line: &str) -> String {
+pub(crate) fn appended(body: &str, line: &str) -> String {
     let nl = if body.contains("\r\n") { "\r\n" } else { "\n" };
     let mut out = body.trim_end_matches(['\r', '\n']).to_string();
     if !out.is_empty() {
