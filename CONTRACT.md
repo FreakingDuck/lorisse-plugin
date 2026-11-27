@@ -162,6 +162,7 @@ We want the days kept as well as the facts: what happened and what was decided, 
 - The memory folder chosen by browsing, not typed: today the Claude app's own window asks for it as a line of text.
 - Tasks, the inbox, the questions to check, what changed since the person last looked.
 - A memory kept by subject or by project, in repositories the person names.
+- Lorisse proposes the repositories itself: on the first day it asks whether the memory is for home only or for home and work; later, when what the person says belongs to a subject kept nowhere (a client, a project of code), it offers to make a repository for it, and makes it on a yes. Today a repository is one line the person writes in the folder's settings.
 - The plugin itself neither pulls nor pushes: the folder stays on the machine unless the person wants more.
 - The keeper's rules of filing, and one skill a subject.
 - The same answers in the desktop app's Cowork, on Windows and on a Mac: built for, not tried.

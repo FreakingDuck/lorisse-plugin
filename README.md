@@ -106,7 +106,7 @@ The steps, for Windows and for a Mac: [lorisse.ai/install](https://lorisse.ai/in
 In short, in Claude Code:
 
 ```
-/plugin marketplace add FreakingDuck/lorisse-plugin
+/plugin marketplace add whysoserious-wtf/lorisse-plugin
 /plugin install lorisse@lorisse
 ```
 
