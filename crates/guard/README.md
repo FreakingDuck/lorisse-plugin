@@ -11,7 +11,7 @@ Built and wired: given what the Claude app sends before a tool call, and the mem
 - **call**: Claude asking to use one tool, once.
 - **service**: who the tool belongs to: `lorisse`, or a connector of the Claude app (`dropbox`, `gmail`).
 - **rule**: one tool of one service, in one of three lists: pass, ask, never.
-- **first set**: the rules the plugin ships, used when the folder has none.
+- **first set**: the rules the plugin ships, used when the folder has none. It also rules any tool of Lorisse's that your own file does not name, so a tool a new version brings passes without you adding it; name it under ask or never to change that.
 
 ## How it is made
 
