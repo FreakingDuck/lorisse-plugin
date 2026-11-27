@@ -32,6 +32,11 @@ This part is validated two ways:
   1. In `target/walk-sample/rules.yaml`, move `search` under `never`, and type "Find boiler" again.
      - See: Lorisse says the search was refused by your rules.
 
+- [ ] **H-4** A rule is asked once, and written on your yes.
+  It proves C-6.1, C-6.2 and C-6.4: you never open the rules file to be left in peace.
+  1. Type "plop", then "From now on, read my Dropbox without asking".
+     - See: the Claude app asks you once, showing the rule about to be written; after your yes, Lorisse says the rule is in your file.
+
 ## In Cowork
 
 - [ ] **H-3** Cowork obeys the guard.
@@ -54,6 +59,10 @@ For the gate and for the assistant; nothing here is yours to read.
 | C-5.2 | nothing passes unnamed; a file that cannot be read | 2 checks · output | — |
 | C-5.3 | a file tool writing the rules file | 1 check · output | — |
 | C-5.4 | the folder before and after; the crate's dependencies | 1 check · writes | — |
+| C-6.1 | a rule written: its service, its tools, its list; a tool moved from another list; the person's other lines left as they were, comments among them; the file made from the first set when absent; one commit and its undo | 4 checks · writes | H-4 |
+| C-6.2 | a call of `rule` answered ask, with a file that names it under pass too | 2 checks · output | H-4 |
+| C-6.3 | the services the rules name, said by `plop` with their lists | 1 check · output | — |
+| C-6.4 | the rule among those `plop` gives; what `rule`'s own description says | 2 checks · output | H-4 |
 
 ## Run log
 

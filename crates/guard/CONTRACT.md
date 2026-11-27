@@ -13,11 +13,12 @@ The plugin's guard: before a tool call runs, it says whether the call passes, as
 - Reads the person's rules in their memory folder.
 - Answers pass, ask or never for a call of one of Lorisse's tools, or of a tool of one of the Claude app's connectors (a file service, the mail, a calendar).
 - Gives a first set of rules to a folder that has none.
+- Writes a rule the person just gave in the conversation, on their yes: rule.
 
 Does not:
 
 - Run the call, or show the prompt → the Claude app.
-- Change the rules → the person, in their file.
+- Decide a rule → the person: by their answer in the conversation, or by their hand in the file.
 - Lift a refusal the person or an organisation set in the Claude app's own settings → the Claude app; that refusal always wins.
 - Decide what is filed, or when → `keeper`.
 
@@ -44,22 +45,32 @@ We want fewer prompts and no surprise: what passes alone is only what the person
 - **C-5.3** A change of the rules file itself by one of the app's file tools always asks, whatever the rules say.
 - **C-5.4** The guard writes nothing in the memory folder and opens no network connection.
 
-## 6. Behaviour
+## 6. The rule asked once
+
+We want nobody to learn a file's format to be left in peace: the first time a person asks for a new kind of thing, Lorisse asks how they want it from now on, and writes their answer down. No service passes by default.
+
+- **C-6.1** `rule` writes one rule in the person's rules file: a service, the tools it names, and the list they go to (pass, ask or never). A tool named before under another list moves to the new one. Every other line of the file stays as it was. Without a rules file, it is made first, from the first set. It is one commit, and `undo` takes it back.
+- **C-6.2** A call of `rule` always asks, whatever the rules say: the Claude app shows the person the rule about to be written, and their yes there is what lets it in. Lorisse cannot give itself a right.
+- **C-6.3** `plop` says which services the person's rules name, and under which list, so Claude knows what is ruled already.
+- **C-6.4** The rules `plop` gives say when: the first time the person asks for something a service their rules do not name would do, ask them once, in plain words, how they want it from now on (ask each time, without asking, never) and what Lorisse may do there; propose "without asking" only for what reads; then call `rule`; past that, ask each time.
+
+## 7. Behaviour
 
 | Situation | Reaction |
 |---|---|
+| `rule` with a list that is none of the three | refused in one sentence; nothing written |
+| `rule` when the rules file cannot be read | refused, with the reason; the file is left as it is |
 | No memory folder | the first set holds |
 | A rule that names a tool or a service nobody has | ignored; the other rules hold |
 | The rules file cannot be read | every call asks, with the reason |
 | Any call, whatever its shape | the guard answers; a guard that fails leaves the call to the Claude app |
 
-## 7. Wanted, not promised yet
+## 8. Wanted, not promised yet
 
-- The rule asked once, in the conversation: the first time the person asks for something a service nobody ruled yet would do (read the mail, list the files), Lorisse asks in plain words how they want it from now on (ask each time, pass, never) and what it may do there, writes it in the rules file with a tool of its own, and from then on asks only for what goes past it. No service passes by default.
 - What asked is kept, and Lorisse proposes the rule that would have let it pass, as the dev tool does.
 - Rules by repository or by subject.
 - A change of the rules file by a shell command is not seen today: only the app's file tools are.
 
-## 8. Non-goals
+## 9. Non-goals
 
 Replacing the Claude app's own settings; deciding for an organisation.
