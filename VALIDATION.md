@@ -100,14 +100,21 @@ The sample is a small memory folder kept in the repository, every word of it inv
   1. Type "Write in the journal that the plumber came this morning", then "Read today's journal".
      - See: Lorisse says it is written; then today's page, with that line and its time.
 
+- [ ] **H-16** Lorisse sorts by itself, and what is in the wrong drawer is moved.
+  It proves C-14.1 and C-14.3: you talk, and never have to say where a thing goes.
+  1. Type "plop", then "I am starting to take clients for garden design. The first one is the house on the hill, her budget is 4000".
+     - See: Lorisse says it made a drawer for that work, and that the client is filed in it.
+  2. Type "The boiler has nothing to do with the house: put it with the garden work".
+     - See: Lorisse says which memory moved, with the same number as before.
+
 ## The first day, on a machine that has no memory yet
 
 - [ ] **H-10** A new person has a memory in one conversation.
   It proves C-11.1, C-11.3 and C-11.4: nothing to know about folders or git to begin.
   1. Type "plop".
      - See: Lorisse says there is no memory yet and offers to make one.
-  2. Answer yes, then its three questions.
-     - See: Lorisse says the folder is ready, and where it is.
+  2. Answer yes, then tell it about yourself as it asks: your name, what fills your days, what must never mix.
+     - See: Lorisse says the folder is ready, where it is, and which drawers it made from what you said.
   3. Open a new conversation and type "plop".
      - See: your intro, with the three answers you gave.
 
@@ -179,6 +186,12 @@ For the gate, which checks that each promise of the contract has one row here, a
 | C-13.1 | an entry added to today's page and to a named day, what was there left; one commit and its undo; in a named repository | 3 checks · writes | H-15 |
 | C-13.2 | a day's page read; an entry found by a search, said with its day | 2 checks · output | H-15 |
 | C-13.3 | the last day written, said by `plop` | 1 check · output | — |
+| C-14.1 | a repository made: its folder, its numbering, its line in the settings with the lines there left as they were; one commit and its undo; a memory filed in it at once | 3 checks · writes | H-16 |
+| C-14.2 | each repository said with what it is for by `plop` | 1 check · output | H-16 |
+| C-14.3 | a memory moved, several at once: the number, the text, the links and the files kept, a link to it still followed; one commit and its undo | 3 checks · writes | H-16 |
+| C-14.4 | a repository made confidential and open to Claude, read and written; a move out of a confidential one refused | 2 checks · writes | — |
+| C-14.5 | the three rules among those `plop` gives | 1 check · output | — |
+| C-14.6 | what `start` tells Claude to ask and to do | 1 check · output | H-10 |
 
 ## Run log
 

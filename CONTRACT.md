@@ -2,7 +2,7 @@
 
 > written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
-Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files, part 11 the first day. Parts 12 and 13 are keeping the memory true and the journal. All are built.
+Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files, part 11 the first day. Parts 12 and 13 are keeping the memory true and the journal. All are built but part 14, the drawers, which is being built.
 
 ## 1. Role
 
@@ -18,6 +18,7 @@ Lorisse as a person meets it in the Claude app: a program on their own machine t
 - Makes a new person's memory folder ready, and fills it with what another assistant already remembers of them: start, import.
 - Corrects a memory that was wrong, and puts aside one that no longer holds: change, retire.
 - Keeps the days: what happened and what was decided, a page a day: journal.
+- Sorts by itself: makes a repository for a subject that has none, and moves what was put in the wrong one: drawer, move.
 
 Does not:
 
@@ -132,10 +133,23 @@ We want the days kept as well as the facts: what happened and what was decided, 
 - **C-13.2** `read`, given a day, gives that day's page. `search` finds in the journal as in the memories, each match said with its day.
 - **C-13.3** `plop` says, after the state, the last day the journal was written.
 
-## 14. Behaviour
+## 14. The drawers
+
+We want a person to talk and Lorisse to sort: the house, the work, a client, a project each in its own repository, which Lorisse calls a drawer when it speaks, made without the person having to know what a repository is, and never a trap: what was put in the wrong one is moved.
+
+- **C-14.1** `drawer` makes a new repository in the memory folder from a name and one sentence on what it is for: its folder, a numbering of its own, and its line in the folder's settings, as one commit that `undo` takes back. A name already taken is refused; nothing the person wrote in the settings is changed.
+- **C-14.2** `plop` says each repository with what it is for, so that a memory is filed where its subject lives.
+- **C-14.3** `move` puts one memory, or several, in another repository: each keeps its number, its text, its links and its files, and what links to it still leads to it. It is one commit, and `undo` puts them back.
+- **C-14.4** `drawer` can make a repository kept apart: marked confidential and open to Claude (C-6.3), for what must never mix with the rest. `move` never takes a piece out of a confidential repository: asked to, it refuses in one sentence.
+- **C-14.5** The rules `plop` gives say when: a subject that keeps coming and has no repository of its own gets one, said in one line; a piece found in the wrong one is moved; the person is never asked to choose where a thing goes.
+- **C-14.6** On the first day, `start` tells Claude to let the person talk about themselves in open questions (who they are, what fills their days, what they would hate to lose, what must never mix), and to make the repositories from what they say, by itself.
+
+## 15. Behaviour
 
 | Situation | Reaction |
 |---|---|
+| `drawer` with a name already taken | one sentence that names the repository there; nothing written |
+| `move` of a piece to the repository it is in | one sentence that says so; nothing written |
 | `retire` of a memory already retired | one sentence that says so; nothing written |
 | `read` of a day with no page | one sentence that says so |
 | A number that does not exist | one sentence that names it |
@@ -148,7 +162,7 @@ We want the days kept as well as the facts: what happened and what was decided, 
 | A change that fails halfway | the folder is as it was before the call |
 | Any call, whatever the folder or the piece | the program answers and stays up |
 
-## 15. Wanted, not promised yet
+## 16. Wanted, not promised yet
 
 - Filing a person; proposals for anything heavy (merge two pieces, move one, rename a tag).
 - A tidy-up the person asks for now and then: what looks said twice, what contradicts, what was never linked, each as a proposal.
@@ -161,12 +175,11 @@ We want the days kept as well as the facts: what happened and what was decided, 
 - A release that arrives whole: the card, the version and the programs together, never one before the other; and a check after each release that an installed copy says the new version.
 - The memory folder chosen by browsing, not typed: today the Claude app's own window asks for it as a line of text.
 - Tasks, the inbox, the questions to check, what changed since the person last looked.
-- A memory kept by subject or by project, in repositories the person names.
-- Lorisse proposes the repositories itself: on the first day it asks whether the memory is for home only or for home and work; later, when what the person says belongs to a subject kept nowhere (a client, a project of code), it offers to make a repository for it, and makes it on a yes. Today a repository is one line the person writes in the folder's settings.
+- A repository renamed, or two made one.
 - The plugin itself neither pulls nor pushes: the folder stays on the machine unless the person wants more.
 - The keeper's rules of filing, and one skill a subject.
 - The same answers in the desktop app's Cowork, on Windows and on a Mac: built for, not tried.
 
-## 16. Non-goals
+## 17. Non-goals
 
 A screen of its own, a choice of model, a reader of mail: the Claude app has them.
