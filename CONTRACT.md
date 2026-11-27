@@ -2,7 +2,7 @@
 
 > written by Lorisse 2026-11-24 · reviewed by the owner: 2026-11-25
 
-Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files, part 11 the first day. Parts 12 and 13 are keeping the memory true and the journal. All are built but part 14, the drawers, which is being built.
+Human file; format: `docs/contract_spec.md`. Stage design: the clause ids may still change. Parts 4 to 7 are the reading step; parts 8 and 9, and C-5.3, the writing step. Part 10 is the files, part 11 the first day. Parts 12 and 13 are keeping the memory true and the journal. Part 14 is the drawers. All are built.
 
 ## 1. Role
 

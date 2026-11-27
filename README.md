@@ -42,6 +42,7 @@ Lorisse reads a memory folder, files in it, and opens a conversation with your o
 | 6. the first day | a new person's folder made ready in one conversation, remembered by the machine, and filled with what another assistant already remembers of them; git recommended, no longer required | built, version 0.4.0 |
 | 7. a first clean version | filing by itself said the same in every text Claude reads, starting with what the conversation already holds; a confidential repository you open to Claude, read and written; nothing left uncommitted; a plain sentence when the setting names the wrong folder | built, version 0.5.0 |
 | 8. keeping it true | a memory corrected, one that no longer holds put aside and never deleted, and the journal, a page a day | built, version 0.6.0 |
+| 9. the drawers | Lorisse sorts by itself: a repository made for a subject that has none, a piece moved when it sits in the wrong one, and a first day where you talk about yourself and it makes the drawers | built, version 0.7.0 |
 | 7. the keeper | the skill that holds the rules of filing: what is filed at once, what stays a proposal, what is never done | after |
 
 Tasks, the inbox and "what to do next" come after the memory itself is in place.
@@ -82,6 +83,8 @@ What Claude can ask the program. Memories, people and tags are read; a task or a
 | `undo` | nothing, or the change to take back | Lorisse's last change taken back as a new commit; never a change made by someone else |
 | `change` | a memory or a person, and what to replace: its text, its title, its kind, its tags | the piece corrected, as one commit; what is not named stays; `undo` brings back what it said before |
 | `retire` | a memory, a reason, and the memory that takes its place if there is one | the memory marked retired with its reason, as one commit; nothing is deleted: it is still read, and comes last in a search |
+| `drawer` | a name and one sentence on what it is for; `apart` if it must never mix with the rest | a new repository of your memory folder, which Lorisse calls a drawer: its folder, its own numbers (`G-0001`), its line in `config.yaml` with every line of yours left as it was, as one commit. Lorisse makes one by itself when a subject keeps coming and has no place |
+| `move` | one memory or several, and the repository to put them in | each moved with its number, its text, its links and its files, as one commit; nothing is ever taken out of a confidential repository |
 | `journal` | a text; a day and a repository if wanted | the time and the text added at the end of that day's page (`journal/2026-11-27.md`), today unless a day is named, as one commit. `read` takes a day and gives its page |
 
 | `start` | nothing, or a place, your name, what you want to remember, how you like to be answered | your memory folder made ready (`Lorisse` in your home folder unless you name a place), under git when git is on the machine, with your page of intro; this machine remembers it. It ends with a text to copy for another assistant, to get back what it remembers of you |

@@ -25,7 +25,7 @@ A rules file that cannot be read (a broken layout, a list other than pass, ask a
 
 ```yaml
 pass:
-  lorisse: [where, plop, search, read, links, remember, note, link, attach, undo, start, import, change, retire, journal]
+  lorisse: [where, plop, search, read, links, remember, note, link, attach, undo, start, import, change, retire, journal, drawer, move]
   dropbox: [search, list_folder, fetch, file_preview, get_file_metadata]
 ask:
   dropbox: [move, copy, create_folder, create_file]
