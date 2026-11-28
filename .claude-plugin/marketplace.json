@@ -11,7 +11,7 @@
       "source": "./plugin",
       "description": "A memory that is yours, in plain files on your machine. You talk; Lorisse files what matters, finds it again, keeps your documents with it, sorts it into drawers by itself, and every change can be taken back.",
       "homepage": "https://lorisse.ai",
-      "repository": "https://github.com/whysoserious-wtf/lorisse-plugin"
+      "repository": "https://github.com/whysoserious-wtf/lorisse"
     }
   ]
 }

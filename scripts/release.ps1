@@ -35,7 +35,7 @@ param([switch]$NoInstall, [int]$Minutes = 25)
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$repo = 'whysoserious-wtf/lorisse-plugin'
+$repo = 'whysoserious-wtf/lorisse'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 function Stop-Release([string] $Why) { Write-Host ('release stopped: ' + $Why); exit 1 }
