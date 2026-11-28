@@ -9,7 +9,9 @@
       3. copies plugin/ to target/try-plugin and puts the built program in its server/
          (plugin/ itself is never touched);
       4. runs the newest claude program found under the VS Code extensions, once, in the
-         sample's copy, with that plugin and the prompt given;
+         sample's copy, with that plugin and the prompt given, and with nothing of the
+         person's own setup: no connector of their Claude account, and the plugin installed
+         on the machine switched off for the run;
       5. prints what Claude answered, then the history of the sample's copy.
     Without -Allow, no tool is allowed beforehand: a tool that runs was let through by the
     plugin's own guard. With -Allow, Lorisse's tools are allowed on the command line.
@@ -85,11 +87,17 @@ if ($FirstDay) {
     New-Item -ItemType Directory -Path $where -Force | Out-Null
 }
 
+# The try sees nothing of the person's own setup: no connector of their Claude account, and not
+# the plugin installed on this machine (its guard would answer by the person's own rules). The
+# settings go by a file: Windows PowerShell 5.1 drops the quotes of a JSON text given to a program.
+$trySettings = Join-Path $root 'target/try-settings.json'
+[IO.File]::WriteAllText($trySettings, '{"disableClaudeAiConnectors": true, "enabledPlugins": {"lorisse@lorisse": false}}', (New-Object Text.UTF8Encoding $false))
+
 Write-Host ('--- Claude ({0}) answers:' -f $Model)
 $ErrorActionPreference = 'Continue'
 Push-Location -LiteralPath $where
 try {
-    & $claude -p $Prompt --plugin-dir $try --model $Model @more
+    & $claude -p $Prompt --plugin-dir $try --model $Model --settings $trySettings @more
 } finally {
     Pop-Location
 }

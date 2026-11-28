@@ -9,15 +9,12 @@
 
 mod drawers;
 mod files;
-// A path named: the old `first_day.rs` and `writing.rs` still sit beside their folders.
-#[path = "first_day/mod.rs"]
 mod first_day;
 mod json;
 mod keeping;
 mod opening;
 mod reading;
 mod shared;
-#[path = "writing/mod.rs"]
 mod writing;
 
 use json::Json;

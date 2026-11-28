@@ -237,7 +237,9 @@ fn tools_c_4_1_an_empty_path_changes_no_answer_and_the_source_names_no_network()
     assert!(writes[1].starts_with("This memory folder keeps no history"), "{}", writes[1]);
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut sources = Vec::new();
-    for dir in ["src", "../store/src", "../store/src/actions"] {
+    let subjects = ["src/shared", "src/reading", "src/opening", "src/writing", "src/files", "src/keeping", "src/drawers", "src/first_day"];
+    let others = ["src", "../store/src", "../store/src/actions", "../guard/src"];
+    for dir in subjects.iter().chain(others.iter()) {
         for entry in fs::read_dir(manifest.join(dir)).unwrap() {
             let path = entry.unwrap().path();
             if path.extension().is_some_and(|e| e == "rs") {
