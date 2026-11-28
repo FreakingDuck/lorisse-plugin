@@ -1,16 +1,17 @@
 {
   "name": "lorisse",
-  "description": "Lorisse's own marketplace: its one plugin is the folder plugin/.",
+  "description": "What comes out of why so serious, a small software house: today one plugin, Lorisse.",
   "owner": {
-    "name": "FreakingDuck"
+    "name": "why so serious",
+    "url": "https://whysoserious.wtf"
   },
   "plugins": [
     {
       "name": "lorisse",
       "source": "./plugin",
-      "description": "A memory that is yours, in plain files. First version: one tool, to see that Lorisse answers.",
+      "description": "A memory that is yours, in plain files on your machine. You talk; Lorisse files what matters, finds it again, keeps your documents with it, sorts it into drawers by itself, and every change can be taken back.",
       "homepage": "https://lorisse.ai",
-      "repository": "https://github.com/FreakingDuck/lorisse-plugin"
+      "repository": "https://github.com/whysoserious-wtf/lorisse-plugin"
     }
   ]
 }

@@ -2,7 +2,7 @@
   "name": "lorisse",
   "displayName": "Lorisse",
   "version": "0.7.0",
-  "description": "Your own memory, in plain files on your machine. Lorisse finds what you noted, files what you ask it to remember, and every change can be taken back.",
+  "description": "A memory that is yours, in plain files on your machine. You talk; Lorisse files what matters, finds it again, keeps your documents with it, sorts it into drawers by itself, and every change can be taken back.",
   "author": {
     "name": "Lorisse",
     "url": "https://lorisse.ai"
@@ -11,7 +11,7 @@
   "license": "MIT",
   "keywords": ["memory", "notes", "files"],
   "homepage": "https://lorisse.ai",
-  "repository": "https://github.com/FreakingDuck/lorisse-plugin",
+  "repository": "https://github.com/whysoserious-wtf/lorisse-plugin",
   "userConfig": {
     "memory_folder": {
       "type": "directory",
